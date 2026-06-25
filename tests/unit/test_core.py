@@ -9,6 +9,15 @@ from __future__ import annotations
 
 import pytest
 
+from viroc.core.diagnostics import (
+    Diagnostic,
+    DiagnosticClass,
+    Severity,
+    Span,
+    code,
+    render,
+    validate_code,
+)
 from viroc.core.hashing import canonical_json, hash_bytes, hash_data, hash_unordered
 from viroc.core.ids import slugify, stable_id
 
@@ -91,3 +100,118 @@ class TestHashing:
         a = {"path": "assets/doc.svg", "hash": "sha256:aa"}
         b = {"path": "assets/img.png", "hash": "sha256:bb"}
         assert hash_unordered([a, b]) == hash_unordered([b, a])
+
+class TestCodeRegistry:
+    def test_allocates_zero_padded_active_code(self) -> None:
+        assert code(DiagnosticClass.SCHEMA, 2) == "VIR1002"
+        assert code(DiagnosticClass.RENDERER, 31) == "VIR5031"
+
+    @pytest.mark.parametrize(
+        "cls", [DiagnosticClass.SEMANTIC, DiagnosticClass.OUTPUT]
+    )
+    def test_reserved_class_allocation_raises(self, cls: DiagnosticClass) -> None:
+        with pytest.raises(ValueError, match="reserved in v1"):
+            code(cls, 1)
+
+    @pytest.mark.parametrize("number", [-1, 1000])
+    def test_out_of_range_number_raises(self, number: int) -> None:
+        with pytest.raises(ValueError, match="out of range"):
+            code(DiagnosticClass.SCHEMA, number)
+
+    def test_validate_accepts_active_codes(self) -> None:
+        for value in ("VIR1002", "VIR2007", "VIR3001", "VIR4001", "VIR5031", "VIR7001"):
+            validate_code(value)  # does not raise
+
+    @pytest.mark.parametrize("value", ["VIR6001", "VIR8001"])
+    def test_validate_rejects_reserved_codes(self, value: str) -> None:
+        with pytest.raises(ValueError, match="reserved class"):
+            validate_code(value)
+
+    @pytest.mark.parametrize("value", ["VIR9001", "VIR10", "vir1002", "nope", "VIR1002x"])
+    def test_validate_rejects_malformed_codes(self, value: str) -> None:
+        with pytest.raises(ValueError, match="not a VIRxxxx code"):
+            validate_code(value)
+
+
+class TestDiagnosticModel:
+    def test_construction_validates_code(self) -> None:
+        with pytest.raises(ValueError, match="reserved class"):
+            Diagnostic(code="VIR6001", message="nope")
+        with pytest.raises(ValueError, match="not a VIRxxxx code"):
+            Diagnostic(code="oops", message="nope")
+
+    def test_defaults_to_error_severity(self) -> None:
+        assert Diagnostic(code="VIR1002", message="x").severity is Severity.ERROR
+
+
+# The compiler-grade diagnostic shape from overview §9.2. Carets align under the
+# offending token at the span column; the locator/source/caret rows compose the
+# framed block; the help line trails.
+_VIR1002_RENDER = "\n".join(
+    [
+        'error[VIR1002]: unknown entity reference "vectorstore"',
+        "  ┌─ rag-overview.vidir.yaml:31:13",
+        "  │",
+        "31│     - from: vectorstore",
+        "  │             ^^^^^^^^^^^ not declared in entities",
+        "  │",
+        'help: did you mean "vector_db"?',
+    ]
+)
+
+
+class TestRender:
+    def _vir1002(self) -> Diagnostic:
+        return Diagnostic(
+            code="VIR1002",
+            message='unknown entity reference "vectorstore"',
+            span=Span(
+                file="rag-overview.vidir.yaml",
+                line=31,
+                col=13,
+                length=11,
+                source="    - from: vectorstore",
+                label="not declared in entities",
+            ),
+            help='did you mean "vector_db"?',
+        )
+
+    def test_matches_overview_9_2_snapshot(self) -> None:
+        assert render(self._vir1002()) == _VIR1002_RENDER
+
+    def test_reproduces_overview_9_2_shape(self) -> None:
+        rendered = render(self._vir1002())
+        assert rendered.startswith('error[VIR1002]: ')
+        assert "┌─ rag-overview.vidir.yaml:31:13" in rendered
+        assert "^^^^^^^^^^^ not declared in entities" in rendered
+        assert rendered.endswith('help: did you mean "vector_db"?')
+
+    def test_caret_aligns_under_span_column(self) -> None:
+        rendered = render(self._vir1002()).splitlines()
+        source_row = next(line for line in rendered if line.startswith("31│"))
+        caret_row = next(line for line in rendered if "^" in line)
+        assert source_row.index("vectorstore") == caret_row.index("^")
+
+    def test_span_without_source_prints_locator_only(self) -> None:
+        rendered = render(
+            Diagnostic(
+                code="VIR2007",
+                message="overlapping beats",
+                span=Span(file="s.vidir.yaml", line=5, col=3),
+            )
+        )
+        assert "┌─ s.vidir.yaml:5:3" in rendered
+        assert "^" not in rendered
+
+    def test_no_span_renders_header_and_help_only(self) -> None:
+        rendered = render(
+            Diagnostic(
+                code=code(DiagnosticClass.RENDERER, 31),
+                message='renderer "manim" does not support primitive "html_embed"',
+                help='use renderer "html", or provide a fallback image asset',
+            )
+        )
+        assert rendered == (
+            'error[VIR5031]: renderer "manim" does not support primitive "html_embed"\n'
+            'help: use renderer "html", or provide a fallback image asset'
+        )
