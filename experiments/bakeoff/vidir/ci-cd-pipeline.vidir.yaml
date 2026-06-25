@@ -1,0 +1,29 @@
+# Mocked VidIR -- topic: ci-cd-pipeline.
+vidir_version: "0.1"
+
+video:
+  id: ci-cd-pipeline
+  title: A CI/CD Pipeline
+  fps: 30
+  resolution: [1920, 1080]
+  duration_target: 90
+
+entities:
+  - { id: commit, label: Commit, type: data_source }
+  - { id: build, label: Build, type: service }
+  - { id: test, label: Test, type: service }
+  - { id: package, label: Package, type: intermediate }
+  - { id: deploy, label: Deploy, type: storage }
+
+scenes:
+  - id: pipeline
+    grammar: pipeline
+    duration: 30s
+    nodes: [commit, build, test, package, deploy]
+    edges:
+      - { from: commit, to: build, kind: flow }
+      - { from: build, to: test, kind: flow }
+      - { from: test, to: package, kind: transform }
+      - { from: package, to: deploy, kind: store }
+    narration: >-
+      A commit triggers a build; the build is tested, packaged, and deployed.

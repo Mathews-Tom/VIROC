@@ -1,0 +1,30 @@
+# Mocked VidIR -- topic: transformer-attention.
+vidir_version: "0.1"
+
+video:
+  id: transformer-attention
+  title: Self-Attention in Transformers
+  fps: 30
+  resolution: [1920, 1080]
+  duration_target: 90
+
+entities:
+  - { id: tokens, label: Input Tokens, type: data_source }
+  - { id: embeddings, label: Embeddings, type: intermediate }
+  - { id: qkv, label: QKV Projections, type: model }
+  - { id: scores, label: Attention Scores, type: intermediate }
+  - { id: context, label: Context Vectors, type: storage }
+
+scenes:
+  - id: pipeline
+    grammar: pipeline
+    duration: 35s
+    nodes: [tokens, embeddings, qkv, scores, context]
+    edges:
+      - { from: tokens, to: embeddings, kind: transform }
+      - { from: embeddings, to: qkv, kind: split }
+      - { from: qkv, to: scores, kind: compare }
+      - { from: scores, to: context, kind: merge }
+    narration: >-
+      Tokens are embedded, projected into queries, keys, and values, scored by
+      similarity, and combined into context vectors.
