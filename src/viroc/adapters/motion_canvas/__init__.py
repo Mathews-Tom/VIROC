@@ -15,6 +15,20 @@ from viroc.adapters.motion_canvas.emit import (
     source_for,
     source_tree,
 )
+from viroc.adapters.motion_canvas.render import (
+    VIR_MISSING_FFMPEG,
+    VIR_MISSING_FFPROBE,
+    VIR_MISSING_MOTION_CANVAS,
+    VIR_MISSING_NODE,
+    VIR_MISSING_NPX,
+    VIR_TOOL_PROBE_FAILED,
+    RenderCommandError,
+    RenderEnvironmentError,
+    captions_to_srt,
+    check_environment,
+    motion_canvas_version,
+    render,
+)
 from viroc.core import Diagnostic
 from viroc.ir import ConcreteIR
 
@@ -28,6 +42,7 @@ capabilities = CapabilityManifest(
     primitives=SUPPORTED_PRIMITIVES,
     animations=SUPPORTED_ANIMATIONS,
 )
+tool_version = motion_canvas_version
 
 
 def supports(ir: ConcreteIR) -> list[Diagnostic]:
@@ -43,16 +58,29 @@ def supports(ir: ConcreteIR) -> list[Diagnostic]:
 __all__ = [
     "SUPPORTED_ANIMATIONS",
     "SUPPORTED_PRIMITIVES",
+    "RenderCommandError",
+    "RenderEnvironmentError",
+    "VIR_MISSING_FFMPEG",
+    "VIR_MISSING_FFPROBE",
+    "VIR_MISSING_MOTION_CANVAS",
+    "VIR_MISSING_NODE",
+    "VIR_MISSING_NPX",
+    "VIR_TOOL_PROBE_FAILED",
     "VIR_UNSUPPORTED_ANIMATION",
     "VIR_UNSUPPORTED_PRIMITIVE",
     "capabilities",
+    "captions_to_srt",
+    "check_environment",
     "emit",
     "id",
     "materialize_source",
+    "motion_canvas_version",
     "project_tree",
+    "render",
     "source_filename",
     "source_for",
     "source_tree",
     "supports",
+    "tool_version",
     "version",
 ]
