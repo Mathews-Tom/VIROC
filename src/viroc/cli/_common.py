@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
+from viroc.adapters import RendererAdapter
+from viroc.adapters.registry import builtin_registry
 from viroc.compiler.pipeline import CompileState, run_pipeline
 from viroc.core import (
     BuildArtifact,
@@ -214,13 +217,25 @@ def write_generated_source(
         return artifact_from_path(source.kind, path)
     raise CliError("source artifact did not carry bytes or a path")
 
+def register_backend_argument(parser: argparse.ArgumentParser) -> None:
+    """Add the shared ``--backend`` selector to one CLI subcommand."""
+    parser.add_argument("--backend", default=None, help="backend id")
 
-def resolve_backend(project: Project, requested: str | None) -> str:
+
+def resolve_backend(project: Project, requested: str | None) -> RendererAdapter:
     """Resolve the requested backend, defaulting to project config."""
     backend = requested or project.config.default_backend
-    if backend != "manim":
-        raise CliError(f'backend "{backend}" is not implemented; only "manim" is available')
-    return backend
+    return builtin_registry().require(backend)
+
+
+def backend_version(adapter: RendererAdapter, ctx: BuildContext) -> str:
+    """Report the adapter version string for ``doctor`` output."""
+    version_fn = getattr(adapter, "tool_version", None)
+    if callable(version_fn):
+        reported = version_fn(ctx)
+        if isinstance(reported, str):
+            return reported
+    return adapter.version
 
 
 def _load_config(config_path: Path, root: Path) -> ProjectConfig:
@@ -246,12 +261,14 @@ __all__ = [
     "CompileResult",
     "Project",
     "RenderBaseline",
+    "backend_version",
     "build_context",
     "compile_storyboard",
     "load_expected_render_baseline",
     "load_expected_source_hash",
     "load_project",
     "print_diagnostics",
+    "register_backend_argument",
     "resolve_backend",
     "write_generated_source",
 ]

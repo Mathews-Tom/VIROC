@@ -5,8 +5,15 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
-import viroc.adapters.manim as manim
-from viroc.cli._common import build_context, load_project, print_diagnostics, resolve_backend
+from viroc.adapters.registry import UnknownBackendError
+from viroc.cli._common import (
+    backend_version,
+    build_context,
+    load_project,
+    print_diagnostics,
+    register_backend_argument,
+    resolve_backend,
+)
 
 
 def register(subparsers: Any) -> None:
@@ -18,25 +25,29 @@ def register(subparsers: Any) -> None:
         default=".",
         help="project directory or storyboard file (default: current directory)",
     )
-    parser.add_argument("--backend", default=None, choices=["manim"], help="backend id")
+    register_backend_argument(parser)
     parser.set_defaults(handler=run)
 
 
 def run(args: argparse.Namespace) -> int:
     """Report backend environment diagnostics without attempting a render."""
     project = load_project(args.path)
-    backend = resolve_backend(project, args.backend)
+    try:
+        adapter = resolve_backend(project, args.backend)
+    except UnknownBackendError as exc:
+        print_diagnostics([exc.diagnostic])
+        return 1
     ctx = build_context(project)
-    diagnostics = manim.check_environment(ctx)
+    diagnostics = adapter.check_environment(ctx)
 
-    print(f"backend: {backend}")
+    print(f"backend: {adapter.id}")
     if diagnostics:
         print("status: unavailable")
         print_diagnostics(diagnostics)
-        return 0
+        return 1
 
     print("status: ok")
-    print(f"version: {manim.manim_version(ctx)}")
+    print(f"version: {backend_version(adapter, ctx)}")
     return 0
 
 

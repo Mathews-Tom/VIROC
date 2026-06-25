@@ -28,10 +28,24 @@ def test_check_accepts_scaffolded_project(
     assert main(["init", str(project)]) == 0
     _ = capsys.readouterr()
 
-    assert main(["check", str(project)]) == 0
+    assert main(["check", str(project), "--backend", "manim"]) == 0
 
     captured = capsys.readouterr()
     assert captured.err == ""
+
+
+def test_check_reports_unknown_backend_diagnostic(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    project = tmp_path / "demo-video"
+    assert main(["init", str(project)]) == 0
+    _ = capsys.readouterr()
+
+    assert main(["check", str(project), "--backend", "html"]) == 1
+
+    captured = capsys.readouterr()
+    assert "VIR5011" in captured.err
+    assert 'available backends: "manim"' in captured.err
 
 
 def test_check_reports_pipeline_diagnostic_for_bad_storyboard(

@@ -20,7 +20,7 @@ _FIXTURES = _ROOT / "tests" / "fixtures"
 def test_cli_e2e_example_and_failing_storyboard(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    assert main(["check", str(_EXAMPLE)]) == 0
+    assert main(["check", str(_EXAMPLE), "--backend", "manim"]) == 0
     assert capsys.readouterr().err == ""
 
     assert main(["compile", str(_EXAMPLE), "--backend", "manim"]) == 0
@@ -36,17 +36,27 @@ def test_cli_e2e_example_and_failing_storyboard(
     assert "scene: pipeline" in graph_out
     assert "documents -[split]-> chunks" in graph_out
 
-    assert main(["doctor", str(_EXAMPLE), "--backend", "manim"]) == 0
-    doctor_out = capsys.readouterr().out
-    assert "backend: manim" in doctor_out
-    assert "status: " in doctor_out
+    doctor_status = main(["doctor", str(_EXAMPLE), "--backend", "manim"])
+    doctor_capture = capsys.readouterr()
+    assert "backend: manim" in doctor_capture.out
+    assert "status: " in doctor_capture.out
+    if "status: unavailable" in doctor_capture.out:
+        assert doctor_status == 1
+        assert "VIR5" in doctor_capture.err
+    else:
+        assert doctor_status == 0
 
-    assert main(["render", str(_EXAMPLE), "--backend", "manim"]) == 0
-    render_capture = capsys.readouterr()
     manifest_path = _EXAMPLE / "build" / "build.json"
     video_path = _EXAMPLE / "build" / "rag-overview.mp4"
     srt_path = _EXAMPLE / "build" / "captions.srt"
+    for path in (manifest_path, video_path, srt_path):
+        if path.exists():
+            path.unlink()
+
+    render_status = main(["render", str(_EXAMPLE), "--backend", "manim"])
+    render_capture = capsys.readouterr()
     if manifest_path.exists():
+        assert render_status == 0
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         assert video_path.exists()
         assert srt_path.exists()
@@ -55,7 +65,7 @@ def test_cli_e2e_example_and_failing_storyboard(
         assert manifest["source_hash"] == _EXPECTED_SOURCE
         assert manifest["perceptual_hash"] == _EXPECTED_RENDER["perceptual_hash"]
     else:
-        assert 'render skipped: backend "manim" is unavailable' in render_capture.err
+        assert render_status == 1
         assert "VIR5" in render_capture.err
 
     broken = tmp_path / "broken"

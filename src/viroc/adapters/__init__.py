@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Protocol, runtime_checkable
 
 from viroc.adapters.capabilities import CapabilityManifest
 from viroc.core import BuildArtifact, BuildContext, Diagnostic
-from viroc.ir import ConcreteIR
+from viroc.ir import Caption, ConcreteIR
 
 
 @runtime_checkable
@@ -29,7 +30,13 @@ class RendererAdapter(Protocol):
         """Lower Concrete IR to byte-deterministic backend source without I/O."""
         ...
 
-    def render(self, source: BuildArtifact, ctx: BuildContext) -> BuildArtifact:
+    def render(
+        self,
+        source: BuildArtifact,
+        ctx: BuildContext,
+        *,
+        captions: Iterable[Caption] = (),
+    ) -> BuildArtifact:
         """Invoke the backend and return the rendered video artifact."""
         ...
 
