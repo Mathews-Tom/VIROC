@@ -7,6 +7,7 @@ from pathlib import Path
 
 import viroc.adapters.html as html_adapter
 import viroc.adapters.manim as manim
+import viroc.adapters.motion_canvas as motion_canvas_adapter
 import viroc.adapters.remotion as remotion_adapter
 from viroc.adapters import CapabilityManifest, RendererAdapter
 from viroc.adapters.capabilities import (
@@ -31,8 +32,8 @@ _HERE = Path(__file__).resolve().parent
 _FIXTURE = _HERE.parent / "fixtures" / "rag-overview.vidir.yaml"
 _MANIM_GOLDEN = _HERE / "rag_pipeline_scene.py"
 _HTML_GOLDEN = _HERE / "rag_pipeline_scene.html"
+_MOTION_CANVAS_GOLDEN = _HERE / "rag_pipeline_motion_canvas_project.json"
 _REMOTION_GOLDEN = _HERE / "rag_pipeline_remotion_project.json"
-
 
 class _FakeAdapter:
     id = "fake"
@@ -251,7 +252,8 @@ def test_fake_adapter_passes_shared_conformance_suite() -> None:
 
 def test_registry_dispatch_preserves_builtin_emit_hashes() -> None:
     registry = builtin_registry()
-    assert registry.ids() == ("html", "manim", "remotion")
+    assert registry.ids() == ("html", "manim", "motion_canvas", "remotion")
+    assert registry.require("motion_canvas").id == "motion_canvas"
     assert registry.require("remotion").id == "remotion"
     concrete = _compile().concrete
     ctx = _ctx()
@@ -260,6 +262,8 @@ def test_registry_dispatch_preserves_builtin_emit_hashes() -> None:
     html_dispatched = registry.require("html").emit(concrete, ctx)
     manim_direct = manim.emit(concrete, ctx)
     manim_dispatched = registry.require("manim").emit(concrete, ctx)
+    motion_canvas_direct = motion_canvas_adapter.emit(concrete, ctx)
+    motion_canvas_dispatched = registry.require("motion_canvas").emit(concrete, ctx)
     remotion_direct = remotion_adapter.emit(concrete, ctx)
     remotion_dispatched = registry.require("remotion").emit(concrete, ctx)
 
@@ -267,6 +271,12 @@ def test_registry_dispatch_preserves_builtin_emit_hashes() -> None:
     assert html_dispatched.data == html_direct.data
     assert manim_dispatched.digest == manim_direct.digest == hash_bytes(_MANIM_GOLDEN.read_bytes())
     assert manim_dispatched.data == manim_direct.data
+    assert (
+        motion_canvas_dispatched.digest
+        == motion_canvas_direct.digest
+        == hash_bytes(_MOTION_CANVAS_GOLDEN.read_bytes())
+    )
+    assert motion_canvas_dispatched.data == motion_canvas_direct.data
     assert (
         remotion_dispatched.digest
         == remotion_direct.digest
