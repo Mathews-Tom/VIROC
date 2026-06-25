@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from viroc.adapters.capabilities import (
+    VIR_UNSUPPORTED_ANIMATION,
+    VIR_UNSUPPORTED_PRIMITIVE,
+    CapabilityManifest,
+    support_diagnostics,
+)
 from viroc.adapters.manim.emit import emit, source_for
 from viroc.adapters.manim.render import (
     VIR_MISSING_FFMPEG,
@@ -15,7 +21,7 @@ from viroc.adapters.manim.render import (
     manim_version,
     render,
 )
-from viroc.core import Diagnostic, DiagnosticClass, code
+from viroc.core import Diagnostic
 from viroc.ir import ConcreteIR
 
 id = "manim"
@@ -23,41 +29,24 @@ version = "0.1"
 
 SUPPORTED_PRIMITIVES = frozenset({"arrow", "rect", "text"})
 SUPPORTED_ANIMATIONS = frozenset({"draw", "fade_in", "fade_out", "highlight"})
-capabilities = SUPPORTED_PRIMITIVES | SUPPORTED_ANIMATIONS
-
-VIR_UNSUPPORTED_PRIMITIVE = code(DiagnosticClass.RENDERER, 31)
-VIR_UNSUPPORTED_ANIMATION = code(DiagnosticClass.RENDERER, 32)
+capabilities = CapabilityManifest(
+    primitives=SUPPORTED_PRIMITIVES,
+    animations=SUPPORTED_ANIMATIONS,
+    features={
+        "html": "unsupported",
+        "interactive_preview": "unsupported",
+        "programmatic_video": "supported",
+    },
+)
 
 def supports(ir: ConcreteIR) -> list[Diagnostic]:
     """Return renderer-compatibility diagnostics for unsupported Concrete IR."""
-    diagnostics: list[Diagnostic] = []
-    for obj in ir.objects:
-        if obj.primitive not in SUPPORTED_PRIMITIVES:
-            diagnostics.append(
-                Diagnostic(
-                    code=VIR_UNSUPPORTED_PRIMITIVE,
-                    message=f'renderer "manim" does not support primitive "{obj.primitive}"',
-                    help=(
-                        'use renderer "html", or provide a fallback image asset '
-                        f'for object "{obj.id}"'
-                    ),
-                )
-            )
-    for keyframe in ir.keyframes:
-        if keyframe.kind not in SUPPORTED_ANIMATIONS:
-            diagnostics.append(
-                Diagnostic(
-                    code=VIR_UNSUPPORTED_ANIMATION,
-                    message=(
-                        f'renderer "manim" does not support animation "{keyframe.kind}"'
-                    ),
-                    help=(
-                        f'lower object "{keyframe.object_id}" to a supported animation '
-                        "or select a backend that supports this keyframe kind"
-                    ),
-                )
-            )
-    return diagnostics
+    return support_diagnostics(
+        id,
+        capabilities,
+        ir,
+        primitive_fallback_backend="html",
+    )
 
 
 __all__ = [
