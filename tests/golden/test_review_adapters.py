@@ -5,8 +5,6 @@ unsupported-feature reporting, and materialized review artifacts.
 """
 
 # ruff: noqa: E501
-
-
 from __future__ import annotations
 
 import importlib.util
@@ -19,7 +17,7 @@ import viroc.adapters.image_sequence as image_sequence
 import viroc.adapters.static_storyboard as static_storyboard
 from viroc.compiler.pipeline import CompileState, run_pipeline
 from viroc.core import BuildContext, BuildPaths, hash_bytes
-from viroc.ir import Box, ConcreteIR, Keyframe, ResolvedObject, load_document
+from viroc.ir import Box, Caption, ConcreteIR, Keyframe, ResolvedObject, load_document
 from viroc.validators import validate_schema
 
 _HERE = Path(__file__).resolve().parent
@@ -67,6 +65,37 @@ def _unsupported_ir() -> ConcreteIR:
             )
         ],
         captions=[],
+    )
+
+
+def _multi_scene_ir() -> ConcreteIR:
+    return ConcreteIR(
+        fps=24,
+        resolution=(1280, 720),
+        objects=[
+            ResolvedObject.model_construct(
+                id="alpha.panel",
+                primitive="rect",
+                box=Box(x=0.0, y=0.0, w=100.0, h=50.0),
+                z=0,
+                style_ref="node.process",
+            ),
+            ResolvedObject.model_construct(
+                id="beta.panel",
+                primitive="rect",
+                box=Box(x=120.0, y=0.0, w=100.0, h=50.0),
+                z=0,
+                style_ref="node.process",
+            ),
+        ],
+        keyframes=[
+            Keyframe(object_id="alpha.panel", kind="fade_in", start_f=0, end_f=12, easing="linear"),
+            Keyframe(object_id="beta.panel", kind="fade_in", start_f=12, end_f=24, easing="linear"),
+        ],
+        captions=[
+            Caption(text="alpha caption", start_f=0, end_f=12),
+            Caption(text="beta caption", start_f=12, end_f=24),
+        ],
     )
 
 
@@ -173,9 +202,16 @@ def test_review_adapters_materialize_review_trees(tmp_path: Path) -> None:
     assert (image_root / "frame-plan.json").exists()
     assert (image_root / "summary.md").exists()
     assert (image_root / "captions.md").exists()
+    assert (image_root / "frames" / "status.json").exists()
     if importlib.util.find_spec("PIL") is not None:
         pngs = sorted((image_root / "frames").glob("*.png"))
         assert pngs
+
+    image_render_ctx = _ctx(tmp_path / "image-render")
+    image_render = image_sequence.render(image_materialized, image_render_ctx)
+    assert image_render.kind == "video"
+    assert image_render.path == image_root / "frame-plan.json"
+    assert (image_render_ctx.paths.out_dir / "build.json").exists()
 
     storyboard_artifact = static_storyboard.emit(_compile().concrete, _ctx())
     storyboard_materialized = static_storyboard.materialize_source(
@@ -188,3 +224,20 @@ def test_review_adapters_materialize_review_trees(tmp_path: Path) -> None:
     assert (storyboard_root / "scene-cards.json").exists()
     assert (storyboard_root / "script.md").exists()
     assert (storyboard_root / "captions.md").exists()
+
+    storyboard_render_ctx = _ctx(tmp_path / "storyboard-render")
+    storyboard_render = static_storyboard.render(
+        storyboard_materialized,
+        storyboard_render_ctx,
+    )
+    assert storyboard_render.kind == "video"
+    assert storyboard_render.path == storyboard_root / "storyboard.md"
+    assert (storyboard_render_ctx.paths.out_dir / "build.json").exists()
+
+
+def test_static_storyboard_scene_cards_keep_multi_scene_captions() -> None:
+    cards = static_storyboard.scene_cards(_multi_scene_ir())
+
+    assert [card["scene_id"] for card in cards] == ["alpha", "beta"]
+    assert cards[0]["caption_lines"] == ["alpha caption"]
+    assert cards[1]["caption_lines"] == ["beta caption"]
