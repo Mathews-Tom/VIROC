@@ -79,7 +79,7 @@ def _timeline_lines(keyframes: list[Keyframe]) -> str:
 
     lines: list[str] = ["        timeline_f = 0\n"]
     for group in _keyframe_groups(keyframes):
-        start_f, end_f, easing, members = group
+        start_f, end_f, members = group
         if start_f > 0:
             lines.append(
                 "        if timeline_f < "
@@ -92,7 +92,6 @@ def _timeline_lines(keyframes: list[Keyframe]) -> str:
         lines.append(
             f"            run_time={_fmt(float(end_f - start_f))} / config.frame_rate,\n"
         )
-        lines.append(f"            rate_func=_rate_func({_string(easing)}),\n")
         lines.append("        )\n")
         lines.append(f"        timeline_f = {end_f}\n")
     return "".join(lines)
@@ -100,27 +99,28 @@ def _timeline_lines(keyframes: list[Keyframe]) -> str:
 
 def _keyframe_groups(
     keyframes: list[Keyframe],
-) -> list[tuple[int, int, str, list[Keyframe]]]:
-    grouped: dict[tuple[int, int, str], list[Keyframe]] = defaultdict(list)
+) -> list[tuple[int, int, list[Keyframe]]]:
+    grouped: dict[tuple[int, int], list[Keyframe]] = defaultdict(list)
     for keyframe in sorted(
         keyframes, key=lambda item: (item.start_f, item.end_f, item.object_id)
     ):
-        grouped[(keyframe.start_f, keyframe.end_f, keyframe.easing)].append(keyframe)
-    return [
-        (start, end, easing, members) for (start, end, easing), members in grouped.items()
-    ]
+        grouped[(keyframe.start_f, keyframe.end_f)].append(keyframe)
+    return [(start, end, members) for (start, end), members in grouped.items()]
 
 
 def _animation_expression(keyframe: Keyframe) -> str:
     obj = f"objects[{_string(keyframe.object_id)}]"
     if keyframe.kind == "fade_in":
-        return f"FadeIn({obj})"
+        return f"FadeIn({obj}, rate_func=_rate_func({_string(keyframe.easing)}))"
     if keyframe.kind == "draw":
-        return f"Create({obj})"
+        return f"Create({obj}, rate_func=_rate_func({_string(keyframe.easing)}))"
     if keyframe.kind == "highlight":
-        return f"Indicate({obj}, color=\"#FBBF24\")"
+        return (
+            f"Indicate({obj}, color=\"#FBBF24\", "
+            f"rate_func=_rate_func({_string(keyframe.easing)}))"
+        )
     if keyframe.kind == "fade_out":
-        return f"FadeOut({obj})"
+        return f"FadeOut({obj}, rate_func=_rate_func({_string(keyframe.easing)}))"
     raise ValueError(f"Manim emitter cannot lower keyframe kind {keyframe.kind!r}")
 
 

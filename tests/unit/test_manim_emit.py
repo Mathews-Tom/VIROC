@@ -68,5 +68,24 @@ def test_source_contains_mechanical_object_and_timeline_lowering() -> None:
     assert "class VirocScene(Scene):" in source
     assert 'objects["pipeline.documents.box"] = _rect(' in source
     assert 'objects["pipeline.documents.label"] = _text("Documents",' in source
-    assert 'FadeIn(objects["pipeline.documents.box"])' in source
+    assert (
+        'FadeIn(objects["pipeline.documents.box"], rate_func=_rate_func("ease_in_out"))'
+        in source
+    )
     assert "run_time=30 / config.frame_rate" in source
+
+
+def test_simultaneous_keyframes_with_different_easing_share_one_play() -> None:
+    ir = _ir()
+    ir.keyframes[0].end_f = 60
+    ir.keyframes[1].start_f = 0
+    ir.keyframes[1].easing = "linear"
+
+    source = source_for(ir)
+
+    assert source.count("self.play(") == 1
+    assert (
+        'FadeIn(objects["pipeline.documents.box"], rate_func=_rate_func("ease_in_out"))'
+        in source
+    )
+    assert 'FadeIn(objects["pipeline.documents.label"], rate_func=_rate_func("linear"))' in source
