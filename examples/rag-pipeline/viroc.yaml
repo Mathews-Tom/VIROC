@@ -1,0 +1,4 @@
+project: rag-pipeline
+default_backend: manim
+paths:
+  out: build
