@@ -14,6 +14,12 @@ from viroc.validators.schema import (
     validate_references,
     validate_schema,
 )
+from viroc.validators.timing import (
+    VIR_BEAT_OVERLAP,
+    VIR_CAPTION_UNDERFLOW,
+    VIR_IMPOSSIBLE_DURATION,
+    validate_timing,
+)
 
 __all__ = [
     "VIR_GRAMMAR_FIT",
@@ -21,9 +27,13 @@ __all__ = [
     "VIR_SCHEMA",
     "VIR_UNKNOWN_FIELD",
     "VIR_UNKNOWN_REFERENCE",
+    "VIR_BEAT_OVERLAP",
+    "VIR_CAPTION_UNDERFLOW",
+    "VIR_IMPOSSIBLE_DURATION",
     "pre_validate",
     "span_from_location",
     "validate_grammar_fit",
     "validate_references",
     "validate_schema",
+    "validate_timing",
 ]
