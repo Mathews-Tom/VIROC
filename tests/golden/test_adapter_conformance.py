@@ -246,6 +246,33 @@ def test_remotion_adapter_passes_shared_conformance_suite() -> None:
     )
 
 
+def test_motion_canvas_adapter_passes_shared_conformance_suite() -> None:
+    _assert_adapter_conformance(
+        motion_canvas_adapter,
+        supported_ir=_compile().concrete,
+        unsupported_ir=_unsupported_remotion_ir(),
+        expected_hash=hash_bytes(_MOTION_CANVAS_GOLDEN.read_bytes()),
+    )
+
+
+def test_image_sequence_adapter_passes_shared_conformance_suite() -> None:
+    _assert_adapter_conformance(
+        image_sequence_adapter,
+        supported_ir=_compile().concrete,
+        unsupported_ir=_unsupported_remotion_ir(),
+        expected_hash=hash_bytes(_IMAGE_SEQUENCE_GOLDEN.read_bytes()),
+    )
+
+
+def test_static_storyboard_adapter_passes_shared_conformance_suite() -> None:
+    _assert_adapter_conformance(
+        static_storyboard_adapter,
+        supported_ir=_compile().concrete,
+        unsupported_ir=_unsupported_remotion_ir(),
+        expected_hash=hash_bytes(_STATIC_STORYBOARD_GOLDEN.read_bytes()),
+    )
+
+
 def test_fake_adapter_passes_shared_conformance_suite() -> None:
     _assert_adapter_conformance(
         _FakeAdapter(),

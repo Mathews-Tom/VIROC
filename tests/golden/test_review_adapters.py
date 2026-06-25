@@ -5,8 +5,6 @@ unsupported-feature reporting, and materialized review artifacts.
 """
 
 # ruff: noqa: E501
-
-
 from __future__ import annotations
 
 import importlib.util
