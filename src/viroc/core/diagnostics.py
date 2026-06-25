@@ -130,3 +130,41 @@ class Diagnostic:
 
     def __post_init__(self) -> None:
         validate_code(self.code)
+
+def render(diagnostic: Diagnostic) -> str:
+    r"""Render ``diagnostic`` as the compiler-grade block from overview §9.2.
+
+    Shape::
+
+        error[VIR1002]: unknown entity reference "vectorstore"
+          ┌─ rag-overview.vidir.yaml:31:13
+          │
+        31│     - from: vectorstore
+          │             ^^^^^^^^^^^ not declared in entities
+          │
+        help: did you mean "vector_db"?
+
+    The header is always present. The framed caret block is included when the
+    span carries its ``source`` text; carets start at ``col`` and span
+    ``length`` characters, aligned under the source. ``help:`` is appended when
+    present. A span without source still prints the ``┌─ file:line:col`` locator.
+    """
+    lines = [f"{diagnostic.severity.value}[{diagnostic.code}]: {diagnostic.message}"]
+    span = diagnostic.span
+    if span is not None:
+        gutter = " " * len(str(span.line))
+        lines.append(f"{gutter}┌─ {span.file}:{span.line}:{span.col}")
+        if span.source is not None:
+            carets = "^" * max(span.length, 1)
+            caret_line = f"{gutter}│ {' ' * (span.col - 1)}{carets}"
+            if span.label is not None:
+                caret_line = f"{caret_line} {span.label}"
+            lines += [
+                f"{gutter}│",
+                f"{span.line}│ {span.source}",
+                caret_line,
+                f"{gutter}│",
+            ]
+    if diagnostic.help is not None:
+        lines.append(f"help: {diagnostic.help}")
+    return "\n".join(lines)

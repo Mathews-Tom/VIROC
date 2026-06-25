@@ -10,6 +10,7 @@ from viroc.core.diagnostics import (
     Severity,
     Span,
     code,
+    render,
     validate_code,
 )
 from viroc.core.hashing import canonical_json, hash_bytes, hash_data, hash_unordered
@@ -27,6 +28,7 @@ __all__ = [
     "hash_bytes",
     "hash_data",
     "hash_unordered",
+    "render",
     "slugify",
     "stable_id",
     "validate_code",
