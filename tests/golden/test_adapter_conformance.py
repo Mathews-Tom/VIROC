@@ -34,8 +34,8 @@ class _FakeAdapter:
     id = "fake"
     version = "0.1-test"
     capabilities = CapabilityManifest(
-        primitives={"rect"},
-        animations={"fade_in"},
+        primitives=frozenset({"rect"}),
+        animations=frozenset({"fade_in"}),
         features={"programmatic_video": "partial"},
     )
 
