@@ -140,8 +140,8 @@ def _total_frames(ir: ConcreteIR) -> int:
 
 
 def _css_vars(style_ref: str) -> str:
-    tokens = STYLE_TOKENS.get(style_ref, {"color": "#E5E7EB"})
-    parts = []
+    tokens: dict[str, str] = STYLE_TOKENS.get(style_ref, {"color": "#E5E7EB"})
+    parts: list[str] = []
     for key, value in sorted(tokens.items()):
         css_key = key.replace("_", "-")
         parts.append(f"--{css_key}:{value}")
