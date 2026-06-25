@@ -1,10 +1,10 @@
 """The v1 ``pipeline`` grammar object: binds expand + layout into a plugin.
 
 :class:`PipelineGrammar` is the single grammar v1 ships (ADR-0003): a left-to-right
-pipeline flow. It satisfies the :class:`~viroc.grammars.LayoutGrammar` surface by
-delegating to the module-level :func:`~viroc.grammars.pipeline.expand.expand` and
-:func:`~viroc.grammars.pipeline.layout.layout`; animation (the full
-:class:`~viroc.grammars.Grammar` contract) lands with the timeline resolver in M7.
+pipeline flow. It satisfies the full :class:`~viroc.grammars.Grammar` surface by
+delegating to the module-level :func:`~viroc.grammars.pipeline.expand.expand`,
+:func:`~viroc.grammars.pipeline.layout.layout`, and
+:func:`~viroc.grammars.pipeline.animate.animate`.
 
 ``version`` is the grammar's own version, bumped whenever its expansion or layout
 changes so a layout change is visible in the reproducibility key. The module-level
@@ -16,13 +16,14 @@ from __future__ import annotations
 
 from viroc.core import BuildContext
 from viroc.grammars import AbstractObject
+from viroc.grammars.pipeline.animate import animate
 from viroc.grammars.pipeline.expand import expand
 from viroc.grammars.pipeline.layout import layout
-from viroc.ir import ResolvedObject, Scene, SemanticIR
+from viroc.ir import Keyframe, ResolvedObject, Scene, SemanticIR
 
 
 class PipelineGrammar:
-    """The ``pipeline`` grammar: node/edge expansion + single-row template layout."""
+    """The ``pipeline`` grammar: expansion + row-template layout + flow animation."""
 
     id = "pipeline"
     version = "1.0.0"
@@ -39,6 +40,12 @@ class PipelineGrammar:
     ) -> list[ResolvedObject]:
         """Place ``objects`` into overlap-free resolved boxes (phase P6)."""
         return layout(objects, resolution, ctx)
+
+    def animate(
+        self, objects: list[ResolvedObject], scene: Scene, fps: int
+    ) -> list[Keyframe]:
+        """Choreograph entrance/transform/exit keyframes for ``objects`` (phase P8)."""
+        return animate(objects, scene, fps)
 
 
 pipeline_grammar = PipelineGrammar()

@@ -95,13 +95,15 @@ class LayoutGrammar(Protocol):
     ) -> list[ResolvedObject]: ...
 
 
+@runtime_checkable
 class Grammar(LayoutGrammar, Protocol):
     """The full grammar plugin contract: :class:`LayoutGrammar` plus animation.
 
     ``animate`` produces the default entrance/transform/exit keyframes for the
-    pattern, with frame windows resolved against the scene and ``fps``. It lands
-    with the timeline resolver (M7); the method is declared here so the plugin
-    surface is complete and future grammars implement all three.
+    pattern, with frame windows resolved against the scene and ``fps``. The
+    timeline resolver (phase P8) selects this surface for grammars that animate,
+    narrowing a registered grammar with ``isinstance`` against this
+    runtime-checkable protocol.
     """
 
     def animate(
