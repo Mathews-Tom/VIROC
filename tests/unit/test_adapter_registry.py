@@ -91,6 +91,7 @@ def test_registry_raises_duplicate_backend_with_registered_refs() -> None:
     diagnostic = exc_info.value.diagnostic
     assert diagnostic.code == VIR_DUPLICATE_BACKEND
     assert diagnostic.message == 'renderer backend "manim" is already registered'
+    assert diagnostic.help is not None
     assert "existing adapter: tests.unit.test_adapter_registry._Adapter" in diagnostic.help
     assert "duplicate adapter: tests.unit.test_adapter_registry._Adapter" in diagnostic.help
 
