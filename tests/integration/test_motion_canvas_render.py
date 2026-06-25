@@ -37,6 +37,25 @@ _PROJECT_TREE = {
         }
     )
     + "\n",
+    "project.meta": canonical_json(
+        {
+            "version": 1,
+            "shared": {
+                "background": "rgb(11,16,32)",
+                "range": [0, None],
+                "size": {"x": 320, "y": 180},
+            },
+            "preview": {"fps": 15, "resolutionScale": 1},
+            "rendering": {
+                "colorSpace": "srgb",
+                "fileType": "image/png",
+                "fps": 15,
+                "quality": 1,
+                "resolutionScale": 1,
+            },
+        }
+    )
+    + "\n",
     "tsconfig.json": canonical_json(
         {"extends": "@motion-canvas/2d/tsconfig.project.json", "include": ["src"]}
     )
@@ -117,3 +136,8 @@ def test_env_gated_motion_canvas_render_emits_video_srt_and_manifest(tmp_path: P
     assert manifest["source_hash"] == source.digest
     assert manifest["asset_hashes"] == {"assets/doc.svg": _ASSET_HASH}
     assert phash.startswith("phash:")
+
+
+def test_motion_canvas_captions_to_srt_rejects_non_positive_fps() -> None:
+    with pytest.raises(ValueError, match="renderer.fps must be positive"):
+        motion_canvas.captions_to_srt([Caption(text="bad", start_f=0, end_f=1)], 0)
