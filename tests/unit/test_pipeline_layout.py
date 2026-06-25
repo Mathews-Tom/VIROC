@@ -12,6 +12,8 @@ from __future__ import annotations
 from itertools import combinations
 from pathlib import Path
 
+import pytest
+
 from viroc.core import BuildContext, BuildPaths
 from viroc.grammars import AbstractObject, contains, overlaps
 from viroc.grammars.pipeline.expand import expand
@@ -126,3 +128,20 @@ def test_layout_stays_within_safe_frame() -> None:
 def test_layout_is_deterministic() -> None:
     """The same objects lay out to the identical resolved set across runs."""
     assert _layout() == _layout()
+
+
+def test_layout_rejects_arrow_to_unplaced_node() -> None:
+    """An arrow whose endpoint is not a laid-out node fails with a clear error."""
+    objects = [
+        AbstractObject(id="s.box", role="node", primitive="rect", style_ref="node.x"),
+        AbstractObject(
+            id="a.arrow",
+            role="arrow",
+            primitive="arrow",
+            style_ref="edge.flow",
+            source="s.box",
+            target="ghost.box",
+        ),
+    ]
+    with pytest.raises(ValueError, match="ghost.box"):
+        layout(objects, _RES, _ctx())

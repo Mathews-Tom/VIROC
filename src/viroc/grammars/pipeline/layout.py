@@ -143,10 +143,14 @@ def layout(
 
     arrow_cy = row_y + box_h // 2
     for arrow in arrows:
-        if arrow.source is None or arrow.target is None:
-            raise ValueError(f"arrow {arrow.id!r} is missing an endpoint")
-        source_box = box_by_id[arrow.source]
-        target_box = box_by_id[arrow.target]
+        source_box = box_by_id.get(arrow.source) if arrow.source is not None else None
+        target_box = box_by_id.get(arrow.target) if arrow.target is not None else None
+        if source_box is None or target_box is None:
+            raise ValueError(
+                f"arrow {arrow.id!r} connects nodes outside this scene's layout "
+                f"(source={arrow.source!r}, target={arrow.target!r}); a pipeline "
+                f"edge must link nodes the scene lays out"
+            )
         left = source_box.x + source_box.w
         right = target_box.x
         arrow_box = Box(
