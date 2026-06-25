@@ -28,4 +28,4 @@ def test_subpackage_imports(name: str) -> None:
 def test_cli_entrypoint_runs() -> None:
     from viroc.cli import main
 
-    assert main() == 0
+    assert main([]) == 0
