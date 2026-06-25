@@ -72,7 +72,9 @@ def run(args: argparse.Namespace) -> int:
         return 1
     env_diagnostics = adapter.check_environment(result.ctx)
 
+
     if env_diagnostics:
+
         print_diagnostics(env_diagnostics)
         return 1
 
