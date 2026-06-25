@@ -1,4 +1,4 @@
-"""Compiler pipeline driver — phases P3 through P8 (design §3).
+"""Compiler pipeline driver — phases P3 through P9 (design §3).
 
 The full pipeline runs P1..P13; this module wires the pure post-parse phases that
 produce the Concrete IR:
@@ -14,14 +14,17 @@ produce the Concrete IR:
 - **P8 build Concrete IR** — animate each scene into keyframes and lower its
   narration to captions, offsetting per-scene frames onto the global timeline,
   then assemble the renderer-neutral :class:`~viroc.ir.ConcreteIR`.
+- **P9 validate Concrete IR** — run layout, timing, and caption necessary-condition
+  checks, aggregating VIR3xxx/VIR2xxx diagnostics before adapter handoff.
 
 Ordering is the contract: normalize first, then assets, then per-scene layout,
 timeline, and animation over the normalized IR. Scenes play back-to-back, so each
 scene's keyframes and captions are offset by the cumulative span of the scenes
 before it, keeping every keyframe window within its own scene's frame span.
 
-The result is a pure function of the Semantic IR, config, and grammar versions:
-identical input yields a byte-identical Concrete IR (the golden guarantee).
+The result is a pure function of the Semantic IR, config, validation thresholds,
+and grammar versions: identical input yields a byte-identical Concrete IR (the
+golden guarantee).
 """
 
 from __future__ import annotations
@@ -43,23 +46,27 @@ from viroc.ir import (
     Scene,
     SemanticIR,
 )
+from viroc.validators.layout import validate_layout
+from viroc.validators.timing import validate_timing
 
 
 @dataclass(frozen=True, slots=True)
 class CompileState:
-    """The assembled result of the pure pipeline phases (P3–P8).
+    """The assembled result of the pure pipeline phases (P3–P9).
 
-    ``ir`` is the normalized Semantic IR (P3); ``concrete`` is the fully-resolved
-    Concrete IR (P8), whose ``objects``/``keyframes``/``captions`` are the layout,
-    animation, and narration outputs of every scene on a single timeline;
-    ``assets`` are the resolved, hashed assets (P4); ``diagnostics`` aggregates
-    every diagnostic emitted by the phases (asset VIR4xxx, timing VIR2xxx).
+    ``ir`` is the normalized Semantic IR (P3); ``concrete`` is the validated,
+    fully-resolved Concrete IR (P8/P9), whose ``objects``/``keyframes``/``captions``
+    are the layout, animation, and narration outputs of every scene on a single
+    timeline; ``assets`` are the resolved, hashed assets (P4); ``diagnostics``
+    aggregates every diagnostic emitted by the phases. ``exit_code`` is non-zero
+    exactly when diagnostics make the compile fail.
     """
 
     ir: SemanticIR
     concrete: ConcreteIR
     assets: list[ResolvedAsset] = field(default_factory=list[ResolvedAsset])
     diagnostics: list[Diagnostic] = field(default_factory=list[Diagnostic])
+    exit_code: int = 0
 
 
 def _animate(
@@ -115,14 +122,16 @@ def _scene_captions(
 def run_pipeline(
     ir: SemanticIR, ctx: BuildContext, *, asset_refs: Iterable[str] = ()
 ) -> CompileState:
-    """Run phases P3–P8, producing a fully-resolved Concrete IR.
+    """Run phases P3–P9, producing a fully-resolved Concrete IR.
 
     Normalizes the IR (P3), resolves and hashes assets (P4), then for each scene
     expands + lays out its objects (P5+P6), resolves its frame span and beats
     (P7), and animates it into keyframes and captions (P8). Scenes are placed
     back-to-back: each scene's keyframes and captions are offset by the spans of
-    the scenes before it. Returns a :class:`CompileState` carrying the normalized
-    IR, the assembled Concrete IR, the resolved assets, and every diagnostic.
+    the scenes before it. Finally, P9 validates Concrete IR layout and timing
+    necessary conditions. Returns a :class:`CompileState` carrying the normalized
+    IR, the assembled Concrete IR, the resolved assets, every diagnostic, and the
+    resulting compile exit code.
     """
     normalized = normalize(ir)
     resolved_assets, diagnostics = resolve_assets(asset_refs, ctx)
@@ -158,6 +167,12 @@ def run_pipeline(
         keyframes=keyframes,
         captions=captions,
     )
+    diagnostics.extend(validate_layout(concrete, ctx))
+    diagnostics.extend(validate_timing(concrete, ctx))
     return CompileState(
-        ir=normalized, concrete=concrete, assets=resolved_assets, diagnostics=diagnostics
+        ir=normalized,
+        concrete=concrete,
+        assets=resolved_assets,
+        diagnostics=diagnostics,
+        exit_code=1 if diagnostics else 0,
     )
