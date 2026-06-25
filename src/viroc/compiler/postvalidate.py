@@ -13,6 +13,7 @@ from viroc.core import Diagnostic, DiagnosticClass, code
 _FRAME_SIZE = 32
 _HASH_SIZE = 8
 _PIXELS_PER_FRAME = _FRAME_SIZE * _FRAME_SIZE
+_COEFFICIENT_SCALE = 1000
 _PHASH_PREFIX = "phash:"
 
 VIR_PERCEPTUAL_MISMATCH = code(DiagnosticClass.REPRODUCIBILITY, 4)
@@ -33,11 +34,13 @@ def perceptual_hash_frame(frame: Sequence[Sequence[int]]) -> str:
     """Return the 64-bit DCT pHash for one grayscale frame as ``phash:<hex>``."""
     normalized = _resize_to_hash_frame(frame)
     coeffs = _dct_low_frequency(normalized)
-    ac_values = [coeffs[row][col] for row in range(_HASH_SIZE) for col in range(_HASH_SIZE)]
-    median = _median_without_dc(ac_values)
+    coeff_values = [coeffs[row][col] for row in range(_HASH_SIZE) for col in range(_HASH_SIZE)]
+    quantized = tuple(round(value * _COEFFICIENT_SCALE) for value in coeff_values)
+    median = _median_without_dc(quantized)
     bits = 0
-    for value in ac_values:
-        bits = (bits << 1) | int(value > median)
+    for index, value in enumerate(quantized):
+        bit = 0 if index == 0 else int(value > median)
+        bits = (bits << 1) | bit
     return f"{_PHASH_PREFIX}{bits:016x}"
 
 
@@ -223,11 +226,11 @@ def _alpha(index: int) -> float:
     return math.sqrt(1 / _FRAME_SIZE) if index == 0 else math.sqrt(2 / _FRAME_SIZE)
 
 
-def _median_without_dc(values: Sequence[float]) -> float:
+def _median_without_dc(values: Sequence[int]) -> float:
     ordered = sorted(values[1:])
     midpoint = len(ordered) // 2
     if len(ordered) % 2 == 1:
-        return ordered[midpoint]
+        return float(ordered[midpoint])
     return (ordered[midpoint - 1] + ordered[midpoint]) / 2
 
 
