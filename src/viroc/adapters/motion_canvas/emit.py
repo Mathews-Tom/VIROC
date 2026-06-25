@@ -40,6 +40,7 @@ def project_tree(ir: ConcreteIR) -> dict[str, str]:
     """Return the generated project files keyed by relative path."""
     return {
         "package.json": _json_file(PACKAGE_JSON_TEMPLATE),
+        "project.meta": _json_file(_project_meta(ir)),
         "tsconfig.json": _json_file(TSCONFIG_JSON_TEMPLATE),
         "vite.config.ts": VITE_CONFIG_TS,
         "src/motion-canvas.d.ts": MOTION_CANVAS_D_TS,
@@ -87,6 +88,26 @@ def _project_source() -> str:
         "  scenes: [viroc],\n"
         "});\n"
     )
+
+
+def _project_meta(ir: ConcreteIR) -> dict[str, object]:
+    width, height = ir.resolution
+    return {
+        "version": 1,
+        "shared": {
+            "background": "rgb(11,16,32)",
+            "range": [0, None],
+            "size": {"x": width, "y": height},
+        },
+        "preview": {"fps": ir.fps, "resolutionScale": 1},
+        "rendering": {
+            "colorSpace": "srgb",
+            "fileType": "image/png",
+            "fps": ir.fps,
+            "quality": 1,
+            "resolutionScale": 1,
+        },
+    }
 
 
 def _scene_source(ir: ConcreteIR) -> str:

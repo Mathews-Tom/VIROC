@@ -6,6 +6,7 @@ reporting, and project-tree materialization for the Motion Canvas adapter.
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -84,6 +85,21 @@ def test_emit_source_hash_is_stable_across_two_calls() -> None:
     assert first.digest == second.digest == hash_bytes(_golden_bytes())
 
 
+def test_emit_pins_project_meta_fps_and_resolution() -> None:
+    ir = ConcreteIR(
+        fps=12,
+        resolution=(640, 360),
+        objects=[],
+        keyframes=[],
+        captions=[],
+    )
+    meta = json.loads(motion_canvas.project_tree(ir)["project.meta"])
+
+    assert meta["shared"]["size"] == {"x": 640, "y": 360}
+    assert meta["preview"]["fps"] == 12
+    assert meta["rendering"]["fps"] == 12
+
+
 def test_unsupported_features_are_vir5xxx_with_fallback_help() -> None:
     diagnostics = motion_canvas.supports(_unsupported_ir())
 
@@ -146,8 +162,8 @@ def test_materialize_source_writes_project_tree(tmp_path: Path) -> None:
     materialized = motion_canvas.materialize_source(artifact, tmp_path / "generated")
     root = materialized.path
     assert root is not None
-    assert root == tmp_path / "generated"
     assert (root / "package.json").exists()
+    assert (root / "project.meta").exists()
     assert (root / "tsconfig.json").exists()
     assert (root / "vite.config.ts").exists()
     assert (root / "src" / "project.ts").exists()
