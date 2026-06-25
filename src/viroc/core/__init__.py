@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+from viroc.core.hashing import canonical_json, hash_bytes, hash_data, hash_unordered
 from viroc.core.ids import slugify, stable_id
 
-__all__ = ["slugify", "stable_id"]
+__all__ = [
+    "canonical_json",
+    "hash_bytes",
+    "hash_data",
+    "hash_unordered",
+    "slugify",
+    "stable_id",
+]
