@@ -214,7 +214,8 @@ def test_fake_adapter_passes_shared_conformance_suite() -> None:
 
 def test_registry_dispatch_preserves_builtin_emit_hashes() -> None:
     registry = builtin_registry()
-    assert registry.ids() == ("html", "manim")
+    assert registry.ids() == ("html", "manim", "remotion")
+    assert registry.require("remotion").id == "remotion"
     concrete = _compile().concrete
     ctx = _ctx()
 
