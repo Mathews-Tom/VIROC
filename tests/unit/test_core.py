@@ -274,10 +274,11 @@ class TestBuildArtifact:
 
 
 class TestBuildContext:
-    def test_defaults_to_empty_config_and_renderer(self) -> None:
+    def test_defaults_to_empty_config_renderer_and_validation(self) -> None:
         ctx = BuildContext(paths=BuildPaths(Path("/p"), Path("/p/out")))
         assert ctx.config == {}
         assert ctx.renderer == {}
+        assert ctx.validation.max_caption_chars_per_second == 18.0
 
     def test_default_mappings_are_not_shared(self) -> None:
         first = BuildContext(paths=BuildPaths(Path("/p"), Path("/p/out")))
@@ -295,6 +296,7 @@ class TestBuildContext:
         assert ctx.paths is paths
         assert ctx.config == {"project": "rag-overview"}
         assert ctx.renderer == {"id": "manim"}
+        assert ctx.validation.safe_margin_pct == 5.0
 
     def test_paths_expose_root_and_out_dir(self) -> None:
         paths = BuildPaths(Path("/proj"), Path("/proj/out"))
@@ -311,6 +313,7 @@ class TestPublicSurface:
             "BuildArtifact",
             "BuildContext",
             "BuildPaths",
+            "ValidationThresholds",
             "Diagnostic",
             "DiagnosticClass",
             "Severity",

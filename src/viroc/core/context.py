@@ -27,6 +27,15 @@ class BuildPaths:
     project_root: Path
     out_dir: Path
 
+@dataclass(frozen=True, slots=True)
+class ValidationThresholds:
+    """Conservative thresholds for Concrete IR necessary-condition checks."""
+
+    safe_margin_pct: float = 5.0
+    min_text_box_width: float = 1.0
+    min_text_box_height: float = 1.0
+    max_caption_chars_per_second: float = 18.0
+
 
 @dataclass(frozen=True, slots=True)
 class BuildContext:
@@ -43,6 +52,7 @@ class BuildContext:
     paths: BuildPaths
     config: dict[str, Any] = field(default_factory=dict[str, Any])
     renderer: dict[str, Any] = field(default_factory=dict[str, Any])
+    validation: ValidationThresholds = field(default_factory=ValidationThresholds)
 
 
 @dataclass(frozen=True, slots=True)
