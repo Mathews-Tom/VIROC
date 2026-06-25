@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import pytest
+
 from viroc.compiler.postvalidate import (
     VIR_PERCEPTUAL_MISMATCH,
     compare_frame_sets,
     compare_perceptual_hashes,
+    decode_raw_gray_frames,
     perceptual_hash_frames,
     validate_perceptual_hash,
 )
@@ -58,3 +61,10 @@ def test_validate_perceptual_hash_returns_vir7xxx_on_mismatch() -> None:
 
     assert [diagnostic.code for diagnostic in diagnostics] == [VIR_PERCEPTUAL_MISMATCH]
     assert diagnostics[0].code == "VIR7004"
+
+
+def test_raw_frame_sampling_rejects_truncated_output() -> None:
+    one_complete_frame = bytes([0]) * (32 * 32)
+
+    with pytest.raises(RuntimeError, match="expected 4096 bytes"):
+        decode_raw_gray_frames(one_complete_frame, sample_count=4)

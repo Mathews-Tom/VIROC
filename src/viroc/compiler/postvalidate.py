@@ -132,7 +132,7 @@ def sample_video_frames(
     if completed.returncode != 0:
         stderr = completed.stderr.decode("utf-8", errors="replace")
         raise RuntimeError(f"ffmpeg frame sampling failed: {stderr}")
-    return _raw_gray_frames(completed.stdout, sample_count)
+    return decode_raw_gray_frames(completed.stdout, sample_count)
 
 
 def probe_duration_seconds(video_path: Path, *, ffprobe: str = "ffprobe") -> float:
@@ -156,13 +156,17 @@ def probe_duration_seconds(video_path: Path, *, ffprobe: str = "ffprobe") -> flo
     return duration
 
 
-def _raw_gray_frames(data: bytes, sample_count: int) -> list[GrayFrame]:
-    frame_count = len(data) // _PIXELS_PER_FRAME
-    if frame_count == 0:
-        raise ValueError("ffmpeg returned no frame data")
-    usable_count = min(sample_count, frame_count)
+def decode_raw_gray_frames(data: bytes, sample_count: int) -> list[GrayFrame]:
+    expected_bytes = sample_count * _PIXELS_PER_FRAME
+    if len(data) != expected_bytes:
+        complete_frames = len(data) // _PIXELS_PER_FRAME
+        raise RuntimeError(
+            "ffmpeg returned "
+            f"{len(data)} raw bytes ({complete_frames} complete frames); "
+            f"expected {expected_bytes} bytes ({sample_count} frames)"
+        )
     frames: list[GrayFrame] = []
-    for frame_index in range(usable_count):
+    for frame_index in range(sample_count):
         start = frame_index * _PIXELS_PER_FRAME
         frame_bytes = data[start : start + _PIXELS_PER_FRAME]
         rows = tuple(
@@ -251,6 +255,7 @@ __all__ = [
     "VIR_PERCEPTUAL_MISMATCH",
     "compare_frame_sets",
     "compare_perceptual_hashes",
+    "decode_raw_gray_frames",
     "perceptual_hash_frame",
     "perceptual_hash_frames",
     "probe_duration_seconds",
