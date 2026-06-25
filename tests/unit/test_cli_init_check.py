@@ -45,7 +45,7 @@ def test_check_reports_unknown_backend_diagnostic(
 
     captured = capsys.readouterr()
     assert "VIR5011" in captured.err
-    assert 'available backends: "html", "manim", "motion_canvas", "remotion"' in captured.err
+    assert 'available backends: "html", "image_sequence", "manim", "motion_canvas", "remotion"' in captured.err
 
 
 def test_check_reports_pipeline_diagnostic_for_bad_storyboard(
