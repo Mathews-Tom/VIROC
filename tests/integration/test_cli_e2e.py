@@ -15,6 +15,9 @@ _EXPECTED_SOURCE = (_EXAMPLE / "expected" / "source.sha256").read_text(encoding=
 _EXPECTED_HTML_SOURCE = (
     _EXAMPLE / "expected" / "html" / "source.sha256"
 ).read_text(encoding="utf-8").strip()
+_EXPECTED_REMOTION_SOURCE = (
+    _EXAMPLE / "expected" / "remotion" / "source.sha256"
+).read_text(encoding="utf-8").strip()
 _EXPECTED_RENDER = json.loads((_EXAMPLE / "expected" / "render.json").read_text(encoding="utf-8"))
 _FIXTURES = _ROOT / "tests" / "fixtures"
 
@@ -39,6 +42,18 @@ def test_cli_e2e_example_and_failing_storyboard(
     assert html_generated.exists()
     assert str(html_generated) in html_compile_out
     assert f"source_hash: {_EXPECTED_HTML_SOURCE}" in html_compile_out
+
+    assert main(["compile", str(_EXAMPLE), "--backend", "remotion"]) == 0
+    remotion_compile_out = capsys.readouterr().out
+    remotion_generated = _EXAMPLE / "build" / "generated" / "remotion"
+    assert remotion_generated.exists()
+    assert str(remotion_generated) in remotion_compile_out
+    assert (remotion_generated / "package.json").exists()
+    assert (remotion_generated / "tsconfig.json").exists()
+    assert (remotion_generated / "src" / "index.ts").exists()
+    assert (remotion_generated / "src" / "Root.tsx").exists()
+    assert (remotion_generated / "src" / "Composition.tsx").exists()
+    assert f"source_hash: {_EXPECTED_REMOTION_SOURCE}" in remotion_compile_out
 
     assert main(["graph", str(_EXAMPLE)]) == 0
     graph_out = capsys.readouterr().out
