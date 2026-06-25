@@ -5,7 +5,9 @@ description = "Typed, verifiable intermediate layer that compiles VidIR storyboa
 readme = "README.md"
 requires-python = ">=3.12"
 license = "Apache-2.0"
-dependencies = []
+dependencies = [
+    "pydantic>=2.6",
+]
 
 [project.scripts]
 viroc = "viroc.cli:main"
