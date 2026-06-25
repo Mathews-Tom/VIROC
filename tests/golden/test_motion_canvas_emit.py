@@ -16,6 +16,7 @@ from viroc.compiler.pipeline import CompileState, run_pipeline
 from viroc.core import BuildContext, BuildPaths, hash_bytes
 from viroc.ir import Box, ConcreteIR, Keyframe, ResolvedObject, load_document
 from viroc.validators import validate_schema
+
 _HERE = Path(__file__).resolve().parent
 _FIXTURE = _HERE.parent / "fixtures" / "rag-overview.vidir.yaml"
 _GOLDEN = _HERE / "rag_pipeline_motion_canvas_project.json"

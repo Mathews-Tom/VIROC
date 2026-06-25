@@ -1,5 +1,7 @@
 """Pure byte-deterministic Motion Canvas project emitter."""
 
+# ruff: noqa: E501
+
 from __future__ import annotations
 
 import json
@@ -245,7 +247,7 @@ def _icon_glyph(obj: ResolvedObject) -> str:
 
 
 def _ref_name(object_id: str) -> str:
-    sanitized = []
+    sanitized: list[str] = []
     for char in object_id:
         sanitized.append(char if char.isalnum() else "_")
     return "ref_" + "".join(sanitized)
