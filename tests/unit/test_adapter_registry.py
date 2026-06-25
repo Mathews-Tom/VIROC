@@ -22,7 +22,10 @@ class _Adapter:
     def __init__(self, adapter_id: str) -> None:
         self.id = adapter_id
         self.version = "0.1"
-        self.capabilities = CapabilityManifest(primitives={"rect"}, animations=set())
+        self.capabilities = CapabilityManifest(
+            primitives=frozenset({"rect"}),
+            animations=frozenset(),
+        )
 
     def check_environment(self, ctx: BuildContext) -> list[Diagnostic]:
         _ = ctx

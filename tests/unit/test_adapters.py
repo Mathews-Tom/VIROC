@@ -14,7 +14,7 @@ class _Adapter:
 
     id = "test"
     version = "0.1"
-    capabilities = CapabilityManifest(primitives={"rect"}, animations=set())
+    capabilities = CapabilityManifest(primitives=frozenset({"rect"}), animations=frozenset())
 
     def check_environment(self, ctx: BuildContext) -> list[Diagnostic]:
         _ = ctx
