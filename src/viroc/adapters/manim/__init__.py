@@ -3,7 +3,19 @@
 from __future__ import annotations
 
 from viroc.adapters.manim.emit import emit, source_for
-from viroc.core import BuildContext, Diagnostic, DiagnosticClass, code
+from viroc.adapters.manim.render import (
+    VIR_MISSING_FFMPEG,
+    VIR_MISSING_FFPROBE,
+    VIR_MISSING_MANIM,
+    VIR_TOOL_PROBE_FAILED,
+    RenderCommandError,
+    RenderEnvironmentError,
+    captions_to_srt,
+    check_environment,
+    manim_version,
+    render,
+)
+from viroc.core import Diagnostic, DiagnosticClass, code
 from viroc.ir import ConcreteIR
 
 id = "manim"
@@ -15,13 +27,6 @@ capabilities = SUPPORTED_PRIMITIVES | SUPPORTED_ANIMATIONS
 
 VIR_UNSUPPORTED_PRIMITIVE = code(DiagnosticClass.RENDERER, 31)
 VIR_UNSUPPORTED_ANIMATION = code(DiagnosticClass.RENDERER, 32)
-
-
-def check_environment(ctx: BuildContext) -> list[Diagnostic]:
-    """M9 emit is pure; impure Manim/FFmpeg probing arrives with render()."""
-    _ = ctx
-    return []
-
 
 def supports(ir: ConcreteIR) -> list[Diagnostic]:
     """Return renderer-compatibility diagnostics for unsupported Concrete IR."""
@@ -60,10 +65,19 @@ __all__ = [
     "SUPPORTED_PRIMITIVES",
     "VIR_UNSUPPORTED_ANIMATION",
     "VIR_UNSUPPORTED_PRIMITIVE",
+    "RenderCommandError",
+    "RenderEnvironmentError",
+    "VIR_MISSING_FFMPEG",
+    "VIR_MISSING_FFPROBE",
+    "VIR_MISSING_MANIM",
+    "VIR_TOOL_PROBE_FAILED",
     "capabilities",
+    "captions_to_srt",
     "check_environment",
     "emit",
     "id",
+    "manim_version",
+    "render",
     "source_for",
     "supports",
     "version",
