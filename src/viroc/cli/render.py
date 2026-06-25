@@ -14,6 +14,7 @@ from viroc.cli._common import (
     load_expected_source_hash,
     load_project,
     print_diagnostics,
+    resolve_backend,
     write_generated_source,
 )
 from viroc.compiler.postvalidate import validate_perceptual_hash
@@ -36,6 +37,7 @@ def register(subparsers: Any) -> None:
 def run(args: argparse.Namespace) -> int:
     """Compile a storyboard, render it, and verify any committed baseline."""
     project = load_project(args.path)
+    backend = resolve_backend(project, args.backend)
     baseline = load_expected_render_baseline(project)
     sample_frames = baseline.sample_frames if baseline is not None else 4
     result = compile_storyboard(project, sample_frames=sample_frames)
@@ -50,7 +52,7 @@ def run(args: argparse.Namespace) -> int:
         return 1
 
     source = manim.emit(result.state.concrete, result.ctx)
-    materialized = write_generated_source(source, project, backend="manim")
+    materialized = write_generated_source(source, project, backend=backend)
     expected_hash = load_expected_source_hash(project)
     if expected_hash is not None and materialized.digest != expected_hash:
         print_diagnostics(
@@ -66,7 +68,7 @@ def run(args: argparse.Namespace) -> int:
 
     env_diagnostics = manim.check_environment(result.ctx)
     if env_diagnostics:
-        print('render skipped: backend "manim" is unavailable', file=sys.stderr)
+        print(f'render skipped: backend "{backend}" is unavailable', file=sys.stderr)
         print_diagnostics(env_diagnostics)
         return 0
 
