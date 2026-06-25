@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 
 from viroc.adapters.capabilities import (
     VIR_UNSUPPORTED_ANIMATION,
@@ -45,7 +46,13 @@ def supports(ir: ConcreteIR) -> list[Diagnostic]:
         id,
         capabilities,
         ir,
-        primitive_fallback_backends=("html", "image_sequence", "motion_canvas", "remotion", "manim"),
+        primitive_fallback_backends=(
+            "html",
+            "image_sequence",
+            "motion_canvas",
+            "remotion",
+            "manim",
+        ),
     )
 
 
@@ -53,7 +60,7 @@ def render(
     source: BuildArtifact,
     ctx: BuildContext,
     *,
-    captions: list[Caption] | tuple[Caption, ...] = (),
+    captions: Iterable[Caption] = (),
 ) -> BuildArtifact:
     """Materialize deterministic review artifacts and write a review manifest."""
     _ = captions

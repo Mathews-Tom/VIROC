@@ -1,5 +1,7 @@
 """Pure byte-deterministic static storyboard review emitter."""
 
+# ruff: noqa: E501
+
 from __future__ import annotations
 
 import json
