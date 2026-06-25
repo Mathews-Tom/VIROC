@@ -177,7 +177,9 @@ def test_fake_adapter_passes_shared_conformance_suite() -> None:
 
 
 def test_registry_dispatch_preserves_manim_emit_hash() -> None:
-    adapter = builtin_registry().require("manim")
+    registry = builtin_registry()
+    assert registry.ids() == ("manim",)
+    adapter = registry.require("manim")
     concrete = _compile().concrete
     ctx = _ctx()
 
