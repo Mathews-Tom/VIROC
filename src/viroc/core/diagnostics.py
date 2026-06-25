@@ -113,6 +113,14 @@ class Span:
     source: str | None = None
     label: str | None = None
 
+    def __post_init__(self) -> None:
+        if self.line < 1:
+            raise ValueError(f"span line must be 1-based, got {self.line}")
+        if self.col < 1:
+            raise ValueError(f"span col must be 1-based, got {self.col}")
+        if self.length < 0:
+            raise ValueError(f"span length must be non-negative, got {self.length}")
+
 
 @dataclass(frozen=True, slots=True)
 class Diagnostic:

@@ -192,6 +192,12 @@ class TestRender:
         caret_row = next(line for line in rendered if "^" in line)
         assert source_row.index("vectorstore") == caret_row.index("^")
 
+    def test_caret_run_length_equals_span_length(self) -> None:
+        caret_row = next(
+            line for line in render(self._vir1002()).splitlines() if "^" in line
+        )
+        assert caret_row.count("^") == 11
+
     def test_span_without_source_prints_locator_only(self) -> None:
         rendered = render(
             Diagnostic(
@@ -215,3 +221,14 @@ class TestRender:
             'error[VIR5031]: renderer "manim" does not support primitive "html_embed"\n'
             'help: use renderer "html", or provide a fallback image asset'
         )
+
+
+class TestSpan:
+    @pytest.mark.parametrize(("line", "col"), [(0, 1), (-1, 1), (1, 0), (1, -3)])
+    def test_rejects_non_1_based_coordinates(self, line: int, col: int) -> None:
+        with pytest.raises(ValueError, match="1-based"):
+            Span(file="s.vidir.yaml", line=line, col=col)
+
+    def test_rejects_negative_length(self) -> None:
+        with pytest.raises(ValueError, match="non-negative"):
+            Span(file="s.vidir.yaml", line=1, col=1, length=-1)
