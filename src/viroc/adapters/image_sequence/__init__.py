@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from collections.abc import Iterable
 
 from viroc.adapters.capabilities import (
     VIR_UNSUPPORTED_ANIMATION,
@@ -54,7 +54,7 @@ def render(
     source: BuildArtifact,
     ctx: BuildContext,
     *,
-    captions: list[Caption] | tuple[Caption, ...] = (),
+    captions: Iterable[Caption] = (),
 ) -> BuildArtifact:
     """Materialize deterministic review artifacts and write a review manifest."""
     _ = captions

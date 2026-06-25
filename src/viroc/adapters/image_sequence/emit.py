@@ -1,16 +1,16 @@
 """Pure byte-deterministic image-sequence review emitter."""
 
+# ruff: noqa: E501
+
 from __future__ import annotations
 
+import importlib
 import json
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING, cast
+from typing import Any, cast
 
 from viroc.core import BuildArtifact, BuildContext, artifact_from_text, canonical_json
 from viroc.ir import Caption, ConcreteIR, Keyframe, ResolvedObject
-
-if TYPE_CHECKING:
-    from PIL import ImageDraw
 
 _ADAPTER_SOURCE_VERSION = "image-sequence-source-v0.1"
 _BACKGROUND = "#0B1020"
@@ -87,7 +87,7 @@ def frame_plan(ir: ConcreteIR) -> dict[str, object]:
 
 def frame_snapshot(ir: ConcreteIR, frame: int) -> dict[str, object]:
     """Return the deterministic review snapshot for one frame index."""
-    snapshots = []
+    snapshots: list[dict[str, object]] = []
     for obj in _sorted_objects(ir.objects):
         opacity = _opacity_at(obj.id, frame, ir.keyframes)
         draw_progress = _draw_progress_at(obj.id, frame, ir.keyframes)
@@ -257,8 +257,9 @@ def _round(value: float) -> float:
 
 def _write_optional_png_snapshots(destination: Path) -> None:
     try:
-        from PIL import Image, ImageDraw
-    except ImportError:
+        image_module = cast(Any, importlib.import_module("PIL.Image"))
+        draw_module = cast(Any, importlib.import_module("PIL.ImageDraw"))
+    except ModuleNotFoundError:
         return
     plan_path = destination / "frame-plan.json"
     plan = cast(dict[str, object], json.loads(plan_path.read_text(encoding="utf-8")))
@@ -268,15 +269,13 @@ def _write_optional_png_snapshots(destination: Path) -> None:
     frame_dir = destination / "frames"
     frame_dir.mkdir(parents=True, exist_ok=True)
     sample_set = _sampled_frame_numbers(frames)
+    width = _field_int(resolution, "width")
+    height = _field_int(resolution, "height")
     for frame_number in sample_set:
         snapshot = frames[frame_number]
-        image = Image.new(
-            "RGBA",
-            (480, 270),
-            _BACKGROUND,
-        )
-        draw = ImageDraw.Draw(image)
-        _draw_snapshot(draw, snapshot, objects, width=int(resolution["width"]), height=int(resolution["height"]))
+        image = image_module.new("RGBA", (480, 270), _BACKGROUND)
+        draw = draw_module.Draw(image)
+        _draw_snapshot(draw, snapshot, objects, width=width, height=height)
         image.save(frame_dir / f"frame-{frame_number:04d}.png")
 
 
@@ -295,7 +294,7 @@ def _sampled_frame_numbers(frames: list[dict[str, object]]) -> list[int]:
 
 
 def _draw_snapshot(
-    draw: ImageDraw.ImageDraw,
+    draw: Any,
     snapshot: dict[str, object],
     objects: list[dict[str, object]],
     *,
@@ -308,22 +307,36 @@ def _draw_snapshot(
     for item in cast(list[dict[str, object]], snapshot["objects"]):
         obj = object_index[cast(str, item["id"])]
         primitive = cast(str, obj["primitive"])
-        x = int(float(obj["x"]) * scale_x)
-        y = int(float(obj["y"]) * scale_y)
-        w = max(int(float(obj["w"]) * scale_x), 1)
-        h = max(int(float(obj["h"]) * scale_y), 1)
+        x = int(_field_float(obj, "x") * scale_x)
+        y = int(_field_float(obj, "y") * scale_y)
+        w = max(int(_field_float(obj, "w") * scale_x), 1)
+        h = max(int(_field_float(obj, "h") * scale_y), 1)
         style = cast(dict[str, str], obj["style"])
         fill = style.get("fill_color", _BACKGROUND)
         stroke = style.get("stroke_color", style.get("color", "#E5E7EB"))
         if primitive == "arrow":
             draw.line((x, y + h // 2, x + w, y + h // 2), fill=stroke, width=3)
         else:
-            draw.rounded_rectangle((x, y, x + w, y + h), radius=8, fill=fill, outline=stroke, width=2)
+            draw.rounded_rectangle(
+                (x, y, x + w, y + h),
+                radius=8,
+                fill=fill,
+                outline=stroke,
+                width=2,
+            )
             draw.text((x + 8, y + 6), cast(str, obj["text"]), fill=style.get("color", "#E5E7EB"))
     caption = cast(str, snapshot["active_caption"])
     if caption:
         draw.rounded_rectangle((32, 214, 448, 252), radius=10, fill="#111827")
         draw.text((44, 226), caption[:64], fill="#E5E7EB")
+
+
+def _field_float(mapping: dict[str, object], key: str) -> float:
+    return float(cast(float | int, mapping[key]))
+
+
+def _field_int(mapping: dict[str, object], key: str) -> int:
+    return int(cast(int, mapping[key]))
 
 
 __all__ = [

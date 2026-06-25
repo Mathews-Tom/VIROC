@@ -4,6 +4,9 @@ Starts with the image-sequence review surface; the static storyboard surface is
 added in the next stack slice.
 """
 
+# ruff: noqa: E501
+
+
 from __future__ import annotations
 
 import importlib.util
