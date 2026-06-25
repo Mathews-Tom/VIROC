@@ -6,14 +6,22 @@ import shutil
 import subprocess
 from collections.abc import Iterable
 from pathlib import Path
+from typing import cast
 
+from viroc.compiler.postvalidate import (
+    perceptual_hash_frames,
+    probe_duration_seconds,
+    sample_video_frames,
+)
 from viroc.core import (
     BuildArtifact,
     BuildContext,
     Diagnostic,
     DiagnosticClass,
     artifact_from_path,
+    build_manifest,
     code,
+    write_manifest,
 )
 from viroc.ir import Caption
 
@@ -96,7 +104,9 @@ def render(
         _mux_srt(raw_video, srt_path, final_path, ctx)
     else:
         shutil.copy2(raw_video, final_path)
-    return artifact_from_path("video", final_path)
+    artifact = artifact_from_path("video", final_path)
+    _write_build_manifest(source, final_path, ctx)
+    return artifact
 
 
 def captions_to_srt(captions: Iterable[Caption], fps: int) -> str:
@@ -245,6 +255,51 @@ def _renderer_int_required(ctx: BuildContext, key: str) -> int:
         raise ValueError(f"renderer.{key} is required when rendering captions")
     return _renderer_int(ctx, key, 0)
 
+
+def _write_build_manifest(source: BuildArtifact, video_path: Path, ctx: BuildContext) -> None:
+    frames = sample_video_frames(
+        video_path,
+        sample_count=_renderer_int(ctx, "sample_frames", 4),
+        ffmpeg=_renderer_str(ctx, "ffmpeg_executable", "ffmpeg"),
+        ffprobe=_renderer_str(ctx, "ffprobe_executable", "ffprobe"),
+    )
+    manifest = build_manifest(
+        project=_project(ctx),
+        source_hash=source.digest,
+        asset_hashes=_asset_hashes(ctx),
+        renderer_id="manim",
+        renderer_version=manim_version(ctx),
+        perceptual_hash=perceptual_hash_frames(frames),
+        duration_seconds=probe_duration_seconds(
+            video_path, ffprobe=_renderer_str(ctx, "ffprobe_executable", "ffprobe")
+        ),
+        vidir_version=_config_str(ctx, "vidir_version", "0.1"),
+    )
+    write_manifest(manifest, ctx.paths.out_dir / "build.json")
+
+
+def _project(ctx: BuildContext) -> str:
+    return _config_str(ctx, "project", ctx.paths.project_root.name)
+
+
+def _config_str(ctx: BuildContext, key: str, default: str) -> str:
+    value = ctx.config.get(key, default)
+    if not isinstance(value, str):
+        raise TypeError(f"config.{key} must be a string")
+    return value
+
+
+def _asset_hashes(ctx: BuildContext) -> dict[str, str]:
+    value = ctx.renderer.get("asset_hashes", {})
+    if not isinstance(value, dict):
+        raise TypeError("renderer.asset_hashes must be a mapping")
+    hashes: dict[str, str] = {}
+    items = cast(dict[object, object], value).items()
+    for ref, digest in items:
+        if not isinstance(ref, str) or not isinstance(digest, str):
+            raise TypeError("renderer.asset_hashes entries must be strings")
+        hashes[ref] = digest
+    return dict(sorted(hashes.items()))
 
 def _renderer_str(ctx: BuildContext, key: str, default: str) -> str:
     value = ctx.renderer.get(key, default)
