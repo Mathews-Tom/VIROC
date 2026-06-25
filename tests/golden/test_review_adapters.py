@@ -1,7 +1,7 @@
-"""Golden review-adapter emission for rag-pipeline (M15, PR-3).
+"""Golden review-adapter emission for rag-pipeline (M15, PR-3/4).
 
-Starts with the image-sequence review surface; the static storyboard surface is
-added in the next stack slice.
+Covers deterministic image-sequence and static-storyboard review outputs,
+unsupported-feature reporting, and materialized review artifacts.
 """
 
 # ruff: noqa: E501
@@ -16,6 +16,7 @@ from pathlib import Path
 from _pytest.monkeypatch import MonkeyPatch
 
 import viroc.adapters.image_sequence as image_sequence
+import viroc.adapters.static_storyboard as static_storyboard
 from viroc.compiler.pipeline import CompileState, run_pipeline
 from viroc.core import BuildContext, BuildPaths, hash_bytes
 from viroc.ir import Box, ConcreteIR, Keyframe, ResolvedObject, load_document
@@ -24,6 +25,7 @@ from viroc.validators import validate_schema
 _HERE = Path(__file__).resolve().parent
 _FIXTURE = _HERE.parent / "fixtures" / "rag-overview.vidir.yaml"
 _IMAGE_SEQUENCE_GOLDEN = _HERE / "rag_pipeline_image_sequence_artifacts.json"
+_STATIC_STORYBOARD_GOLDEN = _HERE / "rag_pipeline_static_storyboard_artifacts.json"
 
 
 def _compile() -> CompileState:
@@ -40,10 +42,6 @@ def _compile() -> CompileState:
 
 def _ctx(root: Path = Path("/tmp/viroc-golden-review-adapters-test")) -> BuildContext:
     return BuildContext(paths=BuildPaths(project_root=root, out_dir=root / "dist"))
-
-
-def _golden_bytes() -> bytes:
-    return _IMAGE_SEQUENCE_GOLDEN.read_bytes()
 
 
 def _unsupported_ir() -> ConcreteIR:
@@ -75,40 +73,64 @@ def _unsupported_ir() -> ConcreteIR:
 def test_image_sequence_emit_matches_golden_artifact_tree() -> None:
     artifact = image_sequence.emit(_compile().concrete, _ctx())
 
-    assert artifact.data == _golden_bytes()
-    assert artifact.digest == hash_bytes(_golden_bytes())
+    assert artifact.data == _IMAGE_SEQUENCE_GOLDEN.read_bytes()
+    assert artifact.digest == hash_bytes(_IMAGE_SEQUENCE_GOLDEN.read_bytes())
 
 
-def test_image_sequence_source_hash_is_stable_across_two_calls() -> None:
+def test_static_storyboard_emit_matches_golden_artifact_tree() -> None:
+    artifact = static_storyboard.emit(_compile().concrete, _ctx())
+
+    assert artifact.data == _STATIC_STORYBOARD_GOLDEN.read_bytes()
+    assert artifact.digest == hash_bytes(_STATIC_STORYBOARD_GOLDEN.read_bytes())
+
+
+def test_review_adapter_source_hashes_are_stable_across_two_calls() -> None:
     concrete = _compile().concrete
 
-    first = image_sequence.emit(concrete, _ctx())
-    second = image_sequence.emit(concrete, _ctx())
+    first_image = image_sequence.emit(concrete, _ctx())
+    second_image = image_sequence.emit(concrete, _ctx())
+    first_storyboard = static_storyboard.emit(concrete, _ctx())
+    second_storyboard = static_storyboard.emit(concrete, _ctx())
 
-    assert first.data == second.data == _golden_bytes()
-    assert first.digest == second.digest == hash_bytes(_golden_bytes())
-
-
-def test_image_sequence_unsupported_features_are_vir5xxx_with_fallback_help() -> None:
-    diagnostics = image_sequence.supports(_unsupported_ir())
-
-    assert [diag.code for diag in diagnostics] == [
-        image_sequence.VIR_UNSUPPORTED_PRIMITIVE,
-        image_sequence.VIR_UNSUPPORTED_ANIMATION,
-    ]
-    assert diagnostics[0].code == "VIR5031"
-    assert diagnostics[0].help == (
-        'use renderer "html", "motion_canvas", "remotion", or "manim", or provide a fallback image asset '
-        'for object "demo_panel"'
+    assert first_image.data == second_image.data == _IMAGE_SEQUENCE_GOLDEN.read_bytes()
+    assert first_image.digest == second_image.digest == hash_bytes(_IMAGE_SEQUENCE_GOLDEN.read_bytes())
+    assert first_storyboard.data == second_storyboard.data == _STATIC_STORYBOARD_GOLDEN.read_bytes()
+    assert first_storyboard.digest == second_storyboard.digest == hash_bytes(
+        _STATIC_STORYBOARD_GOLDEN.read_bytes()
     )
-    assert diagnostics[1].code == "VIR5032"
 
 
-def test_image_sequence_emit_is_invariant_to_context_and_environment(
+def test_review_adapters_report_vir5xxx_with_fallback_help() -> None:
+    image_diagnostics = image_sequence.supports(_unsupported_ir())
+    storyboard_diagnostics = static_storyboard.supports(_unsupported_ir())
+
+    for diagnostics, expected_chain in (
+        (
+            image_diagnostics,
+            'use renderer "html", "motion_canvas", "remotion", or "manim", or provide a fallback image asset '
+            'for object "demo_panel"',
+        ),
+        (
+            storyboard_diagnostics,
+            'use renderer "html", "image_sequence", "motion_canvas", "remotion", or "manim", or provide a fallback image asset '
+            'for object "demo_panel"',
+        ),
+    ):
+        assert [diag.code for diag in diagnostics] == [
+            image_sequence.VIR_UNSUPPORTED_PRIMITIVE,
+            image_sequence.VIR_UNSUPPORTED_ANIMATION,
+        ]
+        assert diagnostics[0].code == "VIR5031"
+        assert diagnostics[0].help == expected_chain
+        assert diagnostics[1].code == "VIR5032"
+
+
+def test_review_adapters_emit_is_invariant_to_context_and_environment(
     monkeypatch: MonkeyPatch, tmp_path: Path
 ) -> None:
     concrete = _compile().concrete
-    first = image_sequence.emit(concrete, _ctx()).data
+    first_image = image_sequence.emit(concrete, _ctx()).data
+    first_storyboard = static_storyboard.emit(concrete, _ctx()).data
 
     monkeypatch.setenv("PILLOW_VERSION", "different")
     changed_ctx = BuildContext(
@@ -117,12 +139,14 @@ def test_image_sequence_emit_is_invariant_to_context_and_environment(
         renderer={"sample_frames": 99},
     )
 
-    assert image_sequence.emit(concrete, changed_ctx).data == first
+    assert image_sequence.emit(concrete, changed_ctx).data == first_image
+    assert static_storyboard.emit(concrete, changed_ctx).data == first_storyboard
 
 
-def test_image_sequence_emit_performs_no_filesystem_or_env_reads(monkeypatch: MonkeyPatch) -> None:
+def test_review_adapters_emit_performs_no_filesystem_or_env_reads(monkeypatch: MonkeyPatch) -> None:
     concrete = _compile().concrete
-    expected = _golden_bytes()
+    expected_image = _IMAGE_SEQUENCE_GOLDEN.read_bytes()
+    expected_storyboard = _STATIC_STORYBOARD_GOLDEN.read_bytes()
 
     def fail_read_text(_self: Path, *args: object, **kwargs: object) -> str:
         raise AssertionError("emit() must not read template files")
@@ -137,18 +161,30 @@ def test_image_sequence_emit_performs_no_filesystem_or_env_reads(monkeypatch: Mo
     monkeypatch.setattr(Path, "read_bytes", fail_read_bytes)
     monkeypatch.setattr(os, "getenv", fail_getenv)
 
-    assert image_sequence.emit(concrete, _ctx()).data == expected
+    assert image_sequence.emit(concrete, _ctx()).data == expected_image
+    assert static_storyboard.emit(concrete, _ctx()).data == expected_storyboard
 
 
-def test_image_sequence_materialize_source_writes_review_tree(tmp_path: Path) -> None:
-    artifact = image_sequence.emit(_compile().concrete, _ctx())
-    materialized = image_sequence.materialize_source(artifact, tmp_path / "generated")
-    root = materialized.path
-    assert root is not None
-    assert root == tmp_path / "generated"
-    assert (root / "frame-plan.json").exists()
-    assert (root / "summary.md").exists()
-    assert (root / "captions.md").exists()
+def test_review_adapters_materialize_review_trees(tmp_path: Path) -> None:
+    image_artifact = image_sequence.emit(_compile().concrete, _ctx())
+    image_materialized = image_sequence.materialize_source(image_artifact, tmp_path / "image")
+    image_root = image_materialized.path
+    assert image_root is not None
+    assert (image_root / "frame-plan.json").exists()
+    assert (image_root / "summary.md").exists()
+    assert (image_root / "captions.md").exists()
     if importlib.util.find_spec("PIL") is not None:
-        pngs = sorted((root / "frames").glob("*.png"))
+        pngs = sorted((image_root / "frames").glob("*.png"))
         assert pngs
+
+    storyboard_artifact = static_storyboard.emit(_compile().concrete, _ctx())
+    storyboard_materialized = static_storyboard.materialize_source(
+        storyboard_artifact,
+        tmp_path / "storyboard",
+    )
+    storyboard_root = storyboard_materialized.path
+    assert storyboard_root is not None
+    assert (storyboard_root / "storyboard.md").exists()
+    assert (storyboard_root / "scene-cards.json").exists()
+    assert (storyboard_root / "script.md").exists()
+    assert (storyboard_root / "captions.md").exists()

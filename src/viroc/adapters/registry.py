@@ -71,8 +71,11 @@ def builtin_registry() -> AdapterRegistry:
     import viroc.adapters.manim as manim
     import viroc.adapters.motion_canvas as motion_canvas
     import viroc.adapters.remotion as remotion
+    import viroc.adapters.static_storyboard as static_storyboard
 
-    return AdapterRegistry([manim, html, image_sequence, motion_canvas, remotion])
+    return AdapterRegistry(
+        [manim, html, image_sequence, motion_canvas, remotion, static_storyboard]
+    )
 
 
 def unknown_backend_diagnostic(adapter_id: str, available: Iterable[str]) -> Diagnostic:

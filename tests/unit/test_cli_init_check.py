@@ -47,7 +47,7 @@ def test_check_reports_unknown_backend_diagnostic(
     assert "VIR5011" in captured.err
     assert (
         'available backends: "html", "image_sequence", "manim", '
-        '"motion_canvas", "remotion"'
+        '"motion_canvas", "remotion", "static_storyboard"'
         in captured.err
     )
 

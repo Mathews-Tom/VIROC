@@ -121,9 +121,17 @@ def test_registry_keeps_adapter_contract_intact() -> None:
 def test_builtin_registry_includes_review_and_animation_backends() -> None:
     registry = builtin_registry()
 
-    assert registry.ids() == ("html", "image_sequence", "manim", "motion_canvas", "remotion")
+    assert registry.ids() == (
+        "html",
+        "image_sequence",
+        "manim",
+        "motion_canvas",
+        "remotion",
+        "static_storyboard",
+    )
     assert registry.require("html").id == "html"
     assert registry.require("image_sequence").id == "image_sequence"
     assert registry.require("manim").id == "manim"
     assert registry.require("motion_canvas").id == "motion_canvas"
     assert registry.require("remotion").id == "remotion"
+    assert registry.require("static_storyboard").id == "static_storyboard"
