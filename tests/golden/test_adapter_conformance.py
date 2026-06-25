@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 
+import viroc.adapters.html as html_adapter
 import viroc.adapters.manim as manim
 from viroc.adapters import CapabilityManifest, RendererAdapter
 from viroc.adapters.capabilities import (
@@ -27,7 +28,8 @@ from viroc.validators import validate_schema
 
 _HERE = Path(__file__).resolve().parent
 _FIXTURE = _HERE.parent / "fixtures" / "rag-overview.vidir.yaml"
-_GOLDEN = _HERE / "rag_pipeline_scene.py"
+_MANIM_GOLDEN = _HERE / "rag_pipeline_scene.py"
+_HTML_GOLDEN = _HERE / "rag_pipeline_scene.html"
 
 
 class _FakeAdapter:
@@ -109,7 +111,7 @@ def _supported_fake_ir() -> ConcreteIR:
     )
 
 
-def _unsupported_ir() -> ConcreteIR:
+def _unsupported_fake_ir() -> ConcreteIR:
     return ConcreteIR(
         fps=24,
         resolution=(1280, 720),
@@ -117,6 +119,32 @@ def _unsupported_ir() -> ConcreteIR:
         keyframes=[
             Keyframe(
                 object_id="demo.panel",
+                kind="move",
+                start_f=0,
+                end_f=24,
+                easing="linear",
+            )
+        ],
+        captions=[],
+    )
+
+
+def _unsupported_html_ir() -> ConcreteIR:
+    return ConcreteIR(
+        fps=24,
+        resolution=(1280, 720),
+        objects=[
+            ResolvedObject.model_construct(
+                id="demo.embed",
+                primitive="html_embed",
+                box=Box(x=0.0, y=0.0, w=100.0, h=50.0),
+                z=0,
+                style_ref="embed.default",
+            )
+        ],
+        keyframes=[
+            Keyframe(
+                object_id="demo.embed",
                 kind="move",
                 start_f=0,
                 end_f=24,
@@ -162,8 +190,17 @@ def test_manim_adapter_passes_shared_conformance_suite() -> None:
     _assert_adapter_conformance(
         manim,
         supported_ir=_compile().concrete,
-        unsupported_ir=_unsupported_ir(),
-        expected_hash=hash_bytes(_GOLDEN.read_bytes()),
+        unsupported_ir=_unsupported_fake_ir(),
+        expected_hash=hash_bytes(_MANIM_GOLDEN.read_bytes()),
+    )
+
+
+def test_html_adapter_passes_shared_conformance_suite() -> None:
+    _assert_adapter_conformance(
+        html_adapter,
+        supported_ir=_compile().concrete,
+        unsupported_ir=_unsupported_html_ir(),
+        expected_hash=hash_bytes(_HTML_GOLDEN.read_bytes()),
     )
 
 
@@ -171,19 +208,22 @@ def test_fake_adapter_passes_shared_conformance_suite() -> None:
     _assert_adapter_conformance(
         _FakeAdapter(),
         supported_ir=_supported_fake_ir(),
-        unsupported_ir=_unsupported_ir(),
+        unsupported_ir=_unsupported_fake_ir(),
     )
 
 
-def test_registry_dispatch_preserves_manim_emit_hash() -> None:
+def test_registry_dispatch_preserves_builtin_emit_hashes() -> None:
     registry = builtin_registry()
     assert registry.ids() == ("html", "manim")
-    adapter = registry.require("manim")
     concrete = _compile().concrete
     ctx = _ctx()
 
-    direct = manim.emit(concrete, ctx)
-    dispatched = adapter.emit(concrete, ctx)
+    html_direct = html_adapter.emit(concrete, ctx)
+    html_dispatched = registry.require("html").emit(concrete, ctx)
+    manim_direct = manim.emit(concrete, ctx)
+    manim_dispatched = registry.require("manim").emit(concrete, ctx)
 
-    assert dispatched.digest == direct.digest == hash_bytes(_GOLDEN.read_bytes())
-    assert dispatched.data == direct.data
+    assert html_dispatched.digest == html_direct.digest == hash_bytes(_HTML_GOLDEN.read_bytes())
+    assert html_dispatched.data == html_direct.data
+    assert manim_dispatched.digest == manim_direct.digest == hash_bytes(_MANIM_GOLDEN.read_bytes())
+    assert manim_dispatched.data == manim_direct.data
