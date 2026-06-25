@@ -6,6 +6,12 @@ from pathlib import Path
 
 from viroc.core import BuildContext, BuildPaths, ValidationThresholds
 from viroc.ir import Box, Caption, ConcreteIR, Keyframe, ResolvedObject
+from viroc.validators.layout import (
+    VIR_OBJECT_CLIPPING,
+    VIR_OBJECT_OVERLAP,
+    VIR_UNSAFE_MARGIN,
+    validate_layout,
+)
 from viroc.validators.timing import (
     VIR_BEAT_OVERLAP,
     VIR_CAPTION_UNDERFLOW,
@@ -66,13 +72,14 @@ def _caption(**overrides: object) -> Caption:
 
 def _concrete(
     *,
+    objects: list[ResolvedObject] | None = None,
     keyframes: list[Keyframe] | None = None,
     captions: list[Caption] | None = None,
 ) -> ConcreteIR:
     return ConcreteIR(
         fps=30,
         resolution=(1920, 1080),
-        objects=[_object()],
+        objects=objects if objects is not None else [_object()],
         keyframes=keyframes if keyframes is not None else [_keyframe()],
         captions=captions if captions is not None else [_caption()],
     )
@@ -114,3 +121,51 @@ def test_caption_underflow_threshold_is_configurable() -> None:
     ir = _concrete(captions=[_caption(text="x" * 40, start_f=0, end_f=30)])
 
     assert validate_timing(ir, _ctx(max_caption_chars_per_second=60.0)) == []
+
+
+def test_clean_layout_ir_has_zero_diagnostics() -> None:
+    """A feasible Concrete IR emits no layout diagnostics."""
+    assert validate_layout(_concrete(), _ctx()) == []
+
+
+def test_overlapping_boxes_emit_vir3xxx() -> None:
+    """Resolved object boxes cannot share positive area."""
+    ir = _concrete(
+        objects=[
+            _object(id="scene.a", box=Box(x=100.0, y=100.0, w=200.0, h=120.0)),
+            _object(id="scene.b", box=Box(x=250.0, y=160.0, w=200.0, h=120.0)),
+        ]
+    )
+
+    assert [diag.code for diag in validate_layout(ir, _ctx())] == [VIR_OBJECT_OVERLAP]
+
+
+def test_clipped_text_emits_vir3xxx() -> None:
+    """A text-like object below configured bounds is a clipping defect."""
+    ir = _concrete(
+        objects=[
+            _object(
+                id="scene.label",
+                primitive="text",
+                box=Box(x=100.0, y=100.0, w=8.0, h=8.0),
+            )
+        ]
+    )
+
+    assert [
+        diag.code for diag in validate_layout(ir, _ctx(min_text_box_width=20.0))
+    ] == [VIR_OBJECT_CLIPPING]
+
+
+def test_unsafe_margin_emits_vir3xxx() -> None:
+    """Resolved boxes must stay inside the BuildContext safe frame."""
+    ir = _concrete(objects=[_object(box=Box(x=10.0, y=100.0, w=200.0, h=120.0))])
+
+    assert [diag.code for diag in validate_layout(ir, _ctx())] == [VIR_UNSAFE_MARGIN]
+
+
+def test_safe_margin_threshold_is_configurable() -> None:
+    """Layout margin validation uses BuildContext thresholds, not constants."""
+    ir = _concrete(objects=[_object(box=Box(x=10.0, y=100.0, w=200.0, h=120.0))])
+
+    assert validate_layout(ir, _ctx(safe_margin_pct=0.0)) == []
