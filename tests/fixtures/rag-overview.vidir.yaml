@@ -1,0 +1,29 @@
+vidir_version: "0.1"
+video:
+  id: "rag-overview"
+  title: "How Retrieval-Augmented Generation Works"
+  resolution: { width: 1920, height: 1080 }
+  fps: 30
+  duration_target: 90
+
+entities:
+  - { id: documents, label: "Documents", type: data_source }
+  - { id: chunks, label: "Chunks", type: intermediate }
+  - { id: embedder, label: "Embedding Model", type: model }
+  - { id: vector_db, label: "Vector DB", type: storage }
+  - { id: llm, label: "LLM", type: model }
+
+scenes:
+  - id: pipeline
+    grammar: pipeline
+    duration: 35s
+    nodes: [documents, chunks, embedder, vector_db]
+    edges:
+      - { from: documents, to: chunks, kind: split }
+      - { from: chunks, to: embedder, kind: transform }
+      - { from: embedder, to: vector_db, kind: store }
+    narration: "Documents are chunked, embedded, and stored in a vector database."
+
+validation:
+  required_entities: [documents, chunks, embedder, vector_db, llm]
+  checks: [schema, layout, timing]
