@@ -14,6 +14,7 @@ from viroc.adapters.registry import (
     AdapterRegistry,
     DuplicateBackendError,
     UnknownBackendError,
+    builtin_registry,
 )
 from viroc.core import BuildArtifact, BuildContext, BuildPaths, Diagnostic, artifact_from_text
 from viroc.ir import Caption, ConcreteIR
@@ -114,3 +115,12 @@ def test_registry_keeps_adapter_contract_intact() -> None:
 
     assert artifact.kind == "source"
     assert artifact.digest.startswith("sha256:")
+
+
+
+def test_builtin_registry_includes_html_and_manim_backends() -> None:
+    registry = builtin_registry()
+
+    assert registry.ids() == ("html", "manim")
+    assert registry.require("html").id == "html"
+    assert registry.require("manim").id == "manim"

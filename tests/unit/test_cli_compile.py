@@ -49,8 +49,8 @@ def test_compile_reports_unknown_backend_diagnostic(
         encoding="utf-8",
     )
 
-    assert main(["compile", str(project), "--backend", "html"]) == 1
+    assert main(["compile", str(project), "--backend", "static"]) == 1
 
     captured = capsys.readouterr()
     assert "VIR5011" in captured.err
-    assert 'available backends: "manim"' in captured.err
+    assert 'available backends: "html", "manim"' in captured.err
