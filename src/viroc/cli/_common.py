@@ -7,7 +7,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
+from typing import Callable, cast
 
 from viroc.adapters import RendererAdapter
 from viroc.adapters.registry import builtin_registry
@@ -204,7 +204,20 @@ def load_expected_render_baseline(project: Project, *, backend: str) -> RenderBa
 def write_generated_source(
     source: BuildArtifact, project: Project, *, adapter: RendererAdapter
 ) -> BuildArtifact:
-    path = project.out_dir / "generated" / adapter.id / _source_filename(adapter)
+    destination = project.out_dir / "generated" / adapter.id
+    materialize = getattr(adapter, "materialize_source", None)
+    if callable(materialize):
+        materialize_source = cast(
+            Callable[[BuildArtifact, Path], BuildArtifact],
+            materialize,
+        )
+        artifact = materialize_source(source, destination)
+        if artifact.digest != source.digest:
+            raise CliError("written source hash does not match emitted source")
+        if artifact.path is None:
+            raise CliError("adapter materializer must return a generated path")
+        return artifact
+    path = destination / _source_filename(adapter)
     path.parent.mkdir(parents=True, exist_ok=True)
     if source.data is not None:
         path.write_bytes(source.data)
