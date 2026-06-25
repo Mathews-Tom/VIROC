@@ -300,3 +300,34 @@ class TestBuildContext:
         paths = BuildPaths(Path("/proj"), Path("/proj/out"))
         assert paths.project_root == Path("/proj")
         assert paths.out_dir == Path("/proj/out")
+
+class TestPublicSurface:
+    def test_documented_names_resolve_from_package_root(self) -> None:
+        import viroc.core as core
+
+        # The names design §5 imports as `from viroc.core import ...`, plus the
+        # primitive helpers later milestones build on.
+        expected = {
+            "BuildArtifact",
+            "BuildContext",
+            "BuildPaths",
+            "Diagnostic",
+            "DiagnosticClass",
+            "Severity",
+            "Span",
+            "artifact_from_bytes",
+            "artifact_from_path",
+            "artifact_from_text",
+            "canonical_json",
+            "code",
+            "hash_bytes",
+            "hash_data",
+            "hash_unordered",
+            "render",
+            "slugify",
+            "stable_id",
+            "validate_code",
+        }
+        assert expected <= set(core.__all__)
+        for name in expected:
+            assert hasattr(core, name)
