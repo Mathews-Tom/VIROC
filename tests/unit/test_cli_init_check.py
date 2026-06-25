@@ -41,11 +41,11 @@ def test_check_reports_unknown_backend_diagnostic(
     assert main(["init", str(project)]) == 0
     _ = capsys.readouterr()
 
-    assert main(["check", str(project), "--backend", "html"]) == 1
+    assert main(["check", str(project), "--backend", "static"]) == 1
 
     captured = capsys.readouterr()
     assert "VIR5011" in captured.err
-    assert 'available backends: "manim"' in captured.err
+    assert 'available backends: "html", "manim"' in captured.err
 
 
 def test_check_reports_pipeline_diagnostic_for_bad_storyboard(
