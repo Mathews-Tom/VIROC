@@ -10,7 +10,7 @@ from viroc.ir import ConcreteIR
 
 @runtime_checkable
 class RendererAdapter(Protocol):
-    """Pure renderer-backend contract for lowering Concrete IR to source."""
+    """Renderer-backend contract for lowering source and rendering artifacts."""
 
     id: str
     version: str
@@ -26,6 +26,10 @@ class RendererAdapter(Protocol):
 
     def emit(self, ir: ConcreteIR, ctx: BuildContext) -> BuildArtifact:
         """Lower Concrete IR to byte-deterministic backend source without I/O."""
+        ...
+
+    def render(self, source: BuildArtifact, ctx: BuildContext) -> BuildArtifact:
+        """Invoke the backend and return the rendered video artifact."""
         ...
 
 

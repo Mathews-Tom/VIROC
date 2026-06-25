@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
+
+import pytest
 
 import viroc.adapters.manim as manim
 from viroc.adapters import RendererAdapter
@@ -38,11 +41,27 @@ def _object(**overrides: object) -> ResolvedObject:
     return ResolvedObject.model_validate(fields)
 
 
+def _missing_tool(command: str) -> None:
+    _ = command
+    return None
+
+
 def test_manim_module_satisfies_renderer_adapter_protocol() -> None:
     assert isinstance(manim, RendererAdapter)
     assert manim.id == "manim"
     assert "rect" in manim.capabilities
-    assert manim.check_environment(_ctx()) == []
+
+
+def test_manim_check_environment_reports_missing_tools(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(shutil, "which", _missing_tool)
+
+    diagnostics = manim.check_environment(_ctx())
+
+    assert [diag.code for diag in diagnostics] == [
+        manim.VIR_MISSING_MANIM,
+        manim.VIR_MISSING_FFMPEG,
+        manim.VIR_MISSING_FFPROBE,
+    ]
 
 
 def test_supported_rag_primitives_emit_no_diagnostics() -> None:

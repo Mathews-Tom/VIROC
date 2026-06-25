@@ -28,6 +28,10 @@ class _Adapter:
         _ = (ir, ctx)
         return artifact_from_text("source", "scene = None\n")
 
+    def render(self, source: BuildArtifact, ctx: BuildContext) -> BuildArtifact:
+        _ = (source, ctx)
+        return artifact_from_text("video", "video-bytes")
+
 
 def _ctx() -> BuildContext:
     root = Path("/tmp/viroc-adapter-contract-test")
@@ -54,4 +58,14 @@ def test_renderer_adapter_emit_contract_returns_source_artifact() -> None:
 
     assert artifact.kind == "source"
     assert artifact.data == b"scene = None\n"
+    assert artifact.digest.startswith("sha256:")
+
+
+def test_renderer_adapter_render_contract_returns_video_artifact() -> None:
+    adapter: RendererAdapter = _Adapter()
+
+    artifact = adapter.render(artifact_from_text("source", "scene = None\n"), _ctx())
+
+    assert artifact.kind == "video"
+    assert artifact.data == b"video-bytes"
     assert artifact.digest.startswith("sha256:")
