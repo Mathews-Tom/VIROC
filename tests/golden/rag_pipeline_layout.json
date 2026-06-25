@@ -1,0 +1,134 @@
+[
+  {
+    "id": "pipeline.documents.box",
+    "primitive": "rect",
+    "box": {
+      "x": 264.0,
+      "y": 482.0,
+      "w": 258.0,
+      "h": 68.0
+    },
+    "z": 0,
+    "style_ref": "node.data_source"
+  },
+  {
+    "id": "pipeline.documents.label",
+    "primitive": "text",
+    "box": {
+      "x": 330.0,
+      "y": 562.0,
+      "w": 126.0,
+      "h": 36.0
+    },
+    "z": 0,
+    "style_ref": "label"
+  },
+  {
+    "id": "pipeline.chunks.box",
+    "primitive": "rect",
+    "box": {
+      "x": 642.0,
+      "y": 482.0,
+      "w": 258.0,
+      "h": 68.0
+    },
+    "z": 0,
+    "style_ref": "node.intermediate"
+  },
+  {
+    "id": "pipeline.chunks.label",
+    "primitive": "text",
+    "box": {
+      "x": 729.0,
+      "y": 562.0,
+      "w": 84.0,
+      "h": 36.0
+    },
+    "z": 0,
+    "style_ref": "label"
+  },
+  {
+    "id": "pipeline.embedder.box",
+    "primitive": "rect",
+    "box": {
+      "x": 1020.0,
+      "y": 482.0,
+      "w": 258.0,
+      "h": 68.0
+    },
+    "z": 0,
+    "style_ref": "node.model"
+  },
+  {
+    "id": "pipeline.embedder.label",
+    "primitive": "text",
+    "box": {
+      "x": 1044.0,
+      "y": 562.0,
+      "w": 210.0,
+      "h": 36.0
+    },
+    "z": 0,
+    "style_ref": "label"
+  },
+  {
+    "id": "pipeline.vector_db.box",
+    "primitive": "rect",
+    "box": {
+      "x": 1398.0,
+      "y": 482.0,
+      "w": 258.0,
+      "h": 68.0
+    },
+    "z": 0,
+    "style_ref": "node.storage"
+  },
+  {
+    "id": "pipeline.vector_db.label",
+    "primitive": "text",
+    "box": {
+      "x": 1464.0,
+      "y": 562.0,
+      "w": 126.0,
+      "h": 36.0
+    },
+    "z": 0,
+    "style_ref": "label"
+  },
+  {
+    "id": "pipeline.documents.chunks.arrow",
+    "primitive": "arrow",
+    "box": {
+      "x": 522.0,
+      "y": 512.0,
+      "w": 120.0,
+      "h": 8.0
+    },
+    "z": 0,
+    "style_ref": "edge.split"
+  },
+  {
+    "id": "pipeline.chunks.embedder.arrow",
+    "primitive": "arrow",
+    "box": {
+      "x": 900.0,
+      "y": 512.0,
+      "w": 120.0,
+      "h": 8.0
+    },
+    "z": 0,
+    "style_ref": "edge.transform"
+  },
+  {
+    "id": "pipeline.embedder.vector_db.arrow",
+    "primitive": "arrow",
+    "box": {
+      "x": 1278.0,
+      "y": 512.0,
+      "w": 120.0,
+      "h": 8.0
+    },
+    "z": 0,
+    "style_ref": "edge.store"
+  }
+]
