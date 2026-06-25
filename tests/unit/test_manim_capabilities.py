@@ -49,7 +49,7 @@ def _missing_tool(command: str) -> None:
 def test_manim_module_satisfies_renderer_adapter_protocol() -> None:
     assert isinstance(manim, RendererAdapter)
     assert manim.id == "manim"
-    assert "rect" in manim.capabilities
+    assert "rect" in manim.capabilities.primitives
 
 
 def test_manim_check_environment_reports_missing_tools(monkeypatch: pytest.MonkeyPatch) -> None:

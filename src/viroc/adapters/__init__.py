@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
+from viroc.adapters.capabilities import CapabilityManifest
 from viroc.core import BuildArtifact, BuildContext, Diagnostic
 from viroc.ir import ConcreteIR
 
@@ -14,7 +15,7 @@ class RendererAdapter(Protocol):
 
     id: str
     version: str
-    capabilities: frozenset[str]
+    capabilities: CapabilityManifest
 
     def check_environment(self, ctx: BuildContext) -> list[Diagnostic]:
         """Return environment diagnostics for impure render dependencies."""
@@ -33,4 +34,4 @@ class RendererAdapter(Protocol):
         ...
 
 
-__all__ = ["RendererAdapter"]
+__all__ = ["CapabilityManifest", "RendererAdapter"]
