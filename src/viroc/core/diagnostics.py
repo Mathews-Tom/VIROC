@@ -15,7 +15,16 @@ later milestones — this module only defines and guards the space.
 from __future__ import annotations
 
 import re
-from enum import IntEnum
+from dataclasses import dataclass
+from enum import IntEnum, StrEnum
+
+
+class Severity(StrEnum):
+    """Diagnostic severity; renders as the leading keyword (``error[VIR...]``)."""
+
+    ERROR = "error"
+    WARNING = "warning"
+    NOTE = "note"
 
 
 class DiagnosticClass(IntEnum):
@@ -86,3 +95,38 @@ def validate_code(value: str) -> None:
             f"diagnostic code {value!r} is in reserved class VIR{int(cls)}xxx "
             f"({CLASS_LABELS[cls]}) in v1"
         )
+
+@dataclass(frozen=True, slots=True)
+class Span:
+    """A source location to underline, with the text to frame and an annotation.
+
+    ``line``/``col`` are 1-based and ``length`` is the number of caret
+    characters. ``source`` is the raw text of ``line`` (when available) so the
+    renderer can draw the caret frame; ``label`` is the note printed after the
+    carets.
+    """
+
+    file: str
+    line: int
+    col: int
+    length: int = 1
+    source: str | None = None
+    label: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class Diagnostic:
+    """One compiler diagnostic: a registered code, severity, message, span, help.
+
+    The code is validated against the registry on construction, so a diagnostic
+    can never carry an out-of-range or reserved code.
+    """
+
+    code: str
+    message: str
+    severity: Severity = Severity.ERROR
+    span: Span | None = None
+    help: str | None = None
+
+    def __post_init__(self) -> None:
+        validate_code(self.code)
