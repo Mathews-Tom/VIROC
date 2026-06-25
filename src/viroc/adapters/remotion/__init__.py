@@ -1,8 +1,6 @@
-"""Remotion source emitter: deterministic React/TypeScript project generation."""
+"""Remotion renderer adapter: deterministic emit and env-gated CLI render."""
 
 from __future__ import annotations
-
-from collections.abc import Iterable
 
 from viroc.adapters.capabilities import (
     VIR_UNSUPPORTED_ANIMATION,
@@ -17,8 +15,22 @@ from viroc.adapters.remotion.emit import (
     source_for,
     source_tree,
 )
-from viroc.core import BuildArtifact, BuildContext, Diagnostic
-from viroc.ir import Caption, ConcreteIR
+from viroc.adapters.remotion.render import (
+    VIR_MISSING_FFMPEG,
+    VIR_MISSING_FFPROBE,
+    VIR_MISSING_NODE,
+    VIR_MISSING_NPX,
+    VIR_MISSING_REMOTION,
+    VIR_TOOL_PROBE_FAILED,
+    RenderCommandError,
+    RenderEnvironmentError,
+    captions_to_srt,
+    check_environment,
+    remotion_version,
+    render,
+)
+from viroc.core import Diagnostic
+from viroc.ir import ConcreteIR
 
 id = "remotion"
 version = "0.1"
@@ -30,12 +42,7 @@ capabilities = CapabilityManifest(
     primitives=SUPPORTED_PRIMITIVES,
     animations=SUPPORTED_ANIMATIONS,
 )
-
-
-def check_environment(ctx: BuildContext) -> list[Diagnostic]:
-    """PR-5 fills the impure Remotion toolchain checks."""
-    _ = ctx
-    return []
+tool_version = remotion_version
 
 
 def supports(ir: ConcreteIR) -> list[Diagnostic]:
@@ -48,32 +55,32 @@ def supports(ir: ConcreteIR) -> list[Diagnostic]:
     )
 
 
-def render(
-    source: BuildArtifact,
-    ctx: BuildContext,
-    *,
-    captions: Iterable[Caption] = (),
-) -> BuildArtifact:
-    """PR-5 fills the impure Remotion render path."""
-    _ = (source, ctx, tuple(captions))
-    raise NotImplementedError("Remotion render is added in the PR-5 branch")
-
-
 __all__ = [
     "SUPPORTED_ANIMATIONS",
     "SUPPORTED_PRIMITIVES",
+    "RenderCommandError",
+    "RenderEnvironmentError",
+    "VIR_MISSING_FFMPEG",
+    "VIR_MISSING_FFPROBE",
+    "VIR_MISSING_NODE",
+    "VIR_MISSING_NPX",
+    "VIR_MISSING_REMOTION",
+    "VIR_TOOL_PROBE_FAILED",
     "VIR_UNSUPPORTED_ANIMATION",
     "VIR_UNSUPPORTED_PRIMITIVE",
     "capabilities",
+    "captions_to_srt",
     "check_environment",
     "emit",
     "id",
     "materialize_source",
     "project_tree",
     "render",
+    "remotion_version",
     "source_filename",
     "source_for",
     "source_tree",
     "supports",
+    "tool_version",
     "version",
 ]
