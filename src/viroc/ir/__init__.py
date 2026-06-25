@@ -2,6 +2,16 @@
 
 from __future__ import annotations
 
+from viroc.ir.concrete import (
+    Box,
+    Caption,
+    ConcreteIR,
+    Easing,
+    Keyframe,
+    KeyframeKind,
+    Primitive,
+    ResolvedObject,
+)
 from viroc.ir.io import (
     DataPath,
     LoadedDocument,
@@ -26,14 +36,22 @@ from viroc.ir.semantic import (
 
 __all__ = [
     "Beat",
+    "Box",
+    "Caption",
+    "ConcreteIR",
     "DataPath",
+    "Easing",
     "Edge",
     "EdgeKind",
     "Entity",
     "EntityType",
+    "Keyframe",
+    "KeyframeKind",
     "LoadedDocument",
+    "Primitive",
     "ProjectConfig",
     "Resolution",
+    "ResolvedObject",
     "Scene",
     "SemanticIR",
     "SourceLocation",
