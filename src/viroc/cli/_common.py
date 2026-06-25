@@ -215,6 +215,14 @@ def write_generated_source(
     raise CliError("source artifact did not carry bytes or a path")
 
 
+def resolve_backend(project: Project, requested: str | None) -> str:
+    """Resolve the requested backend, defaulting to project config."""
+    backend = requested or project.config.default_backend
+    if backend != "manim":
+        raise CliError(f'backend "{backend}" is not implemented; only "manim" is available')
+    return backend
+
+
 def _load_config(config_path: Path, root: Path) -> ProjectConfig:
     if config_path.exists():
         return load_project_config(config_path)
@@ -244,5 +252,6 @@ __all__ = [
     "load_expected_source_hash",
     "load_project",
     "print_diagnostics",
+    "resolve_backend",
     "write_generated_source",
 ]

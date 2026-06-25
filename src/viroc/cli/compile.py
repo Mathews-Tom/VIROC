@@ -11,6 +11,7 @@ from viroc.cli._common import (
     load_expected_source_hash,
     load_project,
     print_diagnostics,
+    resolve_backend,
     write_generated_source,
 )
 from viroc.core import VIR_SOURCE_HASH_MISMATCH, Diagnostic
@@ -32,6 +33,7 @@ def register(subparsers: Any) -> None:
 def run(args: argparse.Namespace) -> int:
     """Compile a storyboard and emit backend source to the build directory."""
     project = load_project(args.path)
+    backend = resolve_backend(project, args.backend)
     result = compile_storyboard(project)
     if result.diagnostics:
         print_diagnostics(result.diagnostics)
@@ -44,7 +46,7 @@ def run(args: argparse.Namespace) -> int:
         return 1
 
     source = manim.emit(result.state.concrete, result.ctx)
-    materialized = write_generated_source(source, project, backend="manim")
+    materialized = write_generated_source(source, project, backend=backend)
     expected_hash = load_expected_source_hash(project)
     if expected_hash is not None and materialized.digest != expected_hash:
         print_diagnostics(
