@@ -7,8 +7,17 @@ emit specific diagnostic codes; here we only prove the primitives themselves.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
+from viroc.core.context import (
+    BuildContext,
+    BuildPaths,
+    artifact_from_bytes,
+    artifact_from_path,
+    artifact_from_text,
+)
 from viroc.core.diagnostics import (
     Diagnostic,
     DiagnosticClass,
@@ -232,3 +241,62 @@ class TestSpan:
     def test_rejects_negative_length(self) -> None:
         with pytest.raises(ValueError, match="non-negative"):
             Span(file="s.vidir.yaml", line=1, col=1, length=-1)
+
+
+class TestBuildArtifact:
+    def test_from_bytes_hashes_content(self) -> None:
+        artifact = artifact_from_bytes("source", b"scene()")
+        assert artifact.kind == "source"
+        assert artifact.data == b"scene()"
+        assert artifact.path is None
+        assert artifact.digest == hash_bytes(b"scene()")
+
+    def test_from_text_hashes_utf8(self) -> None:
+        assert artifact_from_text("source", "scene()").digest == hash_bytes(b"scene()")
+
+    def test_from_bytes_records_optional_path(self) -> None:
+        artifact = artifact_from_bytes("source", b"x", path=Path("out/scene.py"))
+        assert artifact.path == Path("out/scene.py")
+
+    def test_from_path_hashes_file_without_retaining_bytes(self, tmp_path: Path) -> None:
+        target = tmp_path / "scene.py"
+        target.write_bytes(b"rendered")
+        artifact = artifact_from_path("video", target)
+        assert artifact.kind == "video"
+        assert artifact.path == target
+        assert artifact.data is None
+        assert artifact.digest == hash_bytes(b"rendered")
+
+    def test_is_frozen(self) -> None:
+        artifact = artifact_from_bytes("source", b"x")
+        with pytest.raises((AttributeError, TypeError)):
+            artifact.kind = "video"  # type: ignore[misc]
+
+
+class TestBuildContext:
+    def test_defaults_to_empty_config_and_renderer(self) -> None:
+        ctx = BuildContext(paths=BuildPaths(Path("/p"), Path("/p/out")))
+        assert ctx.config == {}
+        assert ctx.renderer == {}
+
+    def test_default_mappings_are_not_shared(self) -> None:
+        first = BuildContext(paths=BuildPaths(Path("/p"), Path("/p/out")))
+        second = BuildContext(paths=BuildPaths(Path("/q"), Path("/q/out")))
+        first.config["k"] = "v"
+        assert second.config == {}
+
+    def test_stores_paths_config_and_renderer(self) -> None:
+        paths = BuildPaths(Path("/proj"), Path("/proj/out"))
+        ctx = BuildContext(
+            paths=paths,
+            config={"project": "rag-overview"},
+            renderer={"id": "manim"},
+        )
+        assert ctx.paths is paths
+        assert ctx.config == {"project": "rag-overview"}
+        assert ctx.renderer == {"id": "manim"}
+
+    def test_paths_expose_root_and_out_dir(self) -> None:
+        paths = BuildPaths(Path("/proj"), Path("/proj/out"))
+        assert paths.project_root == Path("/proj")
+        assert paths.out_dir == Path("/proj/out")
