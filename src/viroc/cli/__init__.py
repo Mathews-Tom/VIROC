@@ -1,22 +1,49 @@
-"""VIROC command-line surface.
-
-The full command set (``init``, ``check``, ``compile``, ``render``, ``graph``,
-``doctor``) is built once the compiler exists. For now this exposes the console
-entrypoint declared in ``pyproject.toml`` so the toolchain has a runnable target.
-"""
+"""VIROC command-line surface."""
 
 from __future__ import annotations
 
+import argparse
+import sys
+from collections.abc import Sequence
+
 from viroc import __version__
+from viroc.cli import check, init
+from viroc.cli._common import CliError
 
 __all__ = ["main"]
 
 
-def main() -> int:
-    """Entry point for the ``viroc`` console script.
+def build_parser() -> argparse.ArgumentParser:
+    """Build the top-level CLI parser."""
+    parser = argparse.ArgumentParser(prog="viroc")
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
+    subparsers = parser.add_subparsers(dest="command")
+    init.register(subparsers)
+    check.register(subparsers)
+    return parser
 
-    Prints the package version and exits successfully. Subcommands are added by
-    the milestone that introduces the CLI.
-    """
-    print(f"viroc {__version__}")
-    return 0
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Entry point for the ``viroc`` console script."""
+    parser = build_parser()
+    args_list = list(sys.argv[1:] if argv is None else argv)
+    if not args_list:
+        parser.print_help()
+        return 0
+    try:
+        args = parser.parse_args(args_list)
+    except SystemExit as exc:
+        return 0 if exc.code is None else int(exc.code)
+    handler = getattr(args, "handler", None)
+    if handler is None:
+        parser.print_help()
+        return 0
+    try:
+        return int(handler(args))
+    except CliError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
