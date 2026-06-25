@@ -51,8 +51,8 @@ def run(args: argparse.Namespace) -> int:
         return 1
 
     source = adapter.emit(result.state.concrete, result.ctx)
-    materialized = write_generated_source(source, project, backend=adapter.id)
-    expected_hash = load_expected_source_hash(project)
+    materialized = write_generated_source(source, project, adapter=adapter)
+    expected_hash = load_expected_source_hash(project, backend=adapter.id)
     if expected_hash is not None and materialized.digest != expected_hash:
         print_diagnostics(
             [

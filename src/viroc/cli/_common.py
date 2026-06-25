@@ -170,17 +170,17 @@ def print_diagnostics(diagnostics: list[Diagnostic]) -> None:
     print("\n\n".join(render(diagnostic) for diagnostic in diagnostics), file=sys.stderr)
 
 
-def load_expected_source_hash(project: Project) -> str | None:
-    """Return the committed source-hash baseline when the project provides one."""
-    path = project.expected_dir / "source.sha256"
+def load_expected_source_hash(project: Project, *, backend: str) -> str | None:
+    """Return the committed source-hash baseline for ``backend`` when provided."""
+    path = _expected_path(project, backend, "source.sha256")
     if not path.exists():
         return None
     return path.read_text(encoding="utf-8").strip() or None
 
 
-def load_expected_render_baseline(project: Project) -> RenderBaseline | None:
-    """Return the committed perceptual-render baseline when the project provides one."""
-    path = project.expected_dir / "render.json"
+def load_expected_render_baseline(project: Project, *, backend: str) -> RenderBaseline | None:
+    """Return the committed perceptual-render baseline for ``backend`` when provided."""
+    path = _expected_path(project, backend, "render.json")
     if not path.exists():
         return None
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -202,9 +202,9 @@ def load_expected_render_baseline(project: Project) -> RenderBaseline | None:
 
 
 def write_generated_source(
-    source: BuildArtifact, project: Project, *, backend: str
+    source: BuildArtifact, project: Project, *, adapter: RendererAdapter
 ) -> BuildArtifact:
-    path = project.out_dir / "generated" / backend / "scene.py"
+    path = project.out_dir / "generated" / adapter.id / _source_filename(adapter)
     path.parent.mkdir(parents=True, exist_ok=True)
     if source.data is not None:
         path.write_bytes(source.data)
@@ -236,6 +236,22 @@ def backend_version(adapter: RendererAdapter, ctx: BuildContext) -> str:
         if isinstance(reported, str):
             return reported
     return adapter.version
+
+
+def _expected_path(project: Project, backend: str, filename: str) -> Path:
+    scoped = project.expected_dir / backend / filename
+    if scoped.exists():
+        return scoped
+    if backend == project.config.default_backend:
+        return project.expected_dir / filename
+    return scoped
+
+
+def _source_filename(adapter: RendererAdapter) -> str:
+    filename = getattr(adapter, "source_filename", "scene.py")
+    if not isinstance(filename, str) or not filename:
+        raise CliError("adapter source filename must be a non-empty string")
+    return filename
 
 
 def _load_config(config_path: Path, root: Path) -> ProjectConfig:
