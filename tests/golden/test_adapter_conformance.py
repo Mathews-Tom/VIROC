@@ -10,6 +10,7 @@ import viroc.adapters.image_sequence as image_sequence_adapter
 import viroc.adapters.manim as manim
 import viroc.adapters.motion_canvas as motion_canvas_adapter
 import viroc.adapters.remotion as remotion_adapter
+import viroc.adapters.static_storyboard as static_storyboard_adapter
 from viroc.adapters import CapabilityManifest, RendererAdapter
 from viroc.adapters.capabilities import (
     VIR_UNSUPPORTED_ANIMATION,
@@ -36,6 +37,7 @@ _HTML_GOLDEN = _HERE / "rag_pipeline_scene.html"
 _IMAGE_SEQUENCE_GOLDEN = _HERE / "rag_pipeline_image_sequence_artifacts.json"
 _MOTION_CANVAS_GOLDEN = _HERE / "rag_pipeline_motion_canvas_project.json"
 _REMOTION_GOLDEN = _HERE / "rag_pipeline_remotion_project.json"
+_STATIC_STORYBOARD_GOLDEN = _HERE / "rag_pipeline_static_storyboard_artifacts.json"
 
 class _FakeAdapter:
     id = "fake"
@@ -260,10 +262,12 @@ def test_registry_dispatch_preserves_builtin_emit_hashes() -> None:
         "manim",
         "motion_canvas",
         "remotion",
+        "static_storyboard",
     )
     assert registry.require("image_sequence").id == "image_sequence"
     assert registry.require("motion_canvas").id == "motion_canvas"
     assert registry.require("remotion").id == "remotion"
+    assert registry.require("static_storyboard").id == "static_storyboard"
     concrete = _compile().concrete
     ctx = _ctx()
 
@@ -277,6 +281,8 @@ def test_registry_dispatch_preserves_builtin_emit_hashes() -> None:
     motion_canvas_dispatched = registry.require("motion_canvas").emit(concrete, ctx)
     remotion_direct = remotion_adapter.emit(concrete, ctx)
     remotion_dispatched = registry.require("remotion").emit(concrete, ctx)
+    static_storyboard_direct = static_storyboard_adapter.emit(concrete, ctx)
+    static_storyboard_dispatched = registry.require("static_storyboard").emit(concrete, ctx)
 
     assert html_dispatched.digest == html_direct.digest == hash_bytes(_HTML_GOLDEN.read_bytes())
     assert html_dispatched.data == html_direct.data
@@ -300,3 +306,9 @@ def test_registry_dispatch_preserves_builtin_emit_hashes() -> None:
         == hash_bytes(_REMOTION_GOLDEN.read_bytes())
     )
     assert remotion_dispatched.data == remotion_direct.data
+    assert (
+        static_storyboard_dispatched.digest
+        == static_storyboard_direct.digest
+        == hash_bytes(_STATIC_STORYBOARD_GOLDEN.read_bytes())
+    )
+    assert static_storyboard_dispatched.data == static_storyboard_direct.data
