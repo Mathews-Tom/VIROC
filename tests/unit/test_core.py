@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 
+from viroc.core.hashing import canonical_json, hash_bytes, hash_data, hash_unordered
 from viroc.core.ids import slugify, stable_id
 
 
@@ -52,3 +53,41 @@ class TestStableId:
     def test_unslugable_part_raises(self) -> None:
         with pytest.raises(ValueError, match="no slug-able characters"):
             stable_id("scene", "!!!")
+
+class TestHashing:
+    def test_identical_input_hashes_identically(self) -> None:
+        payload = {"id": "rag", "scenes": [1, 2, 3]}
+        assert hash_data(payload) == hash_data(payload)
+
+    def test_digest_is_prefixed_sha256_hex(self) -> None:
+        digest = hash_bytes(b"")
+        # sha256 of empty input, in the self-describing prefixed form.
+        assert digest == (
+            "sha256:e3b0c44298fc1c149afbf4c8996fb924"
+            "27ae41e4649b934ca495991b7852b855"
+        )
+
+    def test_mapping_key_order_does_not_change_digest(self) -> None:
+        assert hash_data({"a": 1, "b": 2}) == hash_data({"b": 2, "a": 1})
+
+    def test_nested_mapping_key_order_does_not_change_digest(self) -> None:
+        left = {"video": {"id": "x", "fps": 30}, "v": "0.1"}
+        right = {"v": "0.1", "video": {"fps": 30, "id": "x"}}
+        assert hash_data(left) == hash_data(right)
+
+    def test_list_order_is_significant(self) -> None:
+        assert hash_data([1, 2, 3]) != hash_data([3, 2, 1])
+
+    def test_canonical_json_sorts_keys_and_omits_whitespace(self) -> None:
+        assert canonical_json({"b": 2, "a": 1}) == '{"a":1,"b":2}'
+
+    def test_unordered_is_order_independent(self) -> None:
+        assert hash_unordered([3, 1, 2]) == hash_unordered([1, 2, 3])
+
+    def test_unordered_preserves_multiplicity(self) -> None:
+        assert hash_unordered([1, 1]) != hash_unordered([1])
+
+    def test_unordered_hashes_mappings_by_value(self) -> None:
+        a = {"path": "assets/doc.svg", "hash": "sha256:aa"}
+        b = {"path": "assets/img.png", "hash": "sha256:bb"}
+        assert hash_unordered([a, b]) == hash_unordered([b, a])
