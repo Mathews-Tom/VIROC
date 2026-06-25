@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from viroc.core import render
 from viroc.ir import (
     Edge,
     LoadedDocument,
@@ -19,9 +20,12 @@ from viroc.ir import (
     load_project_config,
 )
 from viroc.validators import (
+    VIR_GRAMMAR_FIT,
     VIR_MISSING_FIELD,
     VIR_SCHEMA,
     VIR_UNKNOWN_FIELD,
+    VIR_UNKNOWN_REFERENCE,
+    pre_validate,
     validate_schema,
 )
 
@@ -247,3 +251,114 @@ def test_beat_missing_duration_is_vir1004(tmp_path: Path) -> None:
 
     assert ir is None
     assert [d.code for d in diagnostics] == [VIR_MISSING_FIELD]
+
+
+_BAD_REFERENCE = """\
+vidir_version: "0.1"
+video: { id: rag-overview, title: t }
+entities:
+  - { id: documents, label: "Documents", type: data_source }
+  - { id: chunks, label: "Chunks", type: intermediate }
+  - { id: embedder, label: "Embedding Model", type: model }
+  - { id: vector_db, label: "Vector DB", type: storage }
+scenes:
+  - id: pipeline
+    grammar: pipeline
+    duration: 35s
+    nodes: [documents, chunks, embedder, vector_db]
+    edges:
+      - from: vectorstore
+        to: chunks
+        kind: store
+"""
+
+
+def test_undeclared_edge_reference_is_vir1002(tmp_path: Path) -> None:
+    """An edge naming an undeclared entity yields VIR1002 with span + suggestion."""
+    ir, diagnostics = pre_validate(_load_yaml(tmp_path, _BAD_REFERENCE))
+
+    assert ir is not None
+    assert [d.code for d in diagnostics] == [VIR_UNKNOWN_REFERENCE]
+    diagnostic = diagnostics[0]
+    assert diagnostic.message == 'unknown entity reference "vectorstore"'
+    assert diagnostic.help == 'did you mean "vector_db"?'
+
+    span = diagnostic.span
+    assert span is not None
+    assert span.source is not None
+    assert span.source[span.col - 1 : span.col - 1 + span.length] == "vectorstore"
+
+    rendered = render(diagnostic)
+    assert 'error[VIR1002]: unknown entity reference "vectorstore"' in rendered
+    assert "^" * len("vectorstore") in rendered
+    assert 'help: did you mean "vector_db"?' in rendered
+
+
+def test_undeclared_node_reference_is_vir1002(tmp_path: Path) -> None:
+    """A scene node naming an undeclared entity yields VIR1002 at the node token."""
+    text = (
+        'vidir_version: "0.1"\n'
+        "video: { id: v, title: t }\n"
+        "entities:\n"
+        '  - { id: documents, label: "Documents", type: data_source }\n'
+        "scenes:\n"
+        "  - id: s1\n"
+        "    grammar: pipeline\n"
+        "    duration: 10s\n"
+        "    nodes: [documents, ghost]\n"
+    )
+    ir, diagnostics = pre_validate(_load_yaml(tmp_path, text))
+
+    assert ir is not None
+    assert [d.code for d in diagnostics] == [VIR_UNKNOWN_REFERENCE]
+    assert diagnostics[0].message == 'unknown entity reference "ghost"'
+    span = diagnostics[0].span
+    assert span is not None
+    assert span.source is not None
+    assert span.source[span.col - 1 : span.col - 1 + span.length] == "ghost"
+
+
+def test_unregistered_grammar_is_vir1005(tmp_path: Path) -> None:
+    """A scene whose grammar is not registered yields a grammar-fit VIR1005."""
+    text = (
+        'vidir_version: "0.1"\n'
+        "video: { id: v, title: t }\n"
+        "entities:\n"
+        '  - { id: a, label: "A", type: model }\n'
+        "scenes:\n"
+        "  - id: s1\n"
+        "    grammar: flowchart\n"
+        "    duration: 10s\n"
+        "    nodes: [a]\n"
+    )
+    ir, diagnostics = pre_validate(_load_yaml(tmp_path, text))
+
+    assert ir is not None
+    assert [d.code for d in diagnostics] == [VIR_GRAMMAR_FIT]
+    assert diagnostics[0].message == 'unknown grammar "flowchart"'
+
+
+def test_empty_pipeline_scene_is_vir1005(tmp_path: Path) -> None:
+    """A pipeline scene with no nodes fails the grammar-fit check (VIR1005)."""
+    text = (
+        'vidir_version: "0.1"\n'
+        "video: { id: v, title: t }\n"
+        "entities: []\n"
+        "scenes:\n"
+        "  - id: s1\n"
+        "    grammar: pipeline\n"
+        "    duration: 10s\n"
+        "    nodes: []\n"
+    )
+    ir, diagnostics = pre_validate(_load_yaml(tmp_path, text))
+
+    assert ir is not None
+    assert [d.code for d in diagnostics] == [VIR_GRAMMAR_FIT]
+
+
+def test_pre_validate_accepts_rag_storyboard() -> None:
+    """The §9.1 storyboard passes the full pre-validation with no diagnostics."""
+    ir, diagnostics = pre_validate(load_document(RAG_STORYBOARD))
+    assert diagnostics == []
+    assert ir is not None
+    assert [scene.id for scene in ir.scenes] == ["pipeline"]
