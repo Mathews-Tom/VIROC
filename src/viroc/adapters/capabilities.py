@@ -2,15 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass, field
-from types import MappingProxyType
-from typing import Literal
+from dataclasses import dataclass
 
 from viroc.core import Diagnostic, DiagnosticClass, code
 from viroc.ir import ConcreteIR
-
-CapabilityLevel = Literal["supported", "partial", "unsupported"]
 
 VIR_UNSUPPORTED_PRIMITIVE = code(DiagnosticClass.RENDERER, 31)
 VIR_UNSUPPORTED_ANIMATION = code(DiagnosticClass.RENDERER, 32)
@@ -18,24 +13,14 @@ VIR_UNSUPPORTED_ANIMATION = code(DiagnosticClass.RENDERER, 32)
 
 @dataclass(frozen=True, slots=True)
 class CapabilityManifest:
-    """Declared backend support for Concrete IR features."""
+    """Declared backend support for Concrete IR primitives and animations."""
 
     primitives: frozenset[str]
     animations: frozenset[str]
-    features: Mapping[str, CapabilityLevel] = field(default_factory=lambda: MappingProxyType({}))
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "primitives", frozenset(self.primitives))
         object.__setattr__(self, "animations", frozenset(self.animations))
-        object.__setattr__(
-            self,
-            "features",
-            MappingProxyType({name: self.features[name] for name in sorted(self.features)}),
-        )
-
-    def feature_level(self, feature: str) -> CapabilityLevel:
-        """Return the declared support level for one named feature."""
-        return self.features.get(feature, "unsupported")
 
 
 def support_diagnostics(
@@ -109,7 +94,6 @@ def unsupported_animation_diagnostic(
 
 
 __all__ = [
-    "CapabilityLevel",
     "CapabilityManifest",
     "VIR_UNSUPPORTED_ANIMATION",
     "VIR_UNSUPPORTED_PRIMITIVE",

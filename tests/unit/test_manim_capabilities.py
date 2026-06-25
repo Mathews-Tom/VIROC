@@ -50,7 +50,6 @@ def test_manim_module_satisfies_renderer_adapter_protocol() -> None:
     assert isinstance(manim, RendererAdapter)
     assert manim.id == "manim"
     assert "rect" in manim.capabilities.primitives
-    assert manim.capabilities.feature_level("html") == "unsupported"
 
 
 def test_manim_check_environment_reports_missing_tools(monkeypatch: pytest.MonkeyPatch) -> None:

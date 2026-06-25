@@ -32,11 +32,6 @@ SUPPORTED_ANIMATIONS = frozenset({"draw", "fade_in", "fade_out", "highlight"})
 capabilities = CapabilityManifest(
     primitives=SUPPORTED_PRIMITIVES,
     animations=SUPPORTED_ANIMATIONS,
-    features={
-        "html": "unsupported",
-        "interactive_preview": "unsupported",
-        "programmatic_video": "supported",
-    },
 )
 
 def supports(ir: ConcreteIR) -> list[Diagnostic]:
