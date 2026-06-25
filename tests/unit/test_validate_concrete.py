@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from viroc.compiler.pipeline import run_pipeline
 from viroc.core import BuildContext, BuildPaths, ValidationThresholds
-from viroc.ir import Box, Caption, ConcreteIR, Keyframe, ResolvedObject
+from viroc.ir import Box, Caption, ConcreteIR, Keyframe, ResolvedObject, SemanticIR
 from viroc.validators.layout import (
     VIR_OBJECT_CLIPPING,
     VIR_OBJECT_OVERLAP,
@@ -19,8 +20,54 @@ from viroc.validators.timing import (
     validate_timing,
 )
 
+_RAG_IR: dict[str, object] = {
+    "vidir_version": "0.1",
+    "video": {"id": "rag_overview", "title": "How RAG Works"},
+    "entities": [
+        {"id": "documents", "label": "Documents", "type": "data_source"},
+        {"id": "chunks", "label": "Chunks", "type": "intermediate"},
+        {"id": "embedder", "label": "Embedding Model", "type": "model"},
+        {"id": "vector_db", "label": "Vector DB", "type": "storage"},
+    ],
+    "scenes": [
+        {
+            "id": "pipeline",
+            "grammar": "pipeline",
+            "duration": "35s",
+            "nodes": ["documents", "chunks", "embedder", "vector_db"],
+            "edges": [
+                {"from": "documents", "to": "chunks", "kind": "split"},
+                {"from": "chunks", "to": "embedder", "kind": "transform"},
+                {"from": "embedder", "to": "vector_db", "kind": "store"},
+            ],
+            "narration": "Documents flow into the vector database.",
+        }
+    ],
+}
+
+
+def _semantic(raw: dict[str, object] | None = None) -> SemanticIR:
+    return SemanticIR.model_validate(raw if raw is not None else _RAG_IR)
+
 
 def _ctx(
+    *,
+    safe_margin_pct: float = 5.0,
+    min_text_box_width: float = 1.0,
+    min_text_box_height: float = 1.0,
+    max_caption_chars_per_second: float = 18.0,
+) -> BuildContext:
+    return _ctx_for_root(
+        Path("/tmp/viroc-validate"),
+        safe_margin_pct=safe_margin_pct,
+        min_text_box_width=min_text_box_width,
+        min_text_box_height=min_text_box_height,
+        max_caption_chars_per_second=max_caption_chars_per_second,
+    )
+
+
+def _ctx_for_root(
+    root: Path,
     *,
     safe_margin_pct: float = 5.0,
     min_text_box_width: float = 1.0,
@@ -34,9 +81,7 @@ def _ctx(
         max_caption_chars_per_second=max_caption_chars_per_second,
     )
     return BuildContext(
-        paths=BuildPaths(
-            project_root=Path("/tmp/viroc-validate"), out_dir=Path("/tmp/out")
-        ),
+        paths=BuildPaths(project_root=root, out_dir=root / "dist"),
         validation=thresholds,
     )
 
@@ -169,3 +214,53 @@ def test_safe_margin_threshold_is_configurable() -> None:
     ir = _concrete(objects=[_object(box=Box(x=10.0, y=100.0, w=200.0, h=120.0))])
 
     assert validate_layout(ir, _ctx(safe_margin_pct=0.0)) == []
+
+
+def test_clean_rag_pipeline_p9_has_zero_diagnostics(tmp_path: Path) -> None:
+    """Clean rag-pipeline passes P9 and remains available for adapter handoff."""
+    state = run_pipeline(_semantic(), _ctx_for_root(tmp_path))
+
+    assert state.diagnostics == []
+    assert state.exit_code == 0
+    assert state.concrete.objects
+
+
+def test_pipeline_p9_aggregates_timing_diagnostics(tmp_path: Path) -> None:
+    """P9 turns overlapping authored beats and over-long captions into VIR2xxx."""
+    raw: dict[str, object] = {
+        "vidir_version": "0.1",
+        "video": {"id": "bad_timing", "title": "Bad Timing"},
+        "entities": [{"id": "a", "label": "A", "type": "data_source"}],
+        "scenes": [
+            {
+                "id": "scene",
+                "grammar": "pipeline",
+                "duration": "10s",
+                "nodes": ["a"],
+                "beats": [
+                    {"id": "intro", "at": "0s", "duration": "4s", "narration": "intro"},
+                    {
+                        "id": "overlap",
+                        "at": "2s",
+                        "duration": "1s",
+                        "narration": "x" * 80,
+                    },
+                ],
+            }
+        ],
+    }
+
+    state = run_pipeline(_semantic(raw), _ctx_for_root(tmp_path))
+
+    assert {VIR_BEAT_OVERLAP, VIR_CAPTION_UNDERFLOW} <= {
+        diag.code for diag in state.diagnostics
+    }
+    assert state.exit_code == 1
+
+
+def test_pipeline_p9_aggregates_layout_diagnostics(tmp_path: Path) -> None:
+    """P9 appends layout diagnostics from configured Concrete IR thresholds."""
+    state = run_pipeline(_semantic(), _ctx_for_root(tmp_path, safe_margin_pct=49.0))
+
+    assert VIR_UNSAFE_MARGIN in {diag.code for diag in state.diagnostics}
+    assert state.exit_code == 1
