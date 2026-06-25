@@ -44,11 +44,19 @@ class SourceLocation:
 
 @dataclass(frozen=True, slots=True)
 class LoadedDocument:
-    """Parsed document data alongside per-value source positions."""
+    """Parsed document data with per-value and per-key source positions.
+
+    ``locations`` maps a data path to the position of its *value* (what a
+    value-pointing diagnostic underlines). ``key_locations`` maps the same path
+    to the position of the mapping *key* that introduced it, so a key-pointing
+    diagnostic (an unknown field, say) can underline the offending key rather
+    than its value.
+    """
 
     path: Path
     data: Any
     locations: dict[DataPath, SourceLocation]
+    key_locations: dict[DataPath, SourceLocation]
 
 
 class ProjectConfig(BaseModel):
@@ -77,7 +85,9 @@ def load_document(path: Path) -> LoadedDocument:
     if suffix in {".yaml", ".yml"}:
         return _load_yaml(path, text)
     if suffix == ".json":
-        return LoadedDocument(path=path, data=json.loads(text), locations={})
+        return LoadedDocument(
+            path=path, data=json.loads(text), locations={}, key_locations={}
+        )
     raise ValueError(
         f"unsupported document type {path.suffix!r}: expected .yaml, .yml, or .json"
     )
@@ -106,14 +116,23 @@ def nearest_location(doc: LoadedDocument, path: DataPath) -> SourceLocation | No
 
 
 def _load_yaml(path: Path, text: str) -> LoadedDocument:
+    # Parse twice on purpose: safe_load gives typed data, get_single_node gives
+    # the node graph for positions. The single-pass alternatives in PyYAML
+    # (construct_document, compose, dispose) are untyped in the stubs and would
+    # break the strict type gate; storyboards are small hand-authored files, so
+    # the second pass is negligible and the loader is a local over an in-memory
+    # string (no resource to dispose).
     data = yaml.safe_load(text)
     node = yaml.SafeLoader(text).get_single_node()
     if node is None:
-        return LoadedDocument(path=path, data=data, locations={})
+        return LoadedDocument(path=path, data=data, locations={}, key_locations={})
     lines = text.splitlines()
     locations: dict[DataPath, SourceLocation] = {}
-    _index(node, (), str(path), lines, locations)
-    return LoadedDocument(path=path, data=data, locations=locations)
+    key_locations: dict[DataPath, SourceLocation] = {}
+    _index(node, (), str(path), lines, locations, key_locations)
+    return LoadedDocument(
+        path=path, data=data, locations=locations, key_locations=key_locations
+    )
 
 
 def _index(
@@ -122,19 +141,24 @@ def _index(
     file: str,
     lines: list[str],
     locations: dict[DataPath, SourceLocation],
+    key_locations: dict[DataPath, SourceLocation],
 ) -> None:
     """Record ``node``'s position, then recurse into mapping values / sequence items.
 
     The traversal mirrors how :func:`yaml.safe_load` builds ``data``, so a path
-    here indexes the same value Pydantic names in its error ``loc`` tuples.
+    here indexes the same value Pydantic names in its error ``loc`` tuples. For
+    mappings, each key node's own position is recorded under the child path too,
+    so a key-pointing diagnostic can underline the key rather than its value.
     """
     locations[path] = _location_of(node, file, lines)
     if isinstance(node, MappingNode):
         for key_node, value_node in node.value:
-            _index(value_node, (*path, str(key_node.value)), file, lines, locations)
+            child = (*path, str(key_node.value))
+            key_locations[child] = _location_of(key_node, file, lines)
+            _index(value_node, child, file, lines, locations, key_locations)
     elif isinstance(node, SequenceNode):
         for index, item in enumerate(node.value):
-            _index(item, (*path, index), file, lines, locations)
+            _index(item, (*path, index), file, lines, locations, key_locations)
 
 
 def _location_of(node: Node, file: str, lines: list[str]) -> SourceLocation:
