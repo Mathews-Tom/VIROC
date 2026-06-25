@@ -70,17 +70,20 @@ def _diagnostic_for(doc: LoadedDocument, detail: ErrorDetails) -> Diagnostic:
         message = f'unknown field "{field}"'
         help_text: str | None = f'remove "{field}" or check for a typo'
         label: str | None = "unknown field"
+        # The offending token is the key itself; point the caret at it.
+        location = doc.key_locations.get(path) or nearest_location(doc, path)
     elif error_type == "missing":
         diag_code = VIR_MISSING_FIELD
         message = f'missing required field "{field}"'
         help_text = f'add the required "{field}" field'
         label = "required here"
+        location = nearest_location(doc, path)
     else:
         diag_code = VIR_SCHEMA
         message = str(detail["msg"])
         help_text = None
         label = None
+        location = nearest_location(doc, path)
 
-    location = nearest_location(doc, path)
     span = span_from_location(location, label) if location is not None else None
     return Diagnostic(code=diag_code, message=message, span=span, help=help_text)
