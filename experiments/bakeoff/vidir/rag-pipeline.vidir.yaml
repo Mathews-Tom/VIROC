@@ -1,0 +1,33 @@
+# Mocked VidIR (Semantic IR by hand) -- bake-off approach 3, topic: rag-pipeline.
+# The engineer edits only this declarative storyboard. The throwaway lowering
+# (lower.py) turns it into the same kind of Manim the hand-written version has.
+# Schema + reference + grammar-fit checks run before anything is rendered.
+vidir_version: "0.1"
+
+video:
+  id: rag-overview
+  title: How Retrieval-Augmented Generation Works
+  fps: 30
+  resolution: [1920, 1080]
+  duration_target: 90
+
+entities:
+  - { id: documents, label: Documents, type: data_source }
+  - { id: chunks, label: Chunks, type: intermediate }
+  - { id: embedder, label: Embedding Model, type: model }
+  - { id: vector_db, label: Vector DB, type: storage }
+  - { id: llm, label: LLM, type: model }
+
+scenes:
+  - id: pipeline
+    grammar: pipeline
+    duration: 35s
+    nodes: [documents, chunks, embedder, vector_db, llm]
+    edges:
+      - { from: documents, to: chunks, kind: split }
+      - { from: chunks, to: embedder, kind: transform }
+      - { from: embedder, to: vector_db, kind: store }
+      - { from: vector_db, to: llm, kind: flow }
+    narration: >-
+      Documents are chunked, embedded, stored in a vector database, and
+      retrieved to ground the LLM.

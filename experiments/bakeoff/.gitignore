@@ -1,0 +1,4 @@
+# Generated artifacts — produced on demand by build_all.py.
+out/
+# Manim render scratch (only created when rendering to MP4).
+media/
