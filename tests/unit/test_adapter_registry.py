@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from viroc.adapters import RendererAdapter
+from viroc.adapters import CapabilityManifest, RendererAdapter
 from viroc.adapters.registry import (
     VIR_DUPLICATE_BACKEND,
     VIR_UNKNOWN_BACKEND,
@@ -22,7 +22,7 @@ class _Adapter:
     def __init__(self, adapter_id: str) -> None:
         self.id = adapter_id
         self.version = "0.1"
-        self.capabilities = frozenset({"rect"})
+        self.capabilities = CapabilityManifest(primitives={"rect"}, animations=set())
 
     def check_environment(self, ctx: BuildContext) -> list[Diagnostic]:
         _ = ctx
