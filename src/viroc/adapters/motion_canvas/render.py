@@ -62,60 +62,54 @@ class RenderCommandError(RuntimeError):
 def check_environment(ctx: BuildContext) -> list[Diagnostic]:
     """Return diagnostics for missing or unusable render dependencies."""
     diagnostics: list[Diagnostic] = []
-    diagnostics.extend(
-        _probe_command(
-            [_renderer_str(ctx, "node_executable", "node"), "--version"],
-            missing_code=VIR_MISSING_NODE,
-            label="node",
-            help_text='install Node.js or set renderer.node_executable to an absolute path',
-        )
-    )
     try:
-        motion_canvas = _motion_canvas_command(ctx)
-    except ValueError as exc:
-        return [
-            Diagnostic(
-                code=VIR_MISSING_MOTION_CANVAS,
-                message="invalid renderer.motion_canvas_command configuration",
-                help=str(exc),
-            )
-        ]
-    if motion_canvas[:1] == ["npx"]:
         diagnostics.extend(
             _probe_command(
-                ["npx", "--version"],
-                missing_code=VIR_MISSING_NPX,
-                label="npx",
-                help_text='install npm/npx or set renderer.motion_canvas_command to a direct executable',
+                [_renderer_str(ctx, "node_executable", "node"), "--version"],
+                missing_code=VIR_MISSING_NODE,
+                label="node",
+                help_text='install Node.js or set renderer.node_executable to an absolute path',
             )
         )
-    diagnostics.extend(
-        _probe_command(
-            [*motion_canvas, "--version"],
-            missing_code=VIR_MISSING_MOTION_CANVAS,
-            label="Motion Canvas CLI",
-            help_text=(
-                'install Motion Canvas so "npx --no-install motion-canvas --version" succeeds '
-                'or set renderer.motion_canvas_command explicitly'
-            ),
+        motion_canvas = _motion_canvas_command(ctx)
+        if motion_canvas[:1] == ["npx"]:
+            diagnostics.extend(
+                _probe_command(
+                    ["npx", "--version"],
+                    missing_code=VIR_MISSING_NPX,
+                    label="npx",
+                    help_text='install npm/npx or set renderer.motion_canvas_command to a direct executable',
+                )
+            )
+        diagnostics.extend(
+            _probe_command(
+                [*motion_canvas, "--version"],
+                missing_code=VIR_MISSING_MOTION_CANVAS,
+                label="Motion Canvas CLI",
+                help_text=(
+                    'install Motion Canvas so "npx --no-install motion-canvas --version" succeeds '
+                    'or set renderer.motion_canvas_command explicitly'
+                ),
+            )
         )
-    )
-    diagnostics.extend(
-        _probe_command(
-            [_renderer_str(ctx, "ffmpeg_executable", "ffmpeg"), "-version"],
-            missing_code=VIR_MISSING_FFMPEG,
-            label="ffmpeg",
-            help_text='install FFmpeg or set renderer.ffmpeg_executable to an absolute path',
+        diagnostics.extend(
+            _probe_command(
+                [_renderer_str(ctx, "ffmpeg_executable", "ffmpeg"), "-version"],
+                missing_code=VIR_MISSING_FFMPEG,
+                label="ffmpeg",
+                help_text='install FFmpeg or set renderer.ffmpeg_executable to an absolute path',
+            )
         )
-    )
-    diagnostics.extend(
-        _probe_command(
-            [_renderer_str(ctx, "ffprobe_executable", "ffprobe"), "-version"],
-            missing_code=VIR_MISSING_FFPROBE,
-            label="ffprobe",
-            help_text='install ffprobe or set renderer.ffprobe_executable to an absolute path',
+        diagnostics.extend(
+            _probe_command(
+                [_renderer_str(ctx, "ffprobe_executable", "ffprobe"), "-version"],
+                missing_code=VIR_MISSING_FFPROBE,
+                label="ffprobe",
+                help_text='install ffprobe or set renderer.ffprobe_executable to an absolute path',
+            )
         )
-    )
+    except ValueError as exc:
+        diagnostics.append(_probe_diagnostic(VIR_TOOL_PROBE_FAILED, "renderer configuration is invalid", str(exc)))
     return diagnostics
 
 
@@ -136,21 +130,30 @@ def render(
     render_dir.mkdir(parents=True, exist_ok=True)
     project_dir = _materialize_source(source, render_dir / "project")
 
-    caption_list = list(captions)
-    srt_text = captions_to_srt(caption_list, _caption_fps(ctx, caption_list))
-    srt_path = out_dir / "captions.srt"
-    srt_path.write_text(srt_text, encoding="utf-8")
+    try:
+        caption_list = list(captions)
+        srt_text = captions_to_srt(caption_list, _caption_fps(ctx, caption_list))
+        srt_path = out_dir / "captions.srt"
+        srt_path.write_text(srt_text, encoding="utf-8")
 
-    raw_video = _run_motion_canvas(project_dir, ctx)
-    final_path = out_dir / f"{_output_name(ctx)}.mp4"
-    if caption_list:
-        _mux_srt(raw_video, srt_path, final_path, ctx)
-    elif raw_video != final_path:
-        shutil.copyfile(raw_video, final_path)
+        raw_video = _run_motion_canvas(project_dir, ctx)
+        final_path = out_dir / f"{_output_name(ctx)}.mp4"
+        if caption_list:
+            _mux_srt(raw_video, srt_path, final_path, ctx)
+        elif raw_video != final_path:
+            shutil.copyfile(raw_video, final_path)
 
-    artifact = artifact_from_path("video", final_path)
-    _write_build_manifest(source, final_path, ctx)
-    return artifact
+        artifact = artifact_from_path("video", final_path)
+        _write_build_manifest(source, final_path, ctx)
+        return artifact
+    except RenderCommandError:
+        raise
+    except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
+        final_path = out_dir / f"{_output_name(ctx)}.mp4"
+        _cleanup_partial_outputs(final_path, out_dir / "build.json")
+        raise RenderEnvironmentError(
+            [_probe_diagnostic(VIR_TOOL_PROBE_FAILED, "post-render validation failed", str(exc))]
+        ) from exc
 
 
 def motion_canvas_version(ctx: BuildContext) -> str:
@@ -161,6 +164,8 @@ def motion_canvas_version(ctx: BuildContext) -> str:
 
 def captions_to_srt(captions: Iterable[Caption], fps: int) -> str:
     """Lower resolved frame captions to deterministic SRT text."""
+    if fps <= 0:
+        raise ValueError(f"renderer.fps must be positive, got {fps}")
     lines: list[str] = []
     for index, caption in enumerate(captions, start=1):
         lines.extend(
@@ -256,24 +261,15 @@ def _probe_command(
 ) -> list[Diagnostic]:
     executable = command[0]
     if shutil.which(executable) is None:
-        return [
-            Diagnostic(
-                code=missing_code,
-                message=f"{label} is not installed",
-                help=help_text,
-            )
-        ]
-    completed = _run_command(list(command), timeout=_DEFAULT_TIMEOUT_SECONDS)
+        return [_probe_diagnostic(missing_code, f"{label} is not installed", help_text)]
+    try:
+        completed = _run_command(list(command), timeout=_DEFAULT_TIMEOUT_SECONDS)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return [_probe_diagnostic(VIR_TOOL_PROBE_FAILED, f"{label} probe failed", str(exc))]
     if completed.returncode == 0:
         return []
     stderr = completed.stderr.strip() or completed.stdout.strip() or "tool exited unsuccessfully"
-    return [
-        Diagnostic(
-            code=VIR_TOOL_PROBE_FAILED,
-            message=f"{label} probe failed",
-            help=stderr,
-        )
-    ]
+    return [_probe_diagnostic(VIR_TOOL_PROBE_FAILED, f"{label} probe failed", stderr)]
 
 
 def _run_command(
@@ -290,6 +286,15 @@ def _run_command(
         timeout=timeout,
         cwd=cwd,
     )
+
+def _probe_diagnostic(code_value: str, message: str, help_text: str) -> Diagnostic:
+    return Diagnostic(code=code_value, message=message, help=help_text)
+
+
+def _cleanup_partial_outputs(*paths: Path) -> None:
+    for path in paths:
+        if path.exists():
+            path.unlink()
 
 
 def _motion_canvas_command(ctx: BuildContext) -> list[str]:
