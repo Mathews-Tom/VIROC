@@ -1,0 +1,5 @@
+project: rag-overview
+default_backend: manim
+paths:
+  storyboards: storyboards
+  out: build
