@@ -64,8 +64,11 @@ def render(
 ) -> BuildArtifact:
     """Materialize deterministic review artifacts and write a review manifest."""
     _ = captions
-    destination = ctx.paths.out_dir / "generated" / id
-    artifact = materialize_source(source, destination)
+    if source.path is not None and source.path.is_dir():
+        artifact = BuildArtifact(kind=source.kind, digest=source.digest, path=source.path)
+    else:
+        destination = ctx.paths.out_dir / "generated" / id
+        artifact = materialize_source(source, destination)
     root = artifact.path
     assert root is not None
     cards_path = root / "scene-cards.json"
@@ -82,7 +85,7 @@ def render(
         vidir_version=ctx.config.get("vidir_version", "0.1"),
     )
     write_manifest(manifest, ctx.paths.out_dir / "build.json")
-    return BuildArtifact(kind="review", digest=artifact.digest, path=root / "storyboard.md")
+    return BuildArtifact(kind="video", digest=artifact.digest, path=root / "storyboard.md")
 
 
 __all__ = [

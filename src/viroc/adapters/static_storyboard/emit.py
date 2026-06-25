@@ -60,26 +60,31 @@ def scene_cards(ir: ConcreteIR) -> list[dict[str, object]]:
     """Return deterministic scene-card data grouped by scene prefix."""
     objects_by_scene: dict[str, list[ResolvedObject]] = defaultdict(list)
     keyframes_by_scene: dict[str, list[Keyframe]] = defaultdict(list)
-    captions_by_scene: dict[str, list[Caption]] = defaultdict(list)
     for obj in _sorted_objects(ir.objects):
         objects_by_scene[_scene_id(obj.id)].append(obj)
     for keyframe in _sorted_keyframes(ir.keyframes):
         keyframes_by_scene[_scene_id(keyframe.object_id)].append(keyframe)
     scene_names = sorted(objects_by_scene)
-    if len(scene_names) == 1:
-        for caption in _sorted_captions(ir.captions):
-            captions_by_scene[scene_names[0]].append(caption)
+    scene_ranges: dict[str, tuple[int, int]] = {}
+    for scene in scene_names:
+        scene_keyframes = keyframes_by_scene.get(scene, [])
+        start_f = min((keyframe.start_f for keyframe in scene_keyframes), default=0)
+        end_f = max((keyframe.end_f for keyframe in scene_keyframes), default=start_f)
+        scene_ranges[scene] = (start_f, end_f)
+    captions_by_scene: dict[str, list[Caption]] = {scene: [] for scene in scene_names}
+    for caption in _sorted_captions(ir.captions):
+        scene = _caption_scene(caption, scene_ranges)
+        if scene is not None:
+            captions_by_scene[scene].append(caption)
     cards: list[dict[str, object]] = []
     for scene in scene_names:
         scene_objects = objects_by_scene[scene]
         scene_keyframes = keyframes_by_scene.get(scene, [])
         scene_captions = captions_by_scene.get(scene, [])
-        start_f = min((keyframe.start_f for keyframe in scene_keyframes), default=0)
-        end_f = max(
-            [keyframe.end_f for keyframe in scene_keyframes]
-            + [caption.end_f for caption in scene_captions],
-            default=0,
-        )
+        start_f, end_f = scene_ranges[scene]
+        if scene_captions:
+            start_f = min(start_f, min(caption.start_f for caption in scene_captions))
+            end_f = max(end_f, max(caption.end_f for caption in scene_captions))
         cards.append(
             {
                 "caption_lines": [caption.text for caption in scene_captions],
@@ -168,6 +173,22 @@ def _script_markdown(cards: list[dict[str, object]]) -> str:
             lines.append("- (no captions)\n")
         lines.append("\n")
     return "".join(lines)
+
+
+def _caption_scene(
+    caption: Caption, scene_ranges: dict[str, tuple[int, int]]
+) -> str | None:
+    for scene, (start_f, end_f) in scene_ranges.items():
+        if start_f <= caption.start_f < max(end_f, start_f + 1):
+            return scene
+        if caption.start_f < start_f and caption.end_f > start_f:
+            return scene
+    if not scene_ranges:
+        return None
+    return min(
+        scene_ranges,
+        key=lambda scene: abs(caption.start_f - scene_ranges[scene][0]),
+    )
 
 
 def _object_data(obj: ResolvedObject) -> dict[str, object]:
