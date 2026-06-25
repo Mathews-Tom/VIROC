@@ -1,0 +1,332 @@
+{
+  "fps": 30,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "objects": [
+    {
+      "id": "pipeline.documents.box",
+      "primitive": "rect",
+      "box": {
+        "x": 264.0,
+        "y": 482.0,
+        "w": 258.0,
+        "h": 68.0
+      },
+      "z": 0,
+      "style_ref": "node.data_source"
+    },
+    {
+      "id": "pipeline.documents.label",
+      "primitive": "text",
+      "box": {
+        "x": 330.0,
+        "y": 562.0,
+        "w": 126.0,
+        "h": 36.0
+      },
+      "z": 0,
+      "style_ref": "label"
+    },
+    {
+      "id": "pipeline.chunks.box",
+      "primitive": "rect",
+      "box": {
+        "x": 642.0,
+        "y": 482.0,
+        "w": 258.0,
+        "h": 68.0
+      },
+      "z": 0,
+      "style_ref": "node.intermediate"
+    },
+    {
+      "id": "pipeline.chunks.label",
+      "primitive": "text",
+      "box": {
+        "x": 729.0,
+        "y": 562.0,
+        "w": 84.0,
+        "h": 36.0
+      },
+      "z": 0,
+      "style_ref": "label"
+    },
+    {
+      "id": "pipeline.embedder.box",
+      "primitive": "rect",
+      "box": {
+        "x": 1020.0,
+        "y": 482.0,
+        "w": 258.0,
+        "h": 68.0
+      },
+      "z": 0,
+      "style_ref": "node.model"
+    },
+    {
+      "id": "pipeline.embedder.label",
+      "primitive": "text",
+      "box": {
+        "x": 1044.0,
+        "y": 562.0,
+        "w": 210.0,
+        "h": 36.0
+      },
+      "z": 0,
+      "style_ref": "label"
+    },
+    {
+      "id": "pipeline.vector_db.box",
+      "primitive": "rect",
+      "box": {
+        "x": 1398.0,
+        "y": 482.0,
+        "w": 258.0,
+        "h": 68.0
+      },
+      "z": 0,
+      "style_ref": "node.storage"
+    },
+    {
+      "id": "pipeline.vector_db.label",
+      "primitive": "text",
+      "box": {
+        "x": 1464.0,
+        "y": 562.0,
+        "w": 126.0,
+        "h": 36.0
+      },
+      "z": 0,
+      "style_ref": "label"
+    },
+    {
+      "id": "pipeline.documents.chunks.arrow",
+      "primitive": "arrow",
+      "box": {
+        "x": 522.0,
+        "y": 512.0,
+        "w": 120.0,
+        "h": 8.0
+      },
+      "z": 0,
+      "style_ref": "edge.split"
+    },
+    {
+      "id": "pipeline.chunks.embedder.arrow",
+      "primitive": "arrow",
+      "box": {
+        "x": 900.0,
+        "y": 512.0,
+        "w": 120.0,
+        "h": 8.0
+      },
+      "z": 0,
+      "style_ref": "edge.transform"
+    },
+    {
+      "id": "pipeline.embedder.vector_db.arrow",
+      "primitive": "arrow",
+      "box": {
+        "x": 1278.0,
+        "y": 512.0,
+        "w": 120.0,
+        "h": 8.0
+      },
+      "z": 0,
+      "style_ref": "edge.store"
+    }
+  ],
+  "keyframes": [
+    {
+      "object_id": "pipeline.documents.box",
+      "kind": "fade_in",
+      "start_f": 0,
+      "end_f": 31,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.documents.label",
+      "kind": "fade_in",
+      "start_f": 31,
+      "end_f": 62,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.chunks.box",
+      "kind": "fade_in",
+      "start_f": 62,
+      "end_f": 93,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.chunks.label",
+      "kind": "fade_in",
+      "start_f": 93,
+      "end_f": 124,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.embedder.box",
+      "kind": "fade_in",
+      "start_f": 124,
+      "end_f": 155,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.embedder.label",
+      "kind": "fade_in",
+      "start_f": 155,
+      "end_f": 186,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.vector_db.box",
+      "kind": "fade_in",
+      "start_f": 186,
+      "end_f": 217,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.vector_db.label",
+      "kind": "fade_in",
+      "start_f": 217,
+      "end_f": 248,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.documents.chunks.arrow",
+      "kind": "draw",
+      "start_f": 248,
+      "end_f": 279,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.chunks.embedder.arrow",
+      "kind": "draw",
+      "start_f": 279,
+      "end_f": 310,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.embedder.vector_db.arrow",
+      "kind": "draw",
+      "start_f": 310,
+      "end_f": 341,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.documents.box",
+      "kind": "highlight",
+      "start_f": 350,
+      "end_f": 481,
+      "easing": "linear"
+    },
+    {
+      "object_id": "pipeline.chunks.box",
+      "kind": "highlight",
+      "start_f": 481,
+      "end_f": 612,
+      "easing": "linear"
+    },
+    {
+      "object_id": "pipeline.embedder.box",
+      "kind": "highlight",
+      "start_f": 612,
+      "end_f": 743,
+      "easing": "linear"
+    },
+    {
+      "object_id": "pipeline.vector_db.box",
+      "kind": "highlight",
+      "start_f": 743,
+      "end_f": 874,
+      "easing": "linear"
+    },
+    {
+      "object_id": "pipeline.documents.box",
+      "kind": "fade_out",
+      "start_f": 875,
+      "end_f": 1050,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.documents.label",
+      "kind": "fade_out",
+      "start_f": 875,
+      "end_f": 1050,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.chunks.box",
+      "kind": "fade_out",
+      "start_f": 875,
+      "end_f": 1050,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.chunks.label",
+      "kind": "fade_out",
+      "start_f": 875,
+      "end_f": 1050,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.embedder.box",
+      "kind": "fade_out",
+      "start_f": 875,
+      "end_f": 1050,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.embedder.label",
+      "kind": "fade_out",
+      "start_f": 875,
+      "end_f": 1050,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.vector_db.box",
+      "kind": "fade_out",
+      "start_f": 875,
+      "end_f": 1050,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.vector_db.label",
+      "kind": "fade_out",
+      "start_f": 875,
+      "end_f": 1050,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.documents.chunks.arrow",
+      "kind": "fade_out",
+      "start_f": 875,
+      "end_f": 1050,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.chunks.embedder.arrow",
+      "kind": "fade_out",
+      "start_f": 875,
+      "end_f": 1050,
+      "easing": "ease_in_out"
+    },
+    {
+      "object_id": "pipeline.embedder.vector_db.arrow",
+      "kind": "fade_out",
+      "start_f": 875,
+      "end_f": 1050,
+      "easing": "ease_in_out"
+    }
+  ],
+  "captions": [
+    {
+      "text": "Documents are chunked, embedded, and stored in a vector database.",
+      "start_f": 0,
+      "end_f": 1050
+    }
+  ]
+}
