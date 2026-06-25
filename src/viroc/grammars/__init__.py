@@ -148,6 +148,20 @@ def registered_ids() -> frozenset[str]:
     return frozenset(_GRAMMARS)
 
 
+def register_builtins() -> None:
+    """Register the built-in v1 grammars; idempotent and safe to call repeatedly.
+
+    The contract module stays free of grammar imports, so the import is local;
+    callers (the layout driver, grammar-fit pre-validation) invoke this before
+    consulting the registry so the built-ins are present without importing the
+    grammar package directly. An already-registered grammar is skipped.
+    """
+    from viroc.grammars.pipeline.grammar import pipeline_grammar
+
+    if not is_registered(pipeline_grammar.id):
+        register(pipeline_grammar)
+
+
 def overlaps(a: Box, b: Box) -> bool:
     """Report whether two boxes share positive area.
 
@@ -181,5 +195,6 @@ __all__ = [
     "is_registered",
     "overlaps",
     "register",
+    "register_builtins",
     "registered_ids",
 ]
