@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import html
-import json
-from collections import defaultdict
 
 from viroc.adapters.html.templates import BASE_CSS, RUNTIME_SCRIPT, SOURCE_HEADER, STYLE_TOKENS
 from viroc.core import BuildArtifact, BuildContext, artifact_from_text, canonical_json
