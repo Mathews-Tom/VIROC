@@ -68,8 +68,9 @@ def builtin_registry() -> AdapterRegistry:
     """Return the built-in in-repo adapters keyed by backend id."""
     import viroc.adapters.html as html
     import viroc.adapters.manim as manim
+    import viroc.adapters.remotion as remotion
 
-    return AdapterRegistry([manim, html])
+    return AdapterRegistry([manim, html, remotion])
 
 
 def unknown_backend_diagnostic(adapter_id: str, available: Iterable[str]) -> Diagnostic:

@@ -29,8 +29,13 @@ def support_diagnostics(
     ir: ConcreteIR,
     *,
     primitive_fallback_backend: str | None = None,
+    primitive_fallback_backends: tuple[str, ...] = (),
 ) -> list[Diagnostic]:
     """Return renderer diagnostics for unsupported Concrete IR content."""
+    fallback_backends = _fallback_backends(
+        primitive_fallback_backend,
+        primitive_fallback_backends,
+    )
     diagnostics: list[Diagnostic] = []
     for obj in ir.objects:
         if obj.primitive not in manifest.primitives:
@@ -39,7 +44,7 @@ def support_diagnostics(
                     adapter_id,
                     obj.primitive,
                     object_id=obj.id,
-                    fallback_backend=primitive_fallback_backend,
+                    fallback_backends=fallback_backends,
                 )
             )
     for keyframe in ir.keyframes:
@@ -59,14 +64,14 @@ def unsupported_primitive_diagnostic(
     primitive: str,
     *,
     object_id: str,
-    fallback_backend: str | None = None,
+    fallback_backends: tuple[str, ...] = (),
 ) -> Diagnostic:
     """Build the diagnostic for an unsupported object primitive."""
-    if fallback_backend is None:
+    if not fallback_backends:
         help_text = f'provide a fallback image asset for object "{object_id}"'
     else:
         help_text = (
-            f'use renderer "{fallback_backend}", or provide a fallback image asset '
+            f"{_fallback_help(fallback_backends)}, or provide a fallback image asset "
             f'for object "{object_id}"'
         )
     return Diagnostic(
@@ -74,6 +79,26 @@ def unsupported_primitive_diagnostic(
         message=f'renderer "{adapter_id}" does not support primitive "{primitive}"',
         help=help_text,
     )
+
+
+def _fallback_backends(
+    fallback_backend: str | None,
+    fallback_backends: tuple[str, ...],
+) -> tuple[str, ...]:
+    ordered: list[str] = []
+    if fallback_backend is not None:
+        ordered.append(fallback_backend)
+    for backend in fallback_backends:
+        if backend not in ordered:
+            ordered.append(backend)
+    return tuple(ordered)
+
+
+def _fallback_help(backends: tuple[str, ...]) -> str:
+    if len(backends) == 1:
+        return f'use renderer "{backends[0]}"'
+    quoted = ", ".join(f'"{backend}"' for backend in backends[:-1])
+    return f"use renderer {quoted}, or \"{backends[-1]}\""
 
 
 def unsupported_animation_diagnostic(
