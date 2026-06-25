@@ -46,3 +46,6 @@ venv = ".venv"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# importlib mode lets test modules in different dirs share a basename
+# (tests/unit and tests/golden both have a test_pipeline_layout.py).
+addopts = "--import-mode=importlib"
