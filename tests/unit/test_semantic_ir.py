@@ -145,7 +145,7 @@ def test_unknown_field_is_vir1003(tmp_path: Path) -> None:
     span = diagnostics[0].span
     assert span is not None
     assert span.source is not None
-    assert span.source.startswith("bogus")
+    assert span.source[span.col - 1 : span.col - 1 + span.length] == "bogus"
 
 
 def test_missing_required_id_is_vir1004(tmp_path: Path) -> None:
@@ -176,3 +176,74 @@ def test_invalid_entity_type_is_vir1001(tmp_path: Path) -> None:
 
     assert ir is None
     assert [d.code for d in diagnostics] == [VIR_SCHEMA]
+
+
+def test_nested_unknown_field_caret_targets_the_key(tmp_path: Path) -> None:
+    """A nested unknown field points the caret at the key, on the key's own line."""
+    text = (
+        'vidir_version: "0.1"\n'
+        "video:\n"
+        "  id: v\n"
+        "  title: t\n"
+        "  bogus:\n"
+        "    nested: value\n"
+        "entities: []\n"
+        "scenes: []\n"
+    )
+    ir, diagnostics = validate_schema(_load_yaml(tmp_path, text))
+
+    assert ir is None
+    assert [d.code for d in diagnostics] == [VIR_UNKNOWN_FIELD]
+    span = diagnostics[0].span
+    assert span is not None
+    assert span.source is not None
+    assert span.source.strip() == "bogus:"
+    assert span.source[span.col - 1 : span.col - 1 + span.length] == "bogus"
+
+
+def test_beat_scene_parses(tmp_path: Path) -> None:
+    """A scene carrying a beats block parses into Beat models."""
+    text = (
+        'vidir_version: "0.1"\n'
+        "video: { id: v, title: t }\n"
+        "entities:\n"
+        '  - { id: a, label: "A", type: model }\n'
+        "scenes:\n"
+        "  - id: s1\n"
+        "    grammar: pipeline\n"
+        "    duration: 10s\n"
+        "    nodes: [a]\n"
+        "    beats:\n"
+        '      - { id: b1, at: "0s", duration: "4s", narration: "intro" }\n'
+        '      - { id: b2, at: "after(b1.end)", duration: "6s" }\n'
+    )
+    ir, diagnostics = validate_schema(_load_yaml(tmp_path, text))
+
+    assert diagnostics == []
+    assert ir is not None
+    beats = ir.scenes[0].beats
+    assert [beat.id for beat in beats] == ["b1", "b2"]
+    assert beats[0].at == "0s"
+    assert beats[0].narration == "intro"
+    assert beats[1].narration is None
+
+
+def test_beat_missing_duration_is_vir1004(tmp_path: Path) -> None:
+    """A beat missing a required field yields VIR1004."""
+    text = (
+        'vidir_version: "0.1"\n'
+        "video: { id: v, title: t }\n"
+        "entities:\n"
+        '  - { id: a, label: "A", type: model }\n'
+        "scenes:\n"
+        "  - id: s1\n"
+        "    grammar: pipeline\n"
+        "    duration: 10s\n"
+        "    nodes: [a]\n"
+        "    beats:\n"
+        '      - { id: b1, at: "0s" }\n'
+    )
+    ir, diagnostics = validate_schema(_load_yaml(tmp_path, text))
+
+    assert ir is None
+    assert [d.code for d in diagnostics] == [VIR_MISSING_FIELD]
