@@ -51,9 +51,15 @@ def check_environment(ctx: BuildContext) -> list[Diagnostic]:
     ffmpeg = _renderer_str(ctx, "ffmpeg_executable", "ffmpeg")
     ffprobe = _renderer_str(ctx, "ffprobe_executable", "ffprobe")
     diagnostics: list[Diagnostic] = []
-    diagnostics.extend(_probe_tool(manim, ["--version"], VIR_MISSING_MANIM, "Manim"))
-    diagnostics.extend(_probe_tool(ffmpeg, ["-version"], VIR_MISSING_FFMPEG, "FFmpeg"))
-    diagnostics.extend(_probe_tool(ffprobe, ["-version"], VIR_MISSING_FFPROBE, "ffprobe"))
+    diagnostics.extend(
+        _probe_tool(manim, ["--version"], VIR_MISSING_MANIM, "Manim", "manim_executable")
+    )
+    diagnostics.extend(
+        _probe_tool(ffmpeg, ["-version"], VIR_MISSING_FFMPEG, "FFmpeg", "ffmpeg_executable")
+    )
+    diagnostics.extend(
+        _probe_tool(ffprobe, ["-version"], VIR_MISSING_FFPROBE, "ffprobe", "ffprobe_executable")
+    )
     return diagnostics
 
 
@@ -68,6 +74,8 @@ def render(
     The generated source remains the reproducibility boundary; this function is
     deliberately impure and fails loudly when the render environment is absent.
     """
+    caption_list = list(captions)
+    srt_text = captions_to_srt(caption_list, _caption_fps(ctx, caption_list))
     diagnostics = check_environment(ctx)
     if diagnostics:
         raise RenderEnvironmentError(diagnostics)
@@ -78,13 +86,13 @@ def render(
     render_dir.mkdir(parents=True, exist_ok=True)
     source_path = _materialize_source(source, render_dir / "scene.py")
     srt_path = out_dir / "captions.srt"
-    srt_path.write_text(captions_to_srt(captions, _renderer_int(ctx, "fps", 30)), encoding="utf-8")
+    srt_path.write_text(srt_text, encoding="utf-8")
 
     raw_name = f"{_renderer_str(ctx, 'output_name', _DEFAULT_OUTPUT_NAME)}-raw"
     final_path = out_dir / f"{_renderer_str(ctx, 'output_name', _DEFAULT_OUTPUT_NAME)}.mp4"
     _run_manim(source_path, media_dir, raw_name, ctx)
     raw_video = _latest_rendered_video(media_dir, raw_name)
-    if srt_path.read_text(encoding="utf-8"):
+    if srt_text:
         _mux_srt(raw_video, srt_path, final_path, ctx)
     else:
         shutil.copy2(raw_video, final_path)
@@ -122,14 +130,14 @@ def manim_version(ctx: BuildContext) -> str:
 
 
 def _probe_tool(
-    command: str, args: list[str], missing_code: str, label: str
+    command: str, args: list[str], missing_code: str, label: str, config_key: str
 ) -> list[Diagnostic]:
     if shutil.which(command) is None:
         return [
             Diagnostic(
                 code=missing_code,
                 message=f"{label} executable not found",
-                help=f'install {label} or set renderer.{command}_executable to its path',
+                help=f"install {label} or set renderer.{config_key} to its path",
             )
         ]
     completed = _run_command([command, *args], timeout=10)
@@ -224,6 +232,18 @@ def _run_command(command: list[str], *, timeout: int) -> subprocess.CompletedPro
         check=False,
         timeout=timeout,
     )
+
+
+def _caption_fps(ctx: BuildContext, captions: list[Caption]) -> int:
+    if not captions:
+        return _renderer_int(ctx, "fps", 30)
+    return _renderer_int_required(ctx, "fps")
+
+
+def _renderer_int_required(ctx: BuildContext, key: str) -> int:
+    if key not in ctx.renderer:
+        raise ValueError(f"renderer.{key} is required when rendering captions")
+    return _renderer_int(ctx, key, 0)
 
 
 def _renderer_str(ctx: BuildContext, key: str, default: str) -> str:
