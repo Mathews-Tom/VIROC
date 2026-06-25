@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
@@ -15,7 +16,7 @@ from viroc.adapters.registry import (
     UnknownBackendError,
 )
 from viroc.core import BuildArtifact, BuildContext, BuildPaths, Diagnostic, artifact_from_text
-from viroc.ir import ConcreteIR
+from viroc.ir import Caption, ConcreteIR
 
 
 class _Adapter:
@@ -39,8 +40,14 @@ class _Adapter:
         _ = (ir, ctx)
         return artifact_from_text("source", "scene = None\n")
 
-    def render(self, source: BuildArtifact, ctx: BuildContext) -> BuildArtifact:
-        _ = (source, ctx)
+    def render(
+        self,
+        source: BuildArtifact,
+        ctx: BuildContext,
+        *,
+        captions: Iterable[Caption] = (),
+    ) -> BuildArtifact:
+        _ = (source, ctx, tuple(captions))
         return artifact_from_text("video", "video-bytes")
 
 

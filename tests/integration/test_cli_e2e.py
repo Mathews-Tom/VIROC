@@ -20,7 +20,7 @@ _FIXTURES = _ROOT / "tests" / "fixtures"
 def test_cli_e2e_example_and_failing_storyboard(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    assert main(["check", str(_EXAMPLE)]) == 0
+    assert main(["check", str(_EXAMPLE), "--backend", "manim"]) == 0
     assert capsys.readouterr().err == ""
 
     assert main(["compile", str(_EXAMPLE), "--backend", "manim"]) == 0

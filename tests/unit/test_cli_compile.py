@@ -1,4 +1,4 @@
-"""CLI compile coverage for deterministic Manim source emission."""
+"""CLI compile coverage for deterministic backend source emission."""
 
 from __future__ import annotations
 
@@ -36,3 +36,21 @@ def test_compile_emits_expected_manim_source(
     assert generated.exists()
     assert str(generated) in captured.out
     assert f"source_hash: {hash_bytes(_GOLDEN_SOURCE.read_bytes())}" in captured.out
+
+
+def test_compile_reports_unknown_backend_diagnostic(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    project = tmp_path / "rag-pipeline"
+    project.mkdir()
+    (project / "viroc.yaml").write_text("project: rag-pipeline\n", encoding="utf-8")
+    (project / "storyboard.vidir.yaml").write_text(
+        (_FIXTURES / "rag-overview.vidir.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    assert main(["compile", str(project), "--backend", "html"]) == 1
+
+    captured = capsys.readouterr()
+    assert "VIR5011" in captured.err
+    assert 'available backends: "manim"' in captured.err
