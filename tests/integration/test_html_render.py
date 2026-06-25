@@ -21,8 +21,24 @@ _SOURCE = """<!doctype html>
 <style>
 html, body { margin: 0; background: #0B1020; }
 #scene { position: relative; width: 320px; height: 180px; background: #0B1020; }
-.box { position: absolute; left: 40px; top: 50px; width: 120px; height: 40px; border-radius: 12px; background: #0891B2; }
-.caption { position: absolute; left: 32px; right: 32px; bottom: 24px; color: #E5E7EB; font: 600 20px/1.2 sans-serif; text-align: center; }
+.box {
+  position: absolute;
+  left: 40px;
+  top: 50px;
+  width: 120px;
+  height: 40px;
+  border-radius: 12px;
+  background: #0891B2;
+}
+.caption {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  bottom: 24px;
+  color: #E5E7EB;
+  font: 600 20px/1.2 sans-serif;
+  text-align: center;
+}
 </style>
 </head>
 <body>

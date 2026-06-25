@@ -62,108 +62,120 @@ const browserArgs = [
 ];
 const child = spawn(browser, browserArgs, { stdio: ["ignore", "pipe", "pipe"] });
 let stderr = "";
+let socket;
 child.stderr.on("data", chunk => {
   stderr += chunk.toString();
 });
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-const activePortPath = join(userDataDir, "DevToolsActivePort");
-let port = "";
-for (let attempt = 0; attempt < 200; attempt += 1) {
-  try {
-    const text = await readFile(activePortPath, "utf8");
-    port = text.split("\n")[0]?.trim() ?? "";
-    if (port) break;
-  } catch {}
-  if (child.exitCode !== null) {
-    break;
-  }
-  await sleep(50);
-}
-if (!port) {
-  throw new Error(stderr.trim() || "Chrome DevTools port did not appear");
-}
-let page;
-for (let attempt = 0; attempt < 100; attempt += 1) {
-  const targets = await fetch(`http://127.0.0.1:${port}/json/list`).then(response => response.json());
-  page = targets.find(target => target.type === "page");
-  if (page) break;
-  await sleep(50);
-}
-if (!page) {
-  throw new Error("Chrome DevTools did not expose a page target");
-}
-const socket = new WebSocket(page.webSocketDebuggerUrl);
-const pending = new Map();
-let nextId = 1;
-socket.onmessage = event => {
-  const message = JSON.parse(event.data);
-  if (message.id && pending.has(message.id)) {
-    const entry = pending.get(message.id);
-    pending.delete(message.id);
-    if (message.error) {
-      entry.reject(new Error(JSON.stringify(message.error)));
-    } else {
-      entry.resolve(message.result);
+try {
+  const activePortPath = join(userDataDir, "DevToolsActivePort");
+  let port = "";
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    try {
+      const text = await readFile(activePortPath, "utf8");
+      port = text.split("\n")[0]?.trim() ?? "";
+      if (port) break;
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
     }
+    if (child.exitCode !== null) {
+      break;
+    }
+    await sleep(50);
   }
-};
-await new Promise((resolve, reject) => {
-  socket.onopen = () => resolve(undefined);
-  socket.onerror = event => reject(new Error(String(event.message || event.type)));
-});
-const send = (method, params = {}) =>
-  new Promise((resolve, reject) => {
-    const id = nextId;
-    nextId += 1;
-    pending.set(id, { resolve, reject });
-    socket.send(JSON.stringify({ id, method, params }));
+  if (!port) {
+    throw new Error(stderr.trim() || "Chrome DevTools port did not appear");
+  }
+  let page;
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const targets = await fetch(`http://127.0.0.1:${port}/json/list`).then(
+      response => response.json()
+    );
+    page = targets.find(target => target.type === "page");
+    if (page) break;
+    await sleep(50);
+  }
+  if (!page) {
+    throw new Error("Chrome DevTools did not expose a page target");
+  }
+  socket = new WebSocket(page.webSocketDebuggerUrl);
+  const pending = new Map();
+  let nextId = 1;
+  socket.onmessage = event => {
+    const message = JSON.parse(event.data);
+    if (message.id && pending.has(message.id)) {
+      const entry = pending.get(message.id);
+      pending.delete(message.id);
+      if (message.error) {
+        entry.reject(new Error(JSON.stringify(message.error)));
+      } else {
+        entry.resolve(message.result);
+      }
+    }
+  };
+  await new Promise((resolve, reject) => {
+    socket.onopen = () => resolve(undefined);
+    socket.onerror = event => reject(new Error(String(event.message || event.type)));
   });
-const evaluate = async expression => {
-  const result = await send("Runtime.evaluate", {
-    expression,
-    returnByValue: true,
-    awaitPromise: true,
+  const send = (method, params = {}) =>
+    new Promise((resolve, reject) => {
+      const id = nextId;
+      nextId += 1;
+      pending.set(id, { resolve, reject });
+      socket.send(JSON.stringify({ id, method, params }));
+    });
+  const evaluate = async expression => {
+    const result = await send("Runtime.evaluate", {
+      expression,
+      returnByValue: true,
+      awaitPromise: true,
+    });
+    return result.result.value;
+  };
+  await send("Page.enable");
+  await send("Runtime.enable");
+  await send("Page.navigate", { url: `${sourceUrl}?frame=0` });
+  await sleep(150);
+  const metadata = await evaluate(`(() => {
+    const scene = document.getElementById("scene");
+    if (!scene) throw new Error("missing #scene root");
+    const fps = Number(scene.dataset.fps || "0");
+    const totalFrames = Number(window.__viroc_frame_count || scene.dataset.totalFrames || "0");
+    return { width: scene.clientWidth, height: scene.clientHeight, fps, totalFrames };
+  })()`);
+  if (!metadata || !metadata.width || !metadata.height || !metadata.fps) {
+    throw new Error(`invalid scene metadata: ${JSON.stringify(metadata)}`);
+  }
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: metadata.width,
+    height: metadata.height,
+    deviceScaleFactor: 1,
+    mobile: false,
   });
-  return result.result.value;
-};
-await send("Page.enable");
-await send("Runtime.enable");
-await send("Page.navigate", { url: `${sourceUrl}?frame=0` });
-await sleep(150);
-const metadata = await evaluate(`(() => {
-  const scene = document.getElementById("scene");
-  if (!scene) throw new Error("missing #scene root");
-  const fps = Number(scene.dataset.fps || "0");
-  const totalFrames = Number(window.__viroc_frame_count || scene.dataset.totalFrames || "0");
-  return { width: scene.clientWidth, height: scene.clientHeight, fps, totalFrames };
-})()`);
-if (!metadata || !metadata.width || !metadata.height || !metadata.fps) {
-  throw new Error(`invalid scene metadata: ${JSON.stringify(metadata)}`);
+  await send("Page.navigate", { url: `${sourceUrl}?frame=0` });
+  await sleep(150);
+  await mkdir(framesDir, { recursive: true });
+  for (let frame = 0; frame < metadata.totalFrames; frame += 1) {
+    await evaluate(`window.__viroc_setFrame(${frame})`);
+    const shot = await send("Page.captureScreenshot", {
+      format: "png",
+      fromSurface: true,
+    });
+    const framePath = join(framesDir, `${String(frame).padStart(6, "0")}.png`);
+    await writeFile(framePath, Buffer.from(shot.data, "base64"));
+  }
+  await writeFile(metadataPath, JSON.stringify(metadata));
+} finally {
+  try {
+    socket?.close();
+  } catch {}
+  if (child.exitCode === null) {
+    child.kill("SIGKILL");
+  }
+  await rm(profileRoot, { recursive: true, force: true });
 }
-await send("Emulation.setDeviceMetricsOverride", {
-  width: metadata.width,
-  height: metadata.height,
-  deviceScaleFactor: 1,
-  mobile: false,
-});
-await send("Page.navigate", { url: `${sourceUrl}?frame=0` });
-await sleep(150);
-await mkdir(framesDir, { recursive: true });
-for (let frame = 0; frame < metadata.totalFrames; frame += 1) {
-  await evaluate(`window.__viroc_setFrame(${frame})`);
-  const shot = await send("Page.captureScreenshot", {
-    format: "png",
-    fromSurface: true,
-  });
-  const framePath = join(framesDir, `${String(frame).padStart(6, "0")}.png`);
-  await writeFile(framePath, Buffer.from(shot.data, "base64"));
-}
-await writeFile(metadataPath, JSON.stringify(metadata));
-socket.close();
-child.kill("SIGKILL");
-await rm(profileRoot, { recursive: true, force: true });
 """
 
 
@@ -187,7 +199,16 @@ class RenderCommandError(RuntimeError):
 def check_environment(ctx: BuildContext) -> list[Diagnostic]:
     """Return diagnostics for missing or unusable impure render dependencies."""
     diagnostics: list[Diagnostic] = []
-    browser = _browser_command(ctx)
+    try:
+        browser = _browser_command(ctx)
+    except ValueError as exc:
+        return [
+            Diagnostic(
+                code=VIR_MISSING_BROWSER,
+                message="invalid renderer.browser_executable configuration",
+                help=str(exc),
+            )
+        ]
     if browser is None:
         diagnostics.append(
             Diagnostic(
@@ -254,7 +275,14 @@ def render(
 
     browser = _require_browser(ctx)
     node = _renderer_str(ctx, "node_executable", "node")
-    command = [node, str(node_script), browser, str(source_path), str(frames_dir), str(metadata_path)]
+    command = [
+        node,
+        str(node_script),
+        browser,
+        str(source_path),
+        str(frames_dir),
+        str(metadata_path),
+    ]
     completed = _run_command(
         command,
         timeout=_renderer_int(ctx, "timeout_seconds", _DEFAULT_TIMEOUT_SECONDS),
@@ -388,7 +416,13 @@ def _write_build_manifest(source: BuildArtifact, video_path: Path, ctx: BuildCon
     write_manifest(manifest, ctx.paths.out_dir / "build.json")
 
 
-def _probe_tool(command: str, args: list[str], *, missing_code: str, label: str) -> list[Diagnostic]:
+def _probe_tool(
+    command: str,
+    args: list[str],
+    *,
+    missing_code: str,
+    label: str,
+) -> list[Diagnostic]:
     resolved = _resolve_executable(command)
     if resolved is None:
         return [
@@ -431,8 +465,10 @@ def _run_command(command: list[str], *, timeout: int) -> subprocess.CompletedPro
 
 
 def _browser_command(ctx: BuildContext) -> str | None:
-    configured = ctx.renderer.get("browser_executable")
-    if isinstance(configured, str) and configured:
+    if "browser_executable" in ctx.renderer:
+        configured = ctx.renderer["browser_executable"]
+        if not isinstance(configured, str) or not configured.strip():
+            raise ValueError("renderer.browser_executable must be a non-empty string")
         return _resolve_executable(configured)
     for candidate in _DEFAULT_BROWSER_CANDIDATES:
         resolved = _resolve_executable(candidate)
