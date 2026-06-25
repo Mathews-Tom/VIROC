@@ -30,7 +30,10 @@ class BuildPaths:
 
 @dataclass(frozen=True, slots=True)
 class BuildContext:
-    """The read-only environment for one compile.
+    """The environment threaded through one compile (a frozen container).
+
+    The instance is frozen — fields cannot be rebound — but the ``config`` and
+    ``renderer`` mappings themselves are ordinary mutable dicts.
 
     ``config`` is the project configuration (``viroc.yaml``); ``renderer`` is the
     selected backend's configuration. Both default to empty mappings so a context
