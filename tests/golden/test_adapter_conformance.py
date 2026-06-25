@@ -7,6 +7,7 @@ from pathlib import Path
 
 import viroc.adapters.html as html_adapter
 import viroc.adapters.manim as manim
+import viroc.adapters.remotion as remotion_adapter
 from viroc.adapters import CapabilityManifest, RendererAdapter
 from viroc.adapters.capabilities import (
     VIR_UNSUPPORTED_ANIMATION,
@@ -30,6 +31,7 @@ _HERE = Path(__file__).resolve().parent
 _FIXTURE = _HERE.parent / "fixtures" / "rag-overview.vidir.yaml"
 _MANIM_GOLDEN = _HERE / "rag_pipeline_scene.py"
 _HTML_GOLDEN = _HERE / "rag_pipeline_scene.html"
+_REMOTION_GOLDEN = _HERE / "rag_pipeline_remotion_project.json"
 
 
 class _FakeAdapter:
@@ -155,6 +157,32 @@ def _unsupported_html_ir() -> ConcreteIR:
     )
 
 
+def _unsupported_remotion_ir() -> ConcreteIR:
+    return ConcreteIR(
+        fps=24,
+        resolution=(1280, 720),
+        objects=[
+            ResolvedObject.model_construct(
+                id="demo.webgl",
+                primitive="webgl_mesh",
+                box=Box(x=0.0, y=0.0, w=100.0, h=50.0),
+                z=0,
+                style_ref="mesh.default",
+            )
+        ],
+        keyframes=[
+            Keyframe(
+                object_id="demo.webgl",
+                kind="move",
+                start_f=0,
+                end_f=24,
+                easing="linear",
+            )
+        ],
+        captions=[],
+    )
+
+
 def _assert_adapter_conformance(
     adapter: RendererAdapter,
     *,
@@ -204,6 +232,15 @@ def test_html_adapter_passes_shared_conformance_suite() -> None:
     )
 
 
+def test_remotion_adapter_passes_shared_conformance_suite() -> None:
+    _assert_adapter_conformance(
+        remotion_adapter,
+        supported_ir=_compile().concrete,
+        unsupported_ir=_unsupported_remotion_ir(),
+        expected_hash=hash_bytes(_REMOTION_GOLDEN.read_bytes()),
+    )
+
+
 def test_fake_adapter_passes_shared_conformance_suite() -> None:
     _assert_adapter_conformance(
         _FakeAdapter(),
@@ -223,8 +260,16 @@ def test_registry_dispatch_preserves_builtin_emit_hashes() -> None:
     html_dispatched = registry.require("html").emit(concrete, ctx)
     manim_direct = manim.emit(concrete, ctx)
     manim_dispatched = registry.require("manim").emit(concrete, ctx)
+    remotion_direct = remotion_adapter.emit(concrete, ctx)
+    remotion_dispatched = registry.require("remotion").emit(concrete, ctx)
 
     assert html_dispatched.digest == html_direct.digest == hash_bytes(_HTML_GOLDEN.read_bytes())
     assert html_dispatched.data == html_direct.data
     assert manim_dispatched.digest == manim_direct.digest == hash_bytes(_MANIM_GOLDEN.read_bytes())
     assert manim_dispatched.data == manim_direct.data
+    assert (
+        remotion_dispatched.digest
+        == remotion_direct.digest
+        == hash_bytes(_REMOTION_GOLDEN.read_bytes())
+    )
+    assert remotion_dispatched.data == remotion_direct.data
