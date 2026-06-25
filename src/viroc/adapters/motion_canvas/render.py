@@ -1,5 +1,7 @@
 """Impure Motion Canvas render path: CLI invocation, caption muxing, and probes."""
 
+# ruff: noqa: E501
+
 from __future__ import annotations
 
 import shlex
@@ -341,11 +343,12 @@ def _asset_hashes(ctx: BuildContext) -> dict[str, str]:
     value = ctx.renderer.get("asset_hashes", {})
     if not isinstance(value, dict):
         raise ValueError("renderer.asset_hashes must be a mapping")
+    items = cast(dict[object, object], value)
     hashes: dict[str, str] = {}
-    for key, item in value.items():
-        if not isinstance(key, str) or not isinstance(item, str):
+    for raw_key, raw_item in items.items():
+        if not isinstance(raw_key, str) or not isinstance(raw_item, str):
             raise ValueError("renderer.asset_hashes must be a string:string mapping")
-        hashes[key] = item
+        hashes[raw_key] = raw_item
     return dict(sorted(hashes.items()))
 
 
