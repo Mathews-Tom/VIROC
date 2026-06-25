@@ -36,7 +36,6 @@ class _FakeAdapter:
     capabilities = CapabilityManifest(
         primitives=frozenset({"rect"}),
         animations=frozenset({"fade_in"}),
-        features={"programmatic_video": "partial"},
     )
 
     def check_environment(self, ctx: BuildContext) -> list[Diagnostic]:
