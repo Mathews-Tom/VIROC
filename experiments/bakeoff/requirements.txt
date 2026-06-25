@@ -1,0 +1,8 @@
+# M1 bake-off — minimal, self-contained deps (throwaway; not the compiler).
+# Build harness (build_all.py + VidIR lowering) needs only these two:
+pydantic>=2.0
+pyyaml>=6.0
+# Optional, for actually rendering the Manim-family artifacts to MP4:
+#   manim>=0.18  (also requires a system ffmpeg)
+# Optional, for rendering the Remotion artifacts: a Node + Remotion project
+# (npx create-video / Remotion Skills); intentionally out of this folder.
