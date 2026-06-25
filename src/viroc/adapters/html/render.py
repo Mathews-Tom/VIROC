@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, cast
 
@@ -254,7 +255,7 @@ def render(
     source: BuildArtifact,
     ctx: BuildContext,
     *,
-    captions: list[Caption] | tuple[Caption, ...] = (),
+    captions: Iterable[Caption] = (),
 ) -> BuildArtifact:
     """Render emitted HTML through a headless browser and FFmpeg."""
     caption_list = list(captions)
@@ -518,7 +519,7 @@ def _asset_hashes(ctx: BuildContext) -> dict[str, str]:
     if not isinstance(value, dict):
         raise ValueError("renderer.asset_hashes must be a mapping")
     hashes: dict[str, str] = {}
-    for key, item in value.items():
+    for key, item in cast(dict[object, object], value).items():
         if not isinstance(key, str) or not isinstance(item, str):
             raise ValueError("renderer.asset_hashes must map strings to strings")
         hashes[key] = item
