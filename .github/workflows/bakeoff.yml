@@ -1,0 +1,35 @@
+name: bakeoff
+
+# Validates the throwaway M1 de-risking bake-off (experiments/bakeoff/). Each PR
+# in the stack runs build_all.py; the single-DECISION check runs only where
+# RESULTS.md is present. The real compiler CI (ruff/pyright/pytest over
+# src/viroc) arrives in milestone M2 as a separate workflow.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install bake-off deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r experiments/bakeoff/requirements.txt
+      - name: Build all bake-off artifacts
+        run: python experiments/bakeoff/build_all.py
+      - name: Verify single DECISION line (when present)
+        run: |
+          if [ -f experiments/bakeoff/RESULTS.md ]; then
+            count=$(grep -c '^DECISION: \(GO\|NO-GO\)$' experiments/bakeoff/RESULTS.md)
+            echo "DECISION lines: $count"
+            test "$count" -eq 1
+          else
+            echo "RESULTS.md absent on this ref; skipping DECISION check"
+          fi
