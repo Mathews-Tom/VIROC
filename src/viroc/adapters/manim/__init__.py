@@ -33,6 +33,7 @@ capabilities = CapabilityManifest(
     primitives=SUPPORTED_PRIMITIVES,
     animations=SUPPORTED_ANIMATIONS,
 )
+tool_version = manim_version
 
 def supports(ir: ConcreteIR) -> list[Diagnostic]:
     """Return renderer-compatibility diagnostics for unsupported Concrete IR."""
@@ -61,6 +62,7 @@ __all__ = [
     "emit",
     "id",
     "manim_version",
+    "tool_version",
     "render",
     "source_for",
     "supports",

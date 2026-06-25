@@ -64,6 +64,13 @@ class AdapterRegistry:
         return tuple(sorted(self._adapters))
 
 
+def builtin_registry() -> AdapterRegistry:
+    """Return the built-in in-repo adapters keyed by backend id."""
+    import viroc.adapters.manim as manim
+
+    return AdapterRegistry([manim])
+
+
 def unknown_backend_diagnostic(adapter_id: str, available: Iterable[str]) -> Diagnostic:
     """Build the user-facing diagnostic for an unknown backend id."""
     available_ids = tuple(sorted(set(available)))
@@ -110,6 +117,7 @@ __all__ = [
     "UnknownBackendError",
     "VIR_DUPLICATE_BACKEND",
     "VIR_UNKNOWN_BACKEND",
+    "builtin_registry",
     "duplicate_backend_diagnostic",
     "unknown_backend_diagnostic",
 ]

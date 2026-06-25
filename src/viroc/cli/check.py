@@ -5,7 +5,14 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
-from viroc.cli._common import compile_storyboard, load_project, print_diagnostics
+from viroc.adapters.registry import UnknownBackendError
+from viroc.cli._common import (
+    compile_storyboard,
+    load_project,
+    print_diagnostics,
+    register_backend_argument,
+    resolve_backend,
+)
 
 
 def register(subparsers: Any) -> None:
@@ -20,14 +27,26 @@ def register(subparsers: Any) -> None:
         default=".",
         help="project directory or storyboard file (default: current directory)",
     )
+    register_backend_argument(parser)
     parser.set_defaults(handler=run)
 
 
 def run(args: argparse.Namespace) -> int:
     """Check a storyboard end to end without emitting backend artifacts."""
-    result = compile_storyboard(load_project(args.path))
+    project = load_project(args.path)
+    try:
+        adapter = resolve_backend(project, args.backend)
+    except UnknownBackendError as exc:
+        print_diagnostics([exc.diagnostic])
+        return 1
+    result = compile_storyboard(project)
     if result.diagnostics:
         print_diagnostics(result.diagnostics)
+        return 1
+    assert result.state is not None
+    diagnostics = adapter.supports(result.state.concrete)
+    if diagnostics:
+        print_diagnostics(diagnostics)
         return 1
     return 0
 

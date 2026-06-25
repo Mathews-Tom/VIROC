@@ -5,12 +5,13 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
-import viroc.adapters.manim as manim
+from viroc.adapters.registry import UnknownBackendError
 from viroc.cli._common import (
     compile_storyboard,
     load_expected_source_hash,
     load_project,
     print_diagnostics,
+    register_backend_argument,
     resolve_backend,
     write_generated_source,
 )
@@ -26,27 +27,31 @@ def register(subparsers: Any) -> None:
         default=".",
         help="project directory or storyboard file (default: current directory)",
     )
-    parser.add_argument("--backend", default=None, choices=["manim"], help="backend id")
+    register_backend_argument(parser)
     parser.set_defaults(handler=run)
 
 
 def run(args: argparse.Namespace) -> int:
     """Compile a storyboard and emit backend source to the build directory."""
     project = load_project(args.path)
-    backend = resolve_backend(project, args.backend)
+    try:
+        adapter = resolve_backend(project, args.backend)
+    except UnknownBackendError as exc:
+        print_diagnostics([exc.diagnostic])
+        return 1
     result = compile_storyboard(project)
     if result.diagnostics:
         print_diagnostics(result.diagnostics)
         return 1
     assert result.state is not None
 
-    diagnostics = manim.supports(result.state.concrete)
+    diagnostics = adapter.supports(result.state.concrete)
     if diagnostics:
         print_diagnostics(diagnostics)
         return 1
 
-    source = manim.emit(result.state.concrete, result.ctx)
-    materialized = write_generated_source(source, project, backend=backend)
+    source = adapter.emit(result.state.concrete, result.ctx)
+    materialized = write_generated_source(source, project, backend=adapter.id)
     expected_hash = load_expected_source_hash(project)
     if expected_hash is not None and materialized.digest != expected_hash:
         print_diagnostics(
