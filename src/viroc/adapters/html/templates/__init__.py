@@ -1,5 +1,7 @@
 """Static templates for the pure HTML emitter."""
 
+# ruff: noqa: E501
+
 from __future__ import annotations
 
 SOURCE_HEADER = """<!doctype html>
@@ -38,14 +40,7 @@ html, body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 body {
   min-height: 100vh;
@@ -80,12 +75,7 @@ body {
 .primitive-rect {
   border-radius: 18px;
   border: 2px solid var(--stroke-color, var(--foreground));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--fill-color, #1D4ED8) 82%, white 18%),
-      var(--fill-color, #1D4ED8)
-    );
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fill-color, #1D4ED8) 82%, white 18%), var(--fill-color, #1D4ED8));
   box-shadow: 0 10px 28px var(--shadow);
 }
 .primitive-text,
@@ -132,12 +122,9 @@ body {
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), transparent 35%),
-    var(--fill-color, #0891B2);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), transparent 35%), var(--fill-color, #0891B2);
   border: 2px solid var(--stroke-color, rgba(229, 231, 235, 0.4));
   box-shadow: 0 10px 28px var(--shadow);
-}
   font-size: 34px;
   font-weight: 700;
 }
@@ -194,12 +181,7 @@ for (const keyframe of DATA.keyframes) {
   animationsByObject.set(keyframe.object_id, list);
 }
 for (const entries of animationsByObject.values()) {
-  entries.sort(
-    (a, b) =>
-      a.start_f - b.start_f ||
-      a.end_f - b.end_f ||
-      a.kind.localeCompare(b.kind)
-  );
+  entries.sort((a, b) => a.start_f - b.start_f || a.end_f - b.end_f || a.kind.localeCompare(b.kind));
 }
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
