@@ -1,0 +1,23 @@
+vidir_version: "0.1"
+video:
+  id: "bad-time"
+  title: "Unsupported relative time"
+  resolution: { width: 1920, height: 1080 }
+  fps: 30
+
+entities:
+  - { id: documents, label: "Documents", type: data_source }
+  - { id: chunks, label: "Chunks", type: intermediate }
+
+scenes:
+  - id: pipeline
+    grammar: pipeline
+    duration: 35s
+    nodes: [documents, chunks]
+    edges:
+      - { from: documents, to: chunks, kind: split }
+    beats:
+      - { id: intro, at: "0s", duration: "4s" }
+      # Requires a constraint solver to place between two anchors -> out of the
+      # v1 absolute + simple-relative grammar -> VIR2001.
+      - { id: middle, at: "between(intro.end, pipeline.end)", duration: "4s" }
