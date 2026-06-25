@@ -41,11 +41,16 @@ def test_doctor_reports_backend_environment(
 ) -> None:
     project = _project(tmp_path)
 
-    assert main(["doctor", str(project), "--backend", "manim"]) == 0
+    status = main(["doctor", str(project), "--backend", "manim"])
 
     captured = capsys.readouterr()
     assert "backend: manim" in captured.out
     assert "status: " in captured.out
+    if "status: unavailable" in captured.out:
+        assert status == 1
+        assert "VIR5" in captured.err
+    else:
+        assert status == 0
 
 
 def test_doctor_reports_unknown_backend_diagnostic(

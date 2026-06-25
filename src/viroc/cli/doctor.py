@@ -44,7 +44,7 @@ def run(args: argparse.Namespace) -> int:
     if diagnostics:
         print("status: unavailable")
         print_diagnostics(diagnostics)
-        return 0
+        return 1
 
     print("status: ok")
     print(f"version: {backend_version(adapter, ctx)}")

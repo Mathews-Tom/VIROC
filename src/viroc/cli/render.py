@@ -70,12 +70,11 @@ def run(args: argparse.Namespace) -> int:
             ]
         )
         return 1
-
     env_diagnostics = adapter.check_environment(result.ctx)
+
     if env_diagnostics:
-        print(f'render skipped: backend "{adapter.id}" is unavailable', file=sys.stderr)
         print_diagnostics(env_diagnostics)
-        return 0
+        return 1
 
     render_environment_error = getattr(adapter, "RenderEnvironmentError", None)
     render_command_error = getattr(adapter, "RenderCommandError", None)
