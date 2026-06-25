@@ -44,7 +44,10 @@ def check_environment(ctx: BuildContext) -> list[Diagnostic]:
         Diagnostic(
             code=VIR_RENDER_UNAVAILABLE,
             message='renderer "html" does not provide browser render in this revision',
-            help='use "viroc compile --backend html" for deterministic source, or apply the render slice',
+            help=(
+                'use "viroc compile --backend html" for deterministic source, '
+                "or apply the render slice"
+            ),
         )
     ]
 
