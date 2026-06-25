@@ -256,18 +256,23 @@ def _round(value: float) -> float:
 
 
 def _write_optional_png_snapshots(destination: Path) -> None:
+    frame_dir = destination / "frames"
+    frame_dir.mkdir(parents=True, exist_ok=True)
+    status_path = frame_dir / "status.json"
     try:
         image_module = cast(Any, importlib.import_module("PIL.Image"))
         draw_module = cast(Any, importlib.import_module("PIL.ImageDraw"))
     except ModuleNotFoundError:
+        status_path.write_text(
+            f'{canonical_json({"png_snapshots": "unavailable", "reason": "Pillow not installed"})}\n',
+            encoding="utf-8",
+        )
         return
     plan_path = destination / "frame-plan.json"
     plan = cast(dict[str, object], json.loads(plan_path.read_text(encoding="utf-8")))
     frames = cast(list[dict[str, object]], plan["frames"])
     objects = cast(list[dict[str, object]], plan["objects"])
     resolution = cast(dict[str, object], plan["resolution"])
-    frame_dir = destination / "frames"
-    frame_dir.mkdir(parents=True, exist_ok=True)
     sample_set = _sampled_frame_numbers(frames)
     width = _field_int(resolution, "width")
     height = _field_int(resolution, "height")
@@ -277,6 +282,10 @@ def _write_optional_png_snapshots(destination: Path) -> None:
         draw = draw_module.Draw(image)
         _draw_snapshot(draw, snapshot, objects, width=width, height=height)
         image.save(frame_dir / f"frame-{frame_number:04d}.png")
+    status_path.write_text(
+        f'{canonical_json({"png_snapshots": "written", "frames": sample_set})}\n',
+        encoding="utf-8",
+    )
 
 
 def _sampled_frame_numbers(frames: list[dict[str, object]]) -> list[int]:
