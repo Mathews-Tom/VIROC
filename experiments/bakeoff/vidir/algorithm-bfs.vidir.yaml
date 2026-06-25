@@ -1,0 +1,33 @@
+# Mocked VidIR -- topic: algorithm-bfs.
+# Exercises a back-edge: mark -> dequeue closes the traversal loop (the generic
+# lowering renders the reverse jump as a curved connector).
+vidir_version: "0.1"
+
+video:
+  id: algorithm-bfs
+  title: Breadth-First Search Traversal
+  fps: 30
+  resolution: [1920, 1080]
+  duration_target: 90
+
+entities:
+  - { id: queue, label: Init Queue, type: data_source }
+  - { id: dequeue, label: Dequeue Node, type: intermediate }
+  - { id: visit, label: Visit Node, type: service }
+  - { id: enqueue, label: Enqueue Neighbors, type: intermediate }
+  - { id: mark, label: Mark Visited, type: storage }
+
+scenes:
+  - id: pipeline
+    grammar: pipeline
+    duration: 30s
+    nodes: [queue, dequeue, visit, enqueue, mark]
+    edges:
+      - { from: queue, to: dequeue, kind: flow }
+      - { from: dequeue, to: visit, kind: flow }
+      - { from: visit, to: enqueue, kind: split }
+      - { from: enqueue, to: mark, kind: store }
+      - { from: mark, to: dequeue, kind: flow }
+    narration: >-
+      Initialize the queue, dequeue a node, visit it, enqueue its neighbors,
+      mark it visited, and loop.

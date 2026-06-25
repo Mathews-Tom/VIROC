@@ -1,0 +1,32 @@
+# Mocked VidIR -- topic: microservices-topology.
+# Exercises a fan-out: the gateway feeds both auth and orders (a non-linear edge
+# the generic lowering renders as a curved connector).
+vidir_version: "0.1"
+
+video:
+  id: microservices-topology
+  title: A Microservices Topology
+  fps: 30
+  resolution: [1920, 1080]
+  duration_target: 90
+
+entities:
+  - { id: gateway, label: API Gateway, type: service }
+  - { id: auth, label: Auth Service, type: service }
+  - { id: orders, label: Order Service, type: service }
+  - { id: payments, label: Payment Service, type: service }
+  - { id: db, label: Database, type: storage }
+
+scenes:
+  - id: pipeline
+    grammar: pipeline
+    duration: 30s
+    nodes: [gateway, auth, orders, payments, db]
+    edges:
+      - { from: gateway, to: auth, kind: flow }
+      - { from: gateway, to: orders, kind: split }
+      - { from: orders, to: payments, kind: flow }
+      - { from: payments, to: db, kind: store }
+    narration: >-
+      The gateway authenticates requests and routes orders through the payment
+      service to the database.
