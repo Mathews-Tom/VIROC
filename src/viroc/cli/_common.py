@@ -2,12 +2,21 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from viroc.compiler.pipeline import CompileState, run_pipeline
-from viroc.core import BuildContext, BuildPaths, Diagnostic, render
+from viroc.core import (
+    BuildArtifact,
+    BuildContext,
+    BuildPaths,
+    Diagnostic,
+    artifact_from_path,
+    render,
+)
 from viroc.ir import ProjectConfig, SemanticIR, load_document, load_project_config
 from viroc.validators import pre_validate
 
@@ -50,6 +59,15 @@ class CompileResult:
     @property
     def ok(self) -> bool:
         return not self.diagnostics and self.ir is not None and self.state is not None
+
+
+@dataclass(frozen=True, slots=True)
+class RenderBaseline:
+    """Committed perceptual-render baseline for one example project."""
+
+    perceptual_hash: str
+    threshold: int
+    sample_frames: int
 
 
 def load_project(target: str | Path = ".") -> Project:
@@ -110,7 +128,9 @@ def build_context(
     )
 
 
-def compile_storyboard(project: Project) -> CompileResult:
+def compile_storyboard(
+    project: Project, *, sample_frames: int = _DEFAULT_SAMPLE_FRAMES
+) -> CompileResult:
     """Load, pre-validate, and compile ``project`` through P9."""
     doc = load_document(project.storyboard_path)
     ir, diagnostics = pre_validate(doc)
@@ -122,7 +142,12 @@ def compile_storyboard(project: Project) -> CompileResult:
             state=None,
             diagnostics=diagnostics,
         )
-    ctx = build_context(project, video_id=ir.video.id, fps=ir.video.fps)
+    ctx = build_context(
+        project,
+        video_id=ir.video.id,
+        fps=ir.video.fps,
+        sample_frames=sample_frames,
+    )
     if diagnostics:
         return CompileResult(project=project, ctx=ctx, ir=ir, state=None, diagnostics=diagnostics)
     state = run_pipeline(ir, ctx)
@@ -140,6 +165,54 @@ def print_diagnostics(diagnostics: list[Diagnostic]) -> None:
     if not diagnostics:
         return
     print("\n\n".join(render(diagnostic) for diagnostic in diagnostics), file=sys.stderr)
+
+
+def load_expected_source_hash(project: Project) -> str | None:
+    """Return the committed source-hash baseline when the project provides one."""
+    path = project.expected_dir / "source.sha256"
+    if not path.exists():
+        return None
+    return path.read_text(encoding="utf-8").strip() or None
+
+
+def load_expected_render_baseline(project: Project) -> RenderBaseline | None:
+    """Return the committed perceptual-render baseline when the project provides one."""
+    path = project.expected_dir / "render.json"
+    if not path.exists():
+        return None
+    data = json.loads(path.read_text(encoding="utf-8"))
+    raw = cast(dict[str, object], data)
+    perceptual_hash = raw.get("perceptual_hash")
+    threshold = raw.get("threshold", 4)
+    sample_frames = raw.get("sample_frames", _DEFAULT_SAMPLE_FRAMES)
+    if not isinstance(perceptual_hash, str):
+        raise CliError(f"expected {path} to define string perceptual_hash")
+    if not isinstance(threshold, int):
+        raise CliError(f"expected {path} to define integer threshold")
+    if not isinstance(sample_frames, int):
+        raise CliError(f"expected {path} to define integer sample_frames")
+    return RenderBaseline(
+        perceptual_hash=perceptual_hash,
+        threshold=threshold,
+        sample_frames=sample_frames,
+    )
+
+
+def write_generated_source(
+    source: BuildArtifact, project: Project, *, backend: str
+) -> BuildArtifact:
+    path = project.out_dir / "generated" / backend / "scene.py"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if source.data is not None:
+        path.write_bytes(source.data)
+        artifact = artifact_from_path(source.kind, path)
+        if artifact.digest != source.digest:
+            raise CliError("written source hash does not match emitted source")
+        return artifact
+    if source.path is not None:
+        path.write_bytes(source.path.read_bytes())
+        return artifact_from_path(source.kind, path)
+    raise CliError("source artifact did not carry bytes or a path")
 
 
 def _load_config(config_path: Path, root: Path) -> ProjectConfig:
@@ -164,8 +237,12 @@ __all__ = [
     "CliError",
     "CompileResult",
     "Project",
+    "RenderBaseline",
     "build_context",
     "compile_storyboard",
+    "load_expected_render_baseline",
+    "load_expected_source_hash",
     "load_project",
     "print_diagnostics",
+    "write_generated_source",
 ]

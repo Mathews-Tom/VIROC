@@ -7,7 +7,7 @@ import sys
 from collections.abc import Sequence
 
 from viroc import __version__
-from viroc.cli import check, init
+from viroc.cli import check, compile, init, render
 from viroc.cli._common import CliError
 
 __all__ = ["main"]
@@ -24,6 +24,8 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command")
     init.register(subparsers)
     check.register(subparsers)
+    compile.register(subparsers)
+    render.register(subparsers)
     return parser
 
 
