@@ -25,6 +25,7 @@ from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
 from viroc.core import Diagnostic, DiagnosticClass, Span, code
+from viroc.grammars import is_registered, register_builtins, registered_ids
 from viroc.ir import DataPath, LoadedDocument, SemanticIR, SourceLocation, nearest_location
 
 VIR_SCHEMA = code(DiagnosticClass.SCHEMA, 1)
@@ -32,10 +33,6 @@ VIR_UNKNOWN_REFERENCE = code(DiagnosticClass.SCHEMA, 2)
 VIR_UNKNOWN_FIELD = code(DiagnosticClass.SCHEMA, 3)
 VIR_MISSING_FIELD = code(DiagnosticClass.SCHEMA, 4)
 VIR_GRAMMAR_FIT = code(DiagnosticClass.SCHEMA, 5)
-
-# Grammars registered in v1. The real plugin registry arrives in M6; until then
-# the grammar-fit check validates declared grammars against this set.
-KNOWN_GRAMMARS = frozenset({"pipeline"})
 
 
 def validate_schema(doc: LoadedDocument) -> tuple[SemanticIR | None, list[Diagnostic]]:
@@ -127,18 +124,20 @@ def validate_grammar_fit(ir: SemanticIR, doc: LoadedDocument) -> list[Diagnostic
     """Check each scene's grammar is registered and minimally satisfiable.
 
     An unregistered grammar or a ``pipeline`` scene with no nodes is a
-    ``VIR1005`` grammar-fit error: the scene cannot be laid out as declared.
+    ``VIR1005`` grammar-fit error: the scene cannot be laid out as declared. The
+    grammar registry is the single source of truth for what "registered" means.
     """
+    register_builtins()
     diagnostics: list[Diagnostic] = []
     for scene_index, scene in enumerate(ir.scenes):
-        if scene.grammar not in KNOWN_GRAMMARS:
+        if not is_registered(scene.grammar):
             location = nearest_location(doc, ("scenes", scene_index, "grammar"))
             span = (
                 span_from_location(location, "unknown grammar")
                 if location is not None
                 else None
             )
-            known = ", ".join(sorted(KNOWN_GRAMMARS))
+            known = ", ".join(sorted(registered_ids()))
             diagnostics.append(
                 Diagnostic(
                     code=VIR_GRAMMAR_FIT,

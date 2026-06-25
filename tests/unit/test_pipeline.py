@@ -1,18 +1,21 @@
-"""Compiler pipeline P3+P4 wiring (M5).
+"""Compiler pipeline P3–P6 wiring (M5 + M6).
 
-The driver runs normalize (P3) then asset resolution (P4). These tests assert
-both phases execute and their outputs and diagnostics land on the returned
-state; layout/timeline/Concrete-IR assembly (P5+) is out of scope here.
+The driver runs normalize (P3), asset resolution (P4), then grammar expand +
+layout (P5+P6). These tests assert the phases execute and their outputs and
+diagnostics land on the returned state; timeline/Concrete-IR assembly (P7+) is
+out of scope here.
 """
 
 from __future__ import annotations
 
+from itertools import combinations
 from pathlib import Path
 
 from viroc.compiler.assets import VIR_ASSET_MISSING
 from viroc.compiler.normalize import normalize
 from viroc.compiler.pipeline import CompileState, run_pipeline
 from viroc.core import BuildContext, BuildPaths
+from viroc.grammars import overlaps
 from viroc.ir import SemanticIR
 
 _RAW_IR: dict[str, object] = {
@@ -73,3 +76,13 @@ def test_run_pipeline_defaults_to_no_assets(tmp_path: Path) -> None:
     state = run_pipeline(_ir(), _ctx(tmp_path))
     assert state.assets == []
     assert state.diagnostics == []
+
+
+def test_run_pipeline_resolves_scene_layout(tmp_path: Path) -> None:
+    """P5+P6 run: the state carries overlap-free resolved boxes for the scene."""
+    state = run_pipeline(_ir(), _ctx(tmp_path))
+    # Two nodes -> box + label each, plus one edge -> one arrow.
+    assert len(state.objects) == 5
+    assert not any(
+        overlaps(a.box, b.box) for a, b in combinations(state.objects, 2)
+    )

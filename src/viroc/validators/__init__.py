@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from viroc.validators.schema import (
-    KNOWN_GRAMMARS,
     VIR_GRAMMAR_FIT,
     VIR_MISSING_FIELD,
     VIR_SCHEMA,
@@ -17,7 +16,6 @@ from viroc.validators.schema import (
 )
 
 __all__ = [
-    "KNOWN_GRAMMARS",
     "VIR_GRAMMAR_FIT",
     "VIR_MISSING_FIELD",
     "VIR_SCHEMA",
