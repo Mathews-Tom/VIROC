@@ -13,7 +13,7 @@ import viroc.adapters.html as html_adapter
 import viroc.adapters.manim as manim_adapter
 import viroc.adapters.remotion as remotion_adapter
 from viroc.cli import main
-from viroc.cli._common import load_project
+from viroc.cli._common import load_expected_render_baseline, load_project
 
 _ROOT = Path(__file__).resolve().parents[2]
 _EXAMPLE = _ROOT / "examples" / "viroc-codebase"
@@ -96,6 +96,8 @@ def test_viroc_codebase_showcase_render_matrix(
     manifest_path = _EXAMPLE / "build" / "build.json"
     video_path = _EXAMPLE / "build" / "viroc-codebase.mp4"
     srt_path = _EXAMPLE / "build" / "captions.srt"
+    baseline = load_expected_render_baseline(_PROJECT, backend=backend)
+
     if status == 1 and "VIR5" in render_capture.err:
         pytest.skip(render_capture.err.splitlines()[0])
 
@@ -119,3 +121,5 @@ def test_viroc_codebase_showcase_render_matrix(
     assert isinstance(renderer["version"], str)
     assert perceptual_hash.startswith("phash:")
 
+    if baseline is not None:
+        assert perceptual_hash == baseline.perceptual_hash
