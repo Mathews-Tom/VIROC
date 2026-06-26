@@ -17,6 +17,7 @@ from viroc.cli._common import load_expected_render_baseline, load_project
 
 _ROOT = Path(__file__).resolve().parents[2]
 _EXAMPLE = _ROOT / "examples" / "viroc-codebase"
+_README = (_EXAMPLE / "README.md").read_text(encoding="utf-8")
 _GALLERY = cast(
     dict[str, object],
     json.loads((_EXAMPLE / "expected" / "gallery.json").read_text(encoding="utf-8")),
@@ -45,6 +46,15 @@ _EXPECTED_SOURCE_HASHES = {
     for backend in _BACKEND_MODULES
 }
 
+_STORY_ARC_IDS = [
+    "entry_point",
+    "project_scaffold",
+    "authored_input",
+    "validation_boundary",
+    "resolver_boundary",
+    "adapter_fanout",
+    "proof_artifacts",
+]
 _PROJECT = load_project(_EXAMPLE)
 
 
@@ -70,6 +80,10 @@ def test_viroc_codebase_showcase_check_compile_and_gallery(
 
     assert _GALLERY["project"] == "viroc-codebase"
     assert _GALLERY["tagline"] == "Video IR. Open compiler. Pluggable renderers."
+    story_arc = cast(list[dict[str, str]], _GALLERY["story_arc"])
+    assert [entry["id"] for entry in story_arc] == _STORY_ARC_IDS
+    assert story_arc[1]["claim"] == "viroc init creates viroc.yaml and storyboard.vidir.yaml."
+
     backends = cast(list[dict[str, object]], _GALLERY["backends"])
     assert [entry["id"] for entry in backends] == ["manim", "html", "remotion"]
 
@@ -81,7 +95,16 @@ def test_viroc_codebase_showcase_check_compile_and_gallery(
         assert entry["source_hash"] == _EXPECTED_SOURCE_HASHES[backend]
         assert capabilities["primitives"] == sorted(adapter.capabilities.primitives)
         assert capabilities["animations"] == sorted(adapter.capabilities.animations)
+        assert _EXPECTED_SOURCE_HASHES[backend] in _README
 
+    assert "7-scene user journey" in _README
+    assert "`viroc init`" in _README
+    assert "render proof stays env-gated and diagnostic-backed" in _README
+    assert (
+        "The machine-readable companion for this scene arc and adapter table is "
+        "`expected/gallery.json`."
+        in _README
+    )
 
 
 @pytest.mark.integration
