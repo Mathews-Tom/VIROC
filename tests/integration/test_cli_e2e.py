@@ -29,6 +29,17 @@ _EXPECTED_STATIC_STORYBOARD_SOURCE = (
 ).read_text(encoding="utf-8").strip()
 _EXPECTED_RENDER = json.loads((_EXAMPLE / "expected" / "render.json").read_text(encoding="utf-8"))
 _FIXTURES = _ROOT / "tests" / "fixtures"
+_COMMITTED_SOURCE_ENTRIES = {
+    "manim": _EXAMPLE / "expected" / "generated" / "manim" / "scene.py",
+    "html": _EXAMPLE / "expected" / "generated" / "html" / "scene.html",
+    "remotion": _EXAMPLE / "expected" / "generated" / "remotion" / "package.json",
+    "motion_canvas": _EXAMPLE / "expected" / "generated" / "motion_canvas" / "package.json",
+    "image_sequence": _EXAMPLE / "expected" / "generated" / "image_sequence" / "summary.md",
+    "static_storyboard": _EXAMPLE / "expected" / "generated" / "static_storyboard" / "storyboard.md",
+}
+_PREVIEW_VIDEO = _EXAMPLE / "expected" / "preview" / "manim" / "rag-overview.mp4"
+_PREVIEW_CAPTIONS = _EXAMPLE / "expected" / "preview" / "manim" / "captions.srt"
+_PREVIEW_MANIFEST = _EXAMPLE / "expected" / "preview" / "manim" / "build.json"
 
 
 @pytest.mark.integration
@@ -44,6 +55,7 @@ def test_cli_e2e_example_and_failing_storyboard(
     assert generated.exists()
     assert str(generated) in compile_out
     assert f"source_hash: {_EXPECTED_SOURCE}" in compile_out
+    assert _COMMITTED_SOURCE_ENTRIES["manim"].exists()
 
     assert main(["compile", str(_EXAMPLE), "--backend", "html"]) == 0
     html_compile_out = capsys.readouterr().out
@@ -51,6 +63,7 @@ def test_cli_e2e_example_and_failing_storyboard(
     assert html_generated.exists()
     assert str(html_generated) in html_compile_out
     assert f"source_hash: {_EXPECTED_HTML_SOURCE}" in html_compile_out
+    assert _COMMITTED_SOURCE_ENTRIES["html"].exists()
 
     assert main(["compile", str(_EXAMPLE), "--backend", "remotion"]) == 0
     remotion_compile_out = capsys.readouterr().out
@@ -63,6 +76,7 @@ def test_cli_e2e_example_and_failing_storyboard(
     assert (remotion_generated / "src" / "Root.tsx").exists()
     assert (remotion_generated / "src" / "Composition.tsx").exists()
     assert f"source_hash: {_EXPECTED_REMOTION_SOURCE}" in remotion_compile_out
+    assert _COMMITTED_SOURCE_ENTRIES["remotion"].exists()
 
     assert main(["compile", str(_EXAMPLE), "--backend", "motion_canvas"]) == 0
     motion_canvas_compile_out = capsys.readouterr().out
@@ -74,6 +88,7 @@ def test_cli_e2e_example_and_failing_storyboard(
     assert (motion_canvas_generated / "src" / "project.ts").exists()
     assert (motion_canvas_generated / "src" / "scenes" / "viroc.tsx").exists()
     assert f"source_hash: {_EXPECTED_MOTION_CANVAS_SOURCE}" in motion_canvas_compile_out
+    assert _COMMITTED_SOURCE_ENTRIES["motion_canvas"].exists()
 
     assert main(["compile", str(_EXAMPLE), "--backend", "image_sequence"]) == 0
     image_sequence_compile_out = capsys.readouterr().out
@@ -84,6 +99,7 @@ def test_cli_e2e_example_and_failing_storyboard(
     assert (image_sequence_generated / "summary.md").exists()
     assert (image_sequence_generated / "captions.md").exists()
     assert f"source_hash: {_EXPECTED_IMAGE_SEQUENCE_SOURCE}" in image_sequence_compile_out
+    assert _COMMITTED_SOURCE_ENTRIES["image_sequence"].exists()
 
     assert main(["compile", str(_EXAMPLE), "--backend", "static_storyboard"]) == 0
     static_storyboard_compile_out = capsys.readouterr().out
@@ -95,6 +111,7 @@ def test_cli_e2e_example_and_failing_storyboard(
     assert (static_storyboard_generated / "script.md").exists()
     assert (static_storyboard_generated / "captions.md").exists()
     assert f"source_hash: {_EXPECTED_STATIC_STORYBOARD_SOURCE}" in static_storyboard_compile_out
+    assert _COMMITTED_SOURCE_ENTRIES["static_storyboard"].exists()
 
     assert main(["graph", str(_EXAMPLE)]) == 0
     graph_out = capsys.readouterr().out
@@ -130,6 +147,9 @@ def test_cli_e2e_example_and_failing_storyboard(
         assert str(manifest_path) in render_capture.out
         assert manifest["source_hash"] == _EXPECTED_SOURCE
         assert manifest["perceptual_hash"] == _EXPECTED_RENDER["perceptual_hash"]
+        assert _PREVIEW_VIDEO.exists()
+        assert _PREVIEW_CAPTIONS.exists()
+        assert _PREVIEW_MANIFEST.exists()
     else:
         assert render_status == 1
         assert "VIR5" in render_capture.err
