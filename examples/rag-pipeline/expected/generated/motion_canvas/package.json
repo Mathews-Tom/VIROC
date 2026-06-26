@@ -1,0 +1,1 @@
+{"dependencies":{"@motion-canvas/2d":"^3.17.2","@motion-canvas/core":"^3.17.2"},"devDependencies":{"@motion-canvas/ffmpeg":"^3.17.2","@motion-canvas/ui":"^3.17.2","@motion-canvas/vite-plugin":"^3.17.2","typescript":"^5.2.2","vite":"^5.4.0"},"name":"viroc-motion-canvas-scene","private":true,"scripts":{"build":"tsc && vite build","dev":"vite"},"type":"module"}

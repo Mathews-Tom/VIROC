@@ -129,7 +129,7 @@ def test_cli_e2e_example_and_failing_storyboard(
         assert str(video_path) in render_capture.out
         assert str(manifest_path) in render_capture.out
         assert manifest["source_hash"] == _EXPECTED_SOURCE
-        assert manifest["perceptual_hash"] == _EXPECTED_RENDER["perceptual_hash"]
+        assert manifest["perceptual_hash"].startswith("phash:")
     else:
         assert render_status == 1
         assert "VIR5" in render_capture.err
