@@ -1,0 +1,30 @@
+vidir_version: "0.1"
+video:
+  id: "viroc-codebase"
+  title: "How the VIROC Codebase Compiles Itself"
+  resolution: { width: 1920, height: 1080 }
+  fps: 30
+  duration_target: 12
+
+entities:
+  - { id: vidir_file, label: "VidIR file", type: data_source }
+  - { id: grammar_vir, label: "Grammar + VIR", type: service }
+  - { id: concrete_ir, label: "Concrete IR", type: intermediate }
+  - { id: registry, label: "Registry", type: service }
+  - { id: build_manifest, label: "build.json", type: storage }
+
+scenes:
+  - id: codebase_tour
+    grammar: pipeline
+    duration: 12s
+    nodes: [vidir_file, grammar_vir, concrete_ir, registry, build_manifest]
+    edges:
+      - { from: vidir_file, to: grammar_vir, kind: transform }
+      - { from: grammar_vir, to: concrete_ir, kind: transform }
+      - { from: concrete_ir, to: registry, kind: flow }
+      - { from: registry, to: build_manifest, kind: store }
+    narration: "VIROC parses VidIR into typed Semantic IR, runs VIR schema, timing, layout, asset, and reproducibility checks, resolves the pipeline grammar into Concrete IR, dispatches adapters, and records hashes in build.json."
+
+validation:
+  required_entities: [vidir_file, grammar_vir, concrete_ir, registry, build_manifest]
+  checks: [schema, layout, timing]
