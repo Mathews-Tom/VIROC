@@ -35,36 +35,78 @@
   "backends": [
     {
       "id": "manim",
-      "source_entry": "build/generated/manim/scene.py",
+      "source_entry": "expected/generated/manim/scene.py",
       "source_hash": "sha256:d1c9e648d5fd5a1cc7cec34fd4bfc19c85975fde6154a2530574beb6c4f0b5c3",
       "render_status": "baseline-committed",
       "render_baseline": "expected/manim/render.json",
       "capabilities": {
-        "primitives": ["arrow", "rect", "text"],
-        "animations": ["draw", "fade_in", "fade_out", "highlight"]
-      }
+        "primitives": [
+          "arrow",
+          "rect",
+          "text"
+        ],
+        "animations": [
+          "draw",
+          "fade_in",
+          "fade_out",
+          "highlight"
+        ]
+      },
+      "source_root": "expected/generated/manim"
     },
     {
       "id": "html",
-      "source_entry": "build/generated/html/scene.html",
+      "source_entry": "expected/generated/html/scene.html",
       "source_hash": "sha256:fb9409d4ef3231483252ba3531158be4ad666c86acbe9b7129a2debba1587132",
       "render_status": "baseline-committed",
       "render_baseline": "expected/html/render.json",
       "capabilities": {
-        "primitives": ["arrow", "code", "formula", "icon", "rect", "text"],
-        "animations": ["draw", "fade_in", "fade_out", "highlight"]
-      }
+        "primitives": [
+          "arrow",
+          "code",
+          "formula",
+          "icon",
+          "rect",
+          "text"
+        ],
+        "animations": [
+          "draw",
+          "fade_in",
+          "fade_out",
+          "highlight"
+        ]
+      },
+      "source_root": "expected/generated/html"
     },
     {
       "id": "remotion",
-      "source_entry": "build/generated/remotion/project.json",
+      "source_entry": "expected/generated/remotion/package.json",
       "source_hash": "sha256:e52bf848307409f59740099c3bc4be00b6bf3381a12151cd05f58dcef9501eea",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {
-        "primitives": ["arrow", "code", "formula", "icon", "rect", "text"],
-        "animations": ["draw", "fade_in", "fade_out", "highlight"]
-      }
+        "primitives": [
+          "arrow",
+          "code",
+          "formula",
+          "icon",
+          "rect",
+          "text"
+        ],
+        "animations": [
+          "draw",
+          "fade_in",
+          "fade_out",
+          "highlight"
+        ]
+      },
+      "source_root": "expected/generated/remotion"
     }
-  ]
+  ],
+  "preview": {
+    "backend": "manim",
+    "video_entry": "expected/preview/manim/viroc-codebase.mp4",
+    "captions_entry": "expected/preview/manim/captions.srt",
+    "manifest_entry": "expected/preview/manim/build.json"
+  }
 }

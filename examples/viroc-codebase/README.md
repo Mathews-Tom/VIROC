@@ -16,12 +16,14 @@ This example is a compiler proof for the VIROC repo itself. It now runs as a 7-s
 | `adapter_fanout` | One Concrete IR lowers through the registry to the top three adapters and a chosen backend renders artifacts. | `src/viroc/adapters/registry.py`, `src/viroc/cli/compile.py`, `src/viroc/adapters/manim`, `src/viroc/adapters/html`, `src/viroc/adapters/remotion` |
 | `proof_artifacts` | Sources, stable hashes, `build.json`, render pHash, and `gallery.json` prove reproducibility. | `src/viroc/core/manifest.py`, `src/viroc/cli/render.py`, `examples/viroc-codebase/expected/gallery.json` |
 
-## Adapter proof
+## Inspectable artifacts
 
-| Backend | Generated source entry | Source hash | Render status | Capability summary |
+Committed generated source now lives under `expected/generated/`, so the example can be inspected on GitHub without rebuilding locally. The committed local preview render is `expected/preview/manim/viroc-codebase.mp4`, with matching captions at `expected/preview/manim/captions.srt` and a manifest snapshot at `expected/preview/manim/build.json`.
+
+| Backend | Committed source root | Entry file | Source hash | Render reference |
 |---|---|---|---|---|
-| `manim` | `build/generated/manim/scene.py` | `sha256:d1c9e648d5fd5a1cc7cec34fd4bfc19c85975fde6154a2530574beb6c4f0b5c3` | env-gated render; perceptual baseline committed at `expected/manim/render.json` | primitives=`arrow, rect, text`; animations=`draw, fade_in, fade_out, highlight` |
-| `html` | `build/generated/html/scene.html` | `sha256:fb9409d4ef3231483252ba3531158be4ad666c86acbe9b7129a2debba1587132` | env-gated render; perceptual baseline committed at `expected/html/render.json` | primitives=`arrow, code, formula, icon, rect, text`; animations=`draw, fade_in, fade_out, highlight` |
-| `remotion` | `build/generated/remotion/project.json` | `sha256:e52bf848307409f59740099c3bc4be00b6bf3381a12151cd05f58dcef9501eea` | env-gated render; skip when the Remotion CLI probe fails | primitives=`arrow, code, formula, icon, rect, text`; animations=`draw, fade_in, fade_out, highlight` |
+| `manim` | `expected/generated/manim/` | `expected/generated/manim/scene.py` | `sha256:d1c9e648d5fd5a1cc7cec34fd4bfc19c85975fde6154a2530574beb6c4f0b5c3` | preview video at `expected/preview/manim/viroc-codebase.mp4`; perceptual baseline at `expected/manim/render.json` |
+| `html` | `expected/generated/html/` | `expected/generated/html/scene.html` | `sha256:fb9409d4ef3231483252ba3531158be4ad666c86acbe9b7129a2debba1587132` | perceptual baseline at `expected/html/render.json` |
+| `remotion` | `expected/generated/remotion/` | `expected/generated/remotion/package.json` | `sha256:e52bf848307409f59740099c3bc4be00b6bf3381a12151cd05f58dcef9501eea` | env-gated render; skip when the Remotion CLI probe fails |
 
-The machine-readable companion for this scene arc and adapter table is `expected/gallery.json`.
+The machine-readable companion for this scene arc, committed source roots, and preview paths is `expected/gallery.json`.
