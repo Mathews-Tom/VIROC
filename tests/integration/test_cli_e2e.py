@@ -35,7 +35,9 @@ _COMMITTED_SOURCE_ENTRIES = {
     "remotion": _EXAMPLE / "expected" / "generated" / "remotion" / "package.json",
     "motion_canvas": _EXAMPLE / "expected" / "generated" / "motion_canvas" / "package.json",
     "image_sequence": _EXAMPLE / "expected" / "generated" / "image_sequence" / "summary.md",
-    "static_storyboard": _EXAMPLE / "expected" / "generated" / "static_storyboard" / "storyboard.md",
+    "static_storyboard": (
+        _EXAMPLE / "expected" / "generated" / "static_storyboard" / "storyboard.md"
+    ),
 }
 _PREVIEW_VIDEO = _EXAMPLE / "expected" / "preview" / "manim" / "rag-overview.mp4"
 _PREVIEW_CAPTIONS = _EXAMPLE / "expected" / "preview" / "manim" / "captions.srt"
