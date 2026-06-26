@@ -26,7 +26,7 @@ from viroc.validators import pre_validate
 
 _DEFAULT_OUT_DIR = "build"
 _DEFAULT_SAMPLE_FRAMES = 4
-_DEFAULT_TIMEOUT_SECONDS = 180
+_DEFAULT_TIMEOUT_SECONDS = 300
 _DEFAULT_QUALITY = "-ql"
 _DEFAULT_SEED = 0
 
