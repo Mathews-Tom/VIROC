@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from itertools import combinations
 
 from viroc.core import BuildContext, Diagnostic, DiagnosticClass, code
@@ -36,15 +37,19 @@ def validate_layout(ir: ConcreteIR, ctx: BuildContext) -> list[Diagnostic]:
 
 def _overlap_diagnostics(objects: list[ResolvedObject]) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
-    for first, second in combinations(objects, 2):
-        if _overlaps(first.box, second.box):
-            diagnostics.append(
-                Diagnostic(
-                    code=VIR_OBJECT_OVERLAP,
-                    message=f"objects {first.id!r} and {second.id!r} overlap",
-                    help="Adjust the grammar layout so resolved boxes share no positive area.",
+    by_scene: dict[str, list[ResolvedObject]] = defaultdict(list)
+    for obj in objects:
+        by_scene[_scene_id(obj.id)].append(obj)
+    for scene_objects in by_scene.values():
+        for first, second in combinations(scene_objects, 2):
+            if _overlaps(first.box, second.box):
+                diagnostics.append(
+                    Diagnostic(
+                        code=VIR_OBJECT_OVERLAP,
+                        message=f"objects {first.id!r} and {second.id!r} overlap",
+                        help="Adjust the grammar layout so resolved boxes share no positive area.",
+                    )
                 )
-            )
     return diagnostics
 
 
@@ -124,3 +129,7 @@ def _safe_frame(resolution: tuple[int, int], margin_pct: float) -> Box:
     mx = width * margin_pct / 100.0
     my = height * margin_pct / 100.0
     return Box(x=mx, y=my, w=width - 2 * mx, h=height - 2 * my)
+
+
+def _scene_id(object_id: str) -> str:
+    return object_id.split(".", 1)[0]

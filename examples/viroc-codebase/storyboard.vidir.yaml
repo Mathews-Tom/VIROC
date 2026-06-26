@@ -1,0 +1,93 @@
+vidir_version: "0.1"
+video:
+  id: "viroc-codebase"
+  title: "How the VIROC Codebase Compiles Itself"
+  resolution: { width: 1920, height: 1080 }
+  fps: 30
+  duration_target: 40
+
+entities:
+  - { id: author, label: "New VIROC user", type: user }
+  - { id: repo_docs, label: "Repo / docs", type: data_source }
+  - { id: video_brief, label: "Video goal", type: data_source }
+  - { id: viroc_init, label: "viroc init", type: service }
+  - { id: project_config, label: "viroc.yaml", type: storage }
+  - { id: storyboard_file, label: "storyboard.vidir.yaml", type: storage }
+  - { id: semantic_ir, label: "Semantic IR", type: intermediate }
+  - { id: vir_checks, label: "VIR diagnostics", type: service }
+  - { id: validated_storyboard, label: "Validated storyboard", type: intermediate }
+  - { id: resolver, label: "Resolver", type: service }
+  - { id: concrete_ir, label: "Concrete IR", type: intermediate }
+  - { id: registry, label: "Registry", type: service }
+  - { id: top_three_outputs, label: "Top-three outputs", type: data_source }
+  - { id: rendered_artifact, label: "MP4 + SRT", type: data_source }
+  - { id: editable_outputs, label: "Sources", type: data_source }
+  - { id: source_hashes, label: "Source hashes", type: storage }
+  - { id: build_manifest, label: "build.json", type: storage }
+  - { id: render_phash, label: "Render pHash", type: storage }
+  - { id: gallery_manifest, label: "gallery.json", type: storage }
+
+scenes:
+  - id: entry_point
+    grammar: pipeline
+    duration: 4s
+    nodes: [repo_docs, author, video_brief]
+    edges:
+      - { from: author, to: video_brief, kind: flow }
+    narration: "Users start VIROC with repo context and a video goal, not renderer code."
+  - id: project_scaffold
+    grammar: pipeline
+    duration: 5s
+    nodes: [author, viroc_init, project_config, storyboard_file]
+    edges:
+      - { from: author, to: viroc_init, kind: flow }
+      - { from: viroc_init, to: project_config, kind: store }
+      - { from: project_config, to: storyboard_file, kind: store }
+    narration: "viroc init scaffolds the project surface: viroc.yaml leads into storyboard.vidir.yaml."
+  - id: authored_input
+    grammar: pipeline
+    duration: 6s
+    nodes: [storyboard_file, semantic_ir, project_config]
+    edges:
+      - { from: storyboard_file, to: semantic_ir, kind: transform }
+    narration: "With project config loaded, the authored storyboard is parsed into typed Semantic IR for the compiler."
+  - id: validation_boundary
+    grammar: pipeline
+    duration: 6s
+    nodes: [semantic_ir, vir_checks, validated_storyboard]
+    edges:
+      - { from: semantic_ir, to: vir_checks, kind: transform }
+      - { from: vir_checks, to: validated_storyboard, kind: flow }
+    narration: "VIR checks reject schema, timing, layout, asset, and toolchain problems before any render step."
+  - id: resolver_boundary
+    grammar: pipeline
+    duration: 6s
+    nodes: [validated_storyboard, resolver, concrete_ir]
+    edges:
+      - { from: validated_storyboard, to: resolver, kind: transform }
+      - { from: resolver, to: concrete_ir, kind: transform }
+    narration: "Once the storyboard passes validation, the resolver fixes layout, timing, and animation into Concrete IR."
+  - id: adapter_fanout
+    grammar: pipeline
+    duration: 6s
+    nodes: [concrete_ir, registry, top_three_outputs, rendered_artifact]
+    edges:
+      - { from: concrete_ir, to: registry, kind: flow }
+      - { from: registry, to: top_three_outputs, kind: transform }
+      - { from: top_three_outputs, to: rendered_artifact, kind: flow }
+    narration: "One Concrete IR enters the registry, becomes top-three outputs, and renders artifacts."
+  - id: proof_artifacts
+    grammar: pipeline
+    duration: 7s
+    nodes: [editable_outputs, source_hashes, build_manifest, render_phash, gallery_manifest]
+    edges:
+      - { from: editable_outputs, to: source_hashes, kind: transform }
+      - { from: source_hashes, to: build_manifest, kind: store }
+      - { from: build_manifest, to: render_phash, kind: store }
+      - { from: render_phash, to: gallery_manifest, kind: store }
+    narration: "The payoff is proof: sources, stable hashes, build.json, render pHash, and gallery metadata line up."
+
+validation:
+  required_entities:
+    [author, repo_docs, video_brief, viroc_init, project_config, storyboard_file, semantic_ir, vir_checks, validated_storyboard, resolver, concrete_ir, registry, top_three_outputs, rendered_artifact, editable_outputs, source_hashes, build_manifest, render_phash, gallery_manifest]
+  checks: [schema, layout, timing]

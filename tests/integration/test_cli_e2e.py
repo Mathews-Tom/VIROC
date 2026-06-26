@@ -98,9 +98,9 @@ def test_cli_e2e_example_and_failing_storyboard(
 
     assert main(["graph", str(_EXAMPLE)]) == 0
     graph_out = capsys.readouterr().out
-    assert "video: rag-overview" in graph_out
-    assert "scene: pipeline" in graph_out
-    assert "documents -[split]-> chunks" in graph_out
+    assert "scene: problem_setup" in graph_out
+    assert "scene: payoff" in graph_out
+    assert "bare_answer -[compare]-> retrieved_context" in graph_out
 
     doctor_status = main(["doctor", str(_EXAMPLE), "--backend", "manim"])
     doctor_capture = capsys.readouterr()
