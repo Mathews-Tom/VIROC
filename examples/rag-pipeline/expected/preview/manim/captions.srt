@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:06,000
+A user question reaches the model, but the answer still needs the document corpus.
+
+2
+00:00:06,000 --> 00:00:13,000
+VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.
+
+3
+00:00:13,000 --> 00:00:19,000
+At query time, the same question probes the vector store and pulls back the nearest context.
+
+4
+00:00:19,000 --> 00:00:26,000
+The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.
+
+5
+00:00:26,000 --> 00:00:34,000
+The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.

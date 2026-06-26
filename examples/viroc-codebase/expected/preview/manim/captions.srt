@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:04,000
+Users start VIROC with repo context and a video goal, not renderer code.
+
+2
+00:00:04,000 --> 00:00:09,000
+viroc init scaffolds the project surface: viroc.yaml leads into storyboard.vidir.yaml.
+
+3
+00:00:09,000 --> 00:00:15,000
+With project config loaded, the authored storyboard is parsed into typed Semantic IR for the compiler.
+
+4
+00:00:15,000 --> 00:00:21,000
+VIR checks reject schema, timing, layout, asset, and toolchain problems before any render step.
+
+5
+00:00:21,000 --> 00:00:27,000
+Once the storyboard passes validation, the resolver fixes layout, timing, and animation into Concrete IR.
+
+6
+00:00:27,000 --> 00:00:33,000
+One Concrete IR enters the registry, becomes top-three outputs, and renders artifacts.
+
+7
+00:00:33,000 --> 00:00:40,000
+The payoff is proof: sources, stable hashes, build.json, render pHash, and gallery metadata line up.
