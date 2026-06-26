@@ -185,6 +185,41 @@ def test_overlapping_boxes_emit_vir3xxx() -> None:
     assert [diag.code for diag in validate_layout(ir, _ctx())] == [VIR_OBJECT_OVERLAP]
 
 
+def test_overlapping_boxes_in_different_scenes_are_allowed() -> None:
+    """Sequential scenes may reuse the same frame positions without VIR3001."""
+    ir = _concrete(
+        objects=[
+            _object(id="scene_a.a", box=Box(x=100.0, y=100.0, w=200.0, h=120.0)),
+            _object(id="scene_b.b", box=Box(x=100.0, y=100.0, w=200.0, h=120.0)),
+        ]
+    )
+
+    assert validate_layout(ir, _ctx()) == []
+
+
+def test_pipeline_p9_allows_sequential_scenes_to_reuse_layout_positions(
+    tmp_path: Path,
+) -> None:
+    """P9 validates overlap per scene, not across sequential scenes."""
+    raw: dict[str, object] = {
+        "vidir_version": "0.1",
+        "video": {"id": "two_scene", "title": "Two Scene Layout"},
+        "entities": [
+            {"id": "a", "label": "Alpha", "type": "data_source"},
+            {"id": "b", "label": "Beta", "type": "data_source"},
+        ],
+        "scenes": [
+            {"id": "intro", "grammar": "pipeline", "duration": "5s", "nodes": ["a"]},
+            {"id": "payoff", "grammar": "pipeline", "duration": "5s", "nodes": ["b"]},
+        ],
+    }
+
+    state = run_pipeline(_semantic(raw), _ctx_for_root(tmp_path))
+
+    assert state.diagnostics == []
+    assert state.exit_code == 0
+
+
 def test_clipped_text_emits_vir3xxx() -> None:
     """A text-like object below configured bounds is a clipping defect."""
     ir = _concrete(
