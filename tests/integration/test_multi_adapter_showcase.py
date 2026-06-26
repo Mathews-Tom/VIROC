@@ -2,19 +2,39 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
+from typing import cast
 
 import pytest
 
+import viroc.adapters.html as html_adapter
+import viroc.adapters.manim as manim_adapter
+import viroc.adapters.remotion as remotion_adapter
 from viroc.cli import main
+from viroc.cli._common import load_expected_render_baseline, load_project
 
 _ROOT = Path(__file__).resolve().parents[2]
 _EXAMPLE = _ROOT / "examples" / "viroc-codebase"
+_GALLERY = cast(
+    dict[str, object],
+    json.loads((_EXAMPLE / "expected" / "gallery.json").read_text(encoding="utf-8")),
+)
+_BACKEND_MODULES = {
+    "manim": manim_adapter,
+    "html": html_adapter,
+    "remotion": remotion_adapter,
+}
 _COMPILE_OUTPUTS = {
     "manim": _EXAMPLE / "build" / "generated" / "manim" / "scene.py",
     "html": _EXAMPLE / "build" / "generated" / "html" / "scene.html",
     "remotion": _EXAMPLE / "build" / "generated" / "remotion",
+}
+_GALLERY_SOURCE_ENTRIES = {
+    "manim": "build/generated/manim/scene.py",
+    "html": "build/generated/html/scene.html",
+    "remotion": "build/generated/remotion/project.json",
 }
 _EXPECTED_SOURCE_HASHES = {
     backend: (
@@ -22,8 +42,10 @@ _EXPECTED_SOURCE_HASHES = {
         .read_text(encoding="utf-8")
         .strip()
     )
-    for backend in _COMPILE_OUTPUTS
+    for backend in _BACKEND_MODULES
 }
+
+_PROJECT = load_project(_EXAMPLE)
 
 
 def _clean_build() -> None:
@@ -31,7 +53,7 @@ def _clean_build() -> None:
 
 
 @pytest.mark.integration
-def test_viroc_codebase_showcase_check_and_compile(
+def test_viroc_codebase_showcase_check_compile_and_gallery(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     _clean_build()
@@ -45,3 +67,56 @@ def test_viroc_codebase_showcase_check_and_compile(
         assert str(generated) in compile_capture.out
         assert f"source_hash: {_EXPECTED_SOURCE_HASHES[backend]}" in compile_capture.out
         assert generated.exists()
+
+    assert _GALLERY["project"] == "viroc-codebase"
+    assert _GALLERY["tagline"] == "Video IR. Open compiler. Pluggable renderers."
+    backends = cast(list[dict[str, object]], _GALLERY["backends"])
+    assert [entry["id"] for entry in backends] == ["manim", "html", "remotion"]
+
+    for entry in backends:
+        backend = cast(str, entry["id"])
+        capabilities = cast(dict[str, list[str]], entry["capabilities"])
+        adapter = _BACKEND_MODULES[backend]
+        assert entry["source_entry"] == _GALLERY_SOURCE_ENTRIES[backend]
+        assert capabilities["primitives"] == sorted(adapter.capabilities.primitives)
+        assert capabilities["animations"] == sorted(adapter.capabilities.animations)
+
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("backend", ["manim", "html", "remotion"])
+def test_viroc_codebase_showcase_render_matrix(
+    backend: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _clean_build()
+
+    status = main(["render", str(_EXAMPLE), "--backend", backend])
+    render_capture = capsys.readouterr()
+    manifest_path = _EXAMPLE / "build" / "build.json"
+    video_path = _EXAMPLE / "build" / "viroc-codebase.mp4"
+    srt_path = _EXAMPLE / "build" / "captions.srt"
+    baseline = load_expected_render_baseline(_PROJECT, backend=backend)
+
+    if status == 1 and "VIR5" in render_capture.err:
+        pytest.skip(render_capture.err.splitlines()[0])
+
+    assert status == 0
+    assert manifest_path.exists()
+    assert video_path.exists()
+    assert srt_path.exists()
+    assert str(video_path) in render_capture.out
+    assert str(manifest_path) in render_capture.out
+    assert f"source_hash: {_EXPECTED_SOURCE_HASHES[backend]}" in render_capture.out
+
+    manifest = cast(
+        dict[str, object], json.loads(manifest_path.read_text(encoding="utf-8"))
+    )
+    renderer = cast(dict[str, object], manifest["renderer"])
+    perceptual_hash = cast(str, manifest["perceptual_hash"])
+
+    assert manifest["project"] == "viroc-codebase"
+    assert manifest["source_hash"] == _EXPECTED_SOURCE_HASHES[backend]
+    assert renderer["id"] == backend
+    assert isinstance(renderer["version"], str)
+    assert perceptual_hash.startswith("phash:")
+
