@@ -17,6 +17,7 @@ from viroc.cli._common import load_expected_render_baseline, load_project
 
 _ROOT = Path(__file__).resolve().parents[2]
 _EXAMPLE = _ROOT / "examples" / "viroc-codebase"
+_README = (_EXAMPLE / "README.md").read_text(encoding="utf-8")
 _GALLERY = cast(
     dict[str, object],
     json.loads((_EXAMPLE / "expected" / "gallery.json").read_text(encoding="utf-8")),
@@ -32,9 +33,14 @@ _COMPILE_OUTPUTS = {
     "remotion": _EXAMPLE / "build" / "generated" / "remotion",
 }
 _GALLERY_SOURCE_ENTRIES = {
-    "manim": "build/generated/manim/scene.py",
-    "html": "build/generated/html/scene.html",
-    "remotion": "build/generated/remotion/project.json",
+    "manim": "expected/generated/manim/scene.py",
+    "html": "expected/generated/html/scene.html",
+    "remotion": "expected/generated/remotion/package.json",
+}
+_GALLERY_SOURCE_ROOTS = {
+    "manim": "expected/generated/manim",
+    "html": "expected/generated/html",
+    "remotion": "expected/generated/remotion",
 }
 _EXPECTED_SOURCE_HASHES = {
     backend: (
@@ -45,6 +51,20 @@ _EXPECTED_SOURCE_HASHES = {
     for backend in _BACKEND_MODULES
 }
 
+_STORY_ARC_IDS = [
+    "entry_point",
+    "project_scaffold",
+    "authored_input",
+    "validation_boundary",
+    "resolver_boundary",
+    "adapter_fanout",
+    "proof_artifacts",
+]
+_PREVIEW_FILES = {
+    "video_entry": "expected/preview/manim/viroc-codebase.mp4",
+    "captions_entry": "expected/preview/manim/captions.srt",
+    "manifest_entry": "expected/preview/manim/build.json",
+}
 _PROJECT = load_project(_EXAMPLE)
 
 
@@ -70,6 +90,16 @@ def test_viroc_codebase_showcase_check_compile_and_gallery(
 
     assert _GALLERY["project"] == "viroc-codebase"
     assert _GALLERY["tagline"] == "Video IR. Open compiler. Pluggable renderers."
+    story_arc = cast(list[dict[str, str]], _GALLERY["story_arc"])
+    assert [entry["id"] for entry in story_arc] == _STORY_ARC_IDS
+    assert story_arc[1]["claim"] == "viroc init creates viroc.yaml and storyboard.vidir.yaml."
+    preview = cast(dict[str, str], _GALLERY["preview"])
+    assert preview["backend"] == "manim"
+    for key, value in _PREVIEW_FILES.items():
+        assert preview[key] == value
+        assert (_EXAMPLE / value).exists()
+
+
     backends = cast(list[dict[str, object]], _GALLERY["backends"])
     assert [entry["id"] for entry in backends] == ["manim", "html", "remotion"]
 
@@ -77,11 +107,22 @@ def test_viroc_codebase_showcase_check_compile_and_gallery(
         backend = cast(str, entry["id"])
         capabilities = cast(dict[str, list[str]], entry["capabilities"])
         adapter = _BACKEND_MODULES[backend]
+        assert entry["source_root"] == _GALLERY_SOURCE_ROOTS[backend]
         assert entry["source_entry"] == _GALLERY_SOURCE_ENTRIES[backend]
+        assert (_EXAMPLE / cast(str, entry["source_root"])).exists()
+        assert (_EXAMPLE / cast(str, entry["source_entry"])).exists()
         assert entry["source_hash"] == _EXPECTED_SOURCE_HASHES[backend]
         assert capabilities["primitives"] == sorted(adapter.capabilities.primitives)
         assert capabilities["animations"] == sorted(adapter.capabilities.animations)
+        assert _EXPECTED_SOURCE_HASHES[backend] in _README
 
+    assert "Committed generated source now lives under `expected/generated/`" in _README
+    assert "`expected/preview/manim/viroc-codebase.mp4`" in _README
+    assert (
+        "The machine-readable companion for this scene arc, committed source "
+        "roots, and preview paths is `expected/gallery.json`."
+        in _README
+    )
 
 
 @pytest.mark.integration
