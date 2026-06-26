@@ -2,6 +2,36 @@
   "project": "viroc-codebase",
   "tagline": "Video IR. Open compiler. Pluggable renderers.",
   "storyboard": "storyboard.vidir.yaml",
+  "story_arc": [
+    {
+      "id": "entry_point",
+      "claim": "Start from repo context and a video goal."
+    },
+    {
+      "id": "project_scaffold",
+      "claim": "viroc init creates viroc.yaml and storyboard.vidir.yaml."
+    },
+    {
+      "id": "authored_input",
+      "claim": "The authored storyboard becomes typed Semantic IR."
+    },
+    {
+      "id": "validation_boundary",
+      "claim": "VIR diagnostics reject schema, timing, layout, asset, and toolchain failures before render."
+    },
+    {
+      "id": "resolver_boundary",
+      "claim": "The resolver fixes layout, timing, and animation into Concrete IR."
+    },
+    {
+      "id": "adapter_fanout",
+      "claim": "One Concrete IR lowers through the registry to the top-three outputs and rendered artifacts."
+    },
+    {
+      "id": "proof_artifacts",
+      "claim": "Sources, hashes, build.json, render pHash, and gallery metadata close the proof."
+    }
+  ],
   "backends": [
     {
       "id": "manim",
