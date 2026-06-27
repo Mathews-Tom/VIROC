@@ -148,8 +148,13 @@ def test_viroc_codebase_showcase_render_matrix(
     srt_path = _EXAMPLE / "build" / "captions.srt"
     baseline = load_expected_render_baseline(_PROJECT, backend=backend)
 
-    if status == 1 and "VIR5" in render_capture.err:
-        pytest.skip(render_capture.err.splitlines()[0])
+    # Skip only on a missing render environment (error[VIR5...]); the non-blocking
+    # note[VIR5033] degradation notes must never mask a real render failure.
+    if status == 1 and "error[VIR5" in render_capture.err:
+        reason = next(
+            line for line in render_capture.err.splitlines() if "error[VIR5" in line
+        )
+        pytest.skip(reason)
 
     assert status == 0
     assert manifest_path.exists()
