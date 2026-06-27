@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from viroc.authoring import authoring_brief_filename, scene_plan_filename
+from viroc.authoring import authoring_brief_filename, scene_plan_filename, script_filename
 from viroc.authoring.live_claude import live_planner_status
 from viroc.cli import main
 
@@ -82,6 +82,57 @@ def test_plan_invalid_brief_fails_loudly(
     assert "failed to load authoring inputs" in captured.err
     assert "Traceback" not in captured.err
 
+
+
+@pytest.mark.integration
+def test_ingest_plan_and_check_happy_path(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    request_path, project_path = _workspace(tmp_path)
+
+    assert main(["ingest", str(request_path)]) == 0
+    ingest_capture = capsys.readouterr()
+    assert str(project_path / authoring_brief_filename()) in ingest_capture.out
+    assert ingest_capture.err == ""
+
+    assert main(["plan", str(project_path)]) == 0
+    plan_capture = capsys.readouterr()
+    assert str(project_path / scene_plan_filename()) in plan_capture.out
+    assert str(project_path / script_filename()) in plan_capture.out
+    assert str(project_path / "storyboard.vidir.yaml") in plan_capture.out
+    assert plan_capture.err == ""
+
+    assert (project_path / authoring_brief_filename()).exists()
+    assert (project_path / scene_plan_filename()).exists()
+    assert (project_path / script_filename()).exists()
+    assert (project_path / "storyboard.vidir.yaml").exists()
+
+    assert main(["check", str(project_path)]) == 0
+    assert capsys.readouterr().err == ""
+
+
+@pytest.mark.integration
+def test_plan_refuses_to_overwrite_edited_storyboard_without_force(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    request_path, project_path = _workspace(tmp_path)
+    assert main(["ingest", str(request_path)]) == 0
+    _ = capsys.readouterr()
+    assert main(["plan", str(project_path)]) == 0
+    _ = capsys.readouterr()
+
+    storyboard = project_path / "storyboard.vidir.yaml"
+    storyboard.write_text("vidir_version: '0.1'\nvideo: [broken]\n", encoding="utf-8")
+
+    assert main(["plan", str(project_path)]) == 2
+    captured = capsys.readouterr()
+    assert "already contains edits" in captured.err
+    assert "Traceback" not in captured.err
+
+    assert main(["plan", str(project_path), "--force"]) == 0
+    forced = capsys.readouterr()
+    assert str(project_path / "storyboard.vidir.yaml") in forced.out
+    assert forced.err == ""
 
 @pytest.mark.integration
 def test_live_plan_reports_unavailable_without_fallback(
