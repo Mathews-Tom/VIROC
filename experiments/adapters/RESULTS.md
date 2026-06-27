@@ -151,3 +151,25 @@ the candidates, not their implementation.
 | WebGPU backend | NO-GO | no |
 | native vector backend | NO-GO | no |
 | cloud rendering backend | NO-GO | no (out-of-tree orchestration only) |
+
+## NO-GO remediation outcomes
+
+Per-target follow-on to the NO-GO decisions, executing the investigation tasks and
+boundary-preserving Option-A remediations in
+`.docs/2026-06-27-no-go-renderer-remediation.md`. Each outcome preserves the
+ADR-0002 emit boundary, adds no required core dependency, and makes no Concrete IR
+change. Greppable status lines: `REMEDIATION: <target> = <status>`.
+
+### Rive export (doc §1, Option A)
+
+I1.2 / I1.3 executed. `rive/prepare.py` is a deterministic Lottie-preparation
+harness over the GO'd `lottie/` emit: `prepare_import_bundle(ir)` yields the
+byte-stable Lottie JSON to import plus a fidelity manifest, proven byte-stable by
+`rive/test_rive_import.py`. The fidelity matrix (grounded in Rive's documented
+Lottie import) records every emitted construct as **baked** at import; above-floor
+losses live in the Lottie emit upstream, not the import. The Rive-editor import is
+render-side/external (Enterprise-gated, no headless CLI), verified perceptually.
+A binary `.riv` writer stays gated on I1.1 (no open serialization exists). Full
+record: `rive/README.md`.
+
+REMEDIATION: Rive export = NO-GO backend; GO via Lottie + render-side editor import (harness implemented)
