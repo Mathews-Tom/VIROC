@@ -149,7 +149,13 @@ def _context_items(context: ContextRequest | None, request_path: Path) -> list[C
         items.append(ContextItem(kind="note", label="note", excerpt=note))
     for document in context.documents:
         path = (request_path.parent / document.path).resolve()
-        text = path.read_text(encoding="utf-8")
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise ValueError(
+                "failed to read document context "
+                f"{document.path!r} referenced by {request_path}: {exc}"
+            ) from exc
         items.append(
             ContextItem(
                 kind="document",
@@ -164,7 +170,12 @@ def _context_items(context: ContextRequest | None, request_path: Path) -> list[C
     root = (request_path.parent / context.repo.root).resolve()
     for relative in context.repo.files:
         path = (root / relative).resolve()
-        text = path.read_text(encoding="utf-8")
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise ValueError(
+                f"failed to read repo context file {relative!r} from {context.repo.root!r}: {exc}"
+            ) from exc
         items.append(
             ContextItem(
                 kind="repo_file",

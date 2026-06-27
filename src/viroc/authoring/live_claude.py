@@ -43,8 +43,14 @@ def build_live_scene_plan(brief: AuthoringBrief) -> ScenePlan:
     if not status.available:
         raise LivePlannerError(_status_message(status))
 
-    anthropic: Any = import_module("anthropic")
-    client = anthropic.Anthropic()
+    try:
+        anthropic: Any = import_module("anthropic")
+        client = anthropic.Anthropic()
+    except Exception as exc:
+        raise LivePlannerError(
+            "live planner setup failed; reinstall the planner extra "
+            "and verify Anthropic credentials"
+        ) from exc
     prompt = _prompt_for(brief)
     try:
         response = client.messages.parse(
