@@ -118,4 +118,36 @@ zero core dependency. Full analysis: `cloud/README.md`.
 
 DECISION: cloud rendering backend = NO-GO
 
-<!-- Follow-on milestone candidates (PR-3) appended below. -->
+## Follow-on milestone candidates (PR-3)
+
+Only the two GO targets preserve the byte-deterministic emit boundary, so only
+they are proposed as follow-on milestones (recorded in ADR-0004,
+`.docs/adr/0004-future-renderer-targets.md`, an untracked local design record). No
+NO-GO target is promoted.
+
+* **Lottie export adapter** — promote `lottie/` to a production `lottie` adapter
+  under `src/viroc/adapters/`: register it in the builtin registry, give it a
+  `CapabilityManifest` (floor native; `icon`/`code`/`formula` degraded via the
+  `VIR5033` policy), add it to the shared conformance suite with a golden source
+  hash, and emit the SRT caption sidecar. Optional `python-lottie` validation
+  stays a dev-only check. No new core runtime dependency.
+* **Interactive web export adapter** — promote `interactive_web/` to a production
+  adapter that extends the HTML family with viewer-side controls (scrubber,
+  play/pause). Emit stays the deterministic timeline JSON + fixed viewer;
+  `formula`/`icon` become native behind optional, deterministic asset steps
+  (KaTeX/icon set) rather than the dependency-light floor. Playback stays
+  env-side.
+
+Each candidate is a separate, independently-gated milestone; this ADR authorizes
+the candidates, not their implementation.
+
+## Summary
+
+| §4.3 future target | Decision | Follow-on milestone candidate |
+|---|---|---|
+| Lottie export | GO | yes — `lottie` production adapter |
+| Rive export | NO-GO | no (covered by Lottie + editor import) |
+| interactive web export | GO | yes — interactive web production adapter |
+| WebGPU backend | NO-GO | no |
+| native vector backend | NO-GO | no |
+| cloud rendering backend | NO-GO | no (out-of-tree orchestration only) |
