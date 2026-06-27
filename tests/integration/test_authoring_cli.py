@@ -1,4 +1,4 @@
-"""Integration coverage for the ingest half of the M17 authoring CLI flow."""
+"""Integration coverage for the ingest + live-planner halves of M17."""
 
 from __future__ import annotations
 
@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from viroc.authoring import authoring_brief_filename
+from viroc.authoring import authoring_brief_filename, scene_plan_filename
+from viroc.authoring.live_claude import live_planner_status
 from viroc.cli import main
 
 _ROOT = Path(__file__).resolve().parents[2]
@@ -27,11 +28,17 @@ def _workspace(tmp_path: Path) -> tuple[Path, Path]:
 
 
 @pytest.mark.integration
-def test_ingest_command_appears_in_help(capsys: pytest.CaptureFixture[str]) -> None:
+def test_authoring_commands_appear_in_help(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["ingest", "--help"]) == 0
     ingest_help = capsys.readouterr()
     assert "authoring-brief.yaml" in ingest_help.out
     assert ingest_help.err == ""
+
+    assert main(["plan", "--help"]) == 0
+    plan_help = capsys.readouterr()
+    assert "script.md" in plan_help.out
+    assert "storyboard.vidir.yaml" in plan_help.out
+    assert plan_help.err == ""
 
 
 @pytest.mark.integration
@@ -58,3 +65,61 @@ def test_ingest_writes_authoring_brief(
     assert str(project_path / authoring_brief_filename()) in ingest_capture.out
     assert ingest_capture.err == ""
     assert (project_path / authoring_brief_filename()).exists()
+
+
+@pytest.mark.integration
+def test_plan_invalid_brief_fails_loudly(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    request_path, project_path = _workspace(tmp_path)
+    assert main(["ingest", str(request_path)]) == 0
+    _ = capsys.readouterr()
+
+    (project_path / authoring_brief_filename()).write_text("project: [broken\n", encoding="utf-8")
+
+    assert main(["plan", str(project_path)]) == 2
+    captured = capsys.readouterr()
+    assert "failed to load authoring inputs" in captured.err
+    assert "Traceback" not in captured.err
+
+
+@pytest.mark.integration
+def test_live_plan_reports_unavailable_without_fallback(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    request_path, project_path = _workspace(tmp_path)
+    assert main(["ingest", str(request_path)]) == 0
+    _ = capsys.readouterr()
+
+    status = live_planner_status()
+    if status.available:
+        pytest.skip(
+            "live planner credentials are configured; "
+            "unavailable-path assertion not applicable"
+        )
+
+    assert main(["plan", str(project_path), "--live"]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert status.reason is not None
+    assert status.reason in captured.err
+    assert status.help is not None
+    assert status.help in captured.err
+
+
+@pytest.mark.integration
+def test_live_plan_happy_path_is_env_gated(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    request_path, project_path = _workspace(tmp_path)
+    assert main(["ingest", str(request_path)]) == 0
+    _ = capsys.readouterr()
+
+    status = live_planner_status()
+    if not status.available:
+        pytest.skip("Anthropic live planner is unavailable")
+
+    assert main(["plan", str(project_path), "--live", "--force"]) == 0
+    live_capture = capsys.readouterr()
+    assert str(project_path / scene_plan_filename()) in live_capture.out
+    assert live_capture.err == ""
