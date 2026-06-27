@@ -8,6 +8,7 @@ unsupported-feature reporting, and materialized review artifacts.
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 from pathlib import Path
 
@@ -241,3 +242,53 @@ def test_static_storyboard_scene_cards_keep_multi_scene_captions() -> None:
     assert [card["scene_id"] for card in cards] == ["alpha", "beta"]
     assert cards[0]["caption_lines"] == ["alpha caption"]
     assert cards[1]["caption_lines"] == ["beta caption"]
+
+
+def test_static_storyboard_review_manifest_links_artifact_hashes() -> None:
+    source = static_storyboard.emit(_compile().concrete, _ctx())
+    manifest = json.loads(static_storyboard.review_manifest(source))
+
+    assert manifest["source_hash"] == source.digest
+    assert manifest["adapter_source_version"] == "static-storyboard-source-v0.1"
+    tree = static_storyboard.source_tree(source)
+    assert manifest["artifacts"] == {
+        name: hash_bytes(body.encode("utf-8")) for name, body in tree.items()
+    }
+    assert set(manifest["artifacts"]) == {
+        "captions.md",
+        "scene-cards.json",
+        "script.md",
+        "storyboard.md",
+    }
+
+
+def test_static_storyboard_review_manifest_is_deterministic() -> None:
+    concrete = _compile().concrete
+    first = static_storyboard.review_manifest(static_storyboard.emit(concrete, _ctx()))
+    second = static_storyboard.review_manifest(static_storyboard.emit(concrete, _ctx()))
+    assert first == second
+
+
+def test_static_storyboard_materialize_review_writes_manifest(tmp_path: Path) -> None:
+    source = static_storyboard.emit(_compile().concrete, _ctx())
+    review_dir = tmp_path / "review"
+    artifact = static_storyboard.materialize_review(source, review_dir)
+
+    assert artifact.path == review_dir
+    manifest_path = review_dir / static_storyboard.REVIEW_MANIFEST_FILENAME
+    assert manifest_path.read_text(encoding="utf-8") == static_storyboard.review_manifest(source)
+    for name in ("storyboard.md", "script.md", "scene-cards.json", "captions.md"):
+        assert (review_dir / name).is_file()
+
+
+def test_static_storyboard_invalidate_review_removes_stale_dir(tmp_path: Path) -> None:
+    review_dir = tmp_path / "review"
+    static_storyboard.materialize_review(static_storyboard.emit(_compile().concrete, _ctx()), review_dir)
+    assert review_dir.exists()
+
+    static_storyboard.invalidate_review(review_dir)
+    assert not review_dir.exists()
+
+    # Invalidating an absent directory is a no-op.
+    static_storyboard.invalidate_review(review_dir)
+    assert not review_dir.exists()

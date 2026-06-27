@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 
@@ -58,3 +59,48 @@ def test_critique_review_artifacts_are_deterministic(tmp_path: Path) -> None:
     second = {name: (review_dir / name).read_text(encoding="utf-8") for name in _REVIEW_ARTIFACTS}
 
     assert first == second
+
+
+@pytest.mark.integration
+def test_critique_writes_review_manifest(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    project = _project(tmp_path)
+
+    assert main(["critique", str(project)]) == 0
+
+    captured = capsys.readouterr()
+    manifest_path = project / "build" / "review" / "review-manifest.json"
+    assert manifest_path.is_file()
+    assert str(manifest_path) in captured.out
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["source_hash"].startswith("sha256:")
+    assert set(manifest["artifacts"]) == {
+        "captions.md",
+        "scene-cards.json",
+        "script.md",
+        "storyboard.md",
+    }
+
+
+@pytest.mark.integration
+def test_critique_invalidates_stale_review_on_invalid_vidir(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    project = _project(tmp_path)
+    review_dir = project / "build" / "review"
+
+    assert main(["critique", str(project)]) == 0
+    assert review_dir.is_dir()
+    capsys.readouterr()
+
+    # Replace the storyboard with one that loads but fails timing validation.
+    bad_vidir = _ROOT / "tests" / "fixtures" / "bad-time.vidir.yaml"
+    (project / "storyboard.vidir.yaml").write_text(
+        bad_vidir.read_text(encoding="utf-8"), encoding="utf-8"
+    )
+
+    assert main(["critique", str(project)]) == 1
+    captured = capsys.readouterr()
+    assert "VIR2001" in captured.err
+    assert not review_dir.exists()
