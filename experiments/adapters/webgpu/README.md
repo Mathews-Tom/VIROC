@@ -68,3 +68,32 @@ There is no distinct deterministic emit that native-vector uniquely requires.
 Re-evaluate only if a future showcase needs GPU-only effects (shaders, particle
 systems) that the SVG/canvas floor genuinely cannot express — at which point it
 would extend interactive web, not become a separate emit target.
+
+## I2.1 — GPU-only requirement inventory (executed)
+
+Per `.docs/2026-06-27-no-go-renderer-remediation.md` §2, WebGPU flips to GO **only**
+as a render mode inside interactive web, and **only if** I2.1 surfaces a concrete
+GPU-only effect the SVG/canvas floor cannot meet. I2.1 inventories every planned
+showcase against that bar:
+
+| Source | Content | GPU-only effect? |
+|---|---|---|
+| Concrete IR vocabulary (`ir/concrete.py`) | primitives `text`/`rect`/`icon`/`arrow`/`code`/`formula`; keyframes `fade_in`/`draw`/`move`/`highlight`/`fade_out`; easings `linear`/`ease_in_out`/`spring` | none — diagram primitives + simple tweens |
+| `tests/fixtures/rag-overview.vidir.yaml` | 5 entities, `pipeline` grammar, fade/draw/transform tweens | no |
+| `tests/fixtures/showcase-composition.vidir.yaml` | 12 entities across 3 scenes (`panels`, fan-out, comparison), `showcase` grammar | no |
+| `experiments/adapters/_sample.py` | full-vocabulary sample (9 objects, 10 keyframes, all easings) | no |
+
+No showcase needs custom shaders, particle systems, or thousands of animated nodes.
+Node counts are tiny (≤12), and the interactive-web SVG/canvas floor already covers
+the **entire** keyframe vocabulary natively (`interactive_web/export.py`:
+`unsupported_keyframes` is empty) at trivial frame cost. There is therefore no
+motivating GPU-only use case — the I2.1 gate is **negative**.
+
+## Decision (WebGPU) — confirmed by I2.1
+
+WebGPU stays **NO-GO**. I2.1 found no GPU-only requirement, so the Option-A WebGPU
+render mode is **not** built (it would be a renderer with no content to justify it,
+and would worsen render determinism — ADR-0002). No WebGPU viewer mode is added;
+the deterministic `interactive_web/` `timeline.json` emit is unchanged. Re-open I2.1
+only when a concrete GPU-only effect appears, at which point it extends interactive
+web (Option A), never a separate emit target (Option B stays rejected).

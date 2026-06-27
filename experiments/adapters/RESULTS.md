@@ -204,3 +204,17 @@ remaining promotion-checklist items to land it in `src/viroc/adapters/svg/` are
 tracked in `svg/README.md`. Full record: `svg/README.md`.
 
 REMEDIATION: native vector = NO-GO embedded renderer; GO as SVG export consolidation (deterministic emit + optional render-side raster implemented)
+
+### WebGPU (doc §2, Option A — conditional)
+
+I2.1 executed; result **negative**. The inventory of every planned showcase (the
+Concrete IR vocabulary, both shipped fixtures `rag-overview` and
+`showcase-composition`, and the full-vocabulary `_sample.py`) finds no GPU-only
+effect — no custom shaders, particle systems, or thousands of animated nodes; node
+counts are ≤12 and the interactive-web SVG/canvas floor covers the entire keyframe
+vocabulary natively. With no motivating use case, the Option-A WebGPU render mode is
+**not** built (honesty over completeness: a negative finding is recorded, never a
+faked viewer mode). The deterministic `interactive_web/` `timeline.json` emit is
+unchanged. Full inventory: `webgpu/README.md`.
+
+REMEDIATION: WebGPU = NO-GO (I2.1 negative: no GPU-only requirement; no render mode built, emit unchanged)
