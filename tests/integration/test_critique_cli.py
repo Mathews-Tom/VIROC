@@ -23,6 +23,16 @@ def _project(tmp_path: Path) -> Path:
     return project
 
 
+def _authoring_workspace(tmp_path: Path) -> tuple[Path, Path]:
+    fixture_root = tmp_path / "tests" / "fixtures" / "authoring"
+    fixture_root.mkdir(parents=True)
+    shutil.copy2(_FIXTURES / "topic-brief.yaml", fixture_root / "topic-brief.yaml")
+    docs_dir = tmp_path / "docs"
+    docs_dir.mkdir(parents=True)
+    shutil.copy2(_ROOT / "docs" / "overview.md", docs_dir / "overview.md")
+    return fixture_root / "topic-brief.yaml", fixture_root / "happy-path-project"
+
+
 @pytest.mark.integration
 def test_critique_appears_in_help(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["critique", "--help"]) == 0
@@ -104,3 +114,27 @@ def test_critique_invalidates_stale_review_on_invalid_vidir(
     captured = capsys.readouterr()
     assert "VIR2001" in captured.err
     assert not review_dir.exists()
+
+
+@pytest.mark.integration
+def test_plan_hands_off_into_critique(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    request_path, project_path = _authoring_workspace(tmp_path)
+
+    assert main(["ingest", str(request_path)]) == 0
+    capsys.readouterr()
+
+    assert main(["plan", str(project_path)]) == 0
+    plan_out = capsys.readouterr()
+    assert "next: viroc critique" in plan_out.out
+    assert plan_out.err == ""
+
+    assert main(["critique", str(project_path)]) == 0
+    critique_out = capsys.readouterr()
+    review_dir = project_path / "build" / "review"
+    for name in _REVIEW_ARTIFACTS:
+        assert (review_dir / name).is_file(), name
+    assert (review_dir / "review-manifest.json").is_file()
+    assert "next: viroc compile" in critique_out.out
+    assert critique_out.err == ""
