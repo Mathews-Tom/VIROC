@@ -14,7 +14,7 @@ byte-stability test.
 | 1 | Lottie export backend | `lottie/` | export format |
 | 2 | Rive export backend | `rive/` | export format |
 | 3 | WebGPU backend | `webgpu/` | render platform |
-| 4 | native vector backend | `webgpu/` | render platform |
+| 4 | native vector backend | `webgpu/` (analysis), `svg/` (remediation) | render platform |
 | 5 | cloud rendering backend | `cloud/` | render platform |
 | 6 | interactive web export backend | `interactive_web/` | render platform |
 
@@ -149,7 +149,7 @@ the candidates, not their implementation.
 | Rive export | NO-GO | no (covered by Lottie + editor import) |
 | interactive web export | GO | yes — interactive web production adapter |
 | WebGPU backend | NO-GO | no |
-| native vector backend | NO-GO | no |
+| native vector backend | NO-GO (embedded) | SVG export consolidation (see remediation + `svg/`) |
 | cloud rendering backend | NO-GO | no (out-of-tree orchestration only) |
 
 ## NO-GO remediation outcomes
@@ -188,3 +188,19 @@ and never loads the worker layer (I4.3). The HTTP client is imported lazily at
 dispatch only. Full record: `cloud/README.md`.
 
 REMEDIATION: cloud rendering = NO-GO core backend; GO as out-of-tree orchestrator (implemented, zero core change)
+
+### native vector / SVG export (doc §3, Option A)
+
+I3.1 / I3.2 / I3.3 executed. I3.1 is positive: a standalone `.svg` is a distinct
+artifact (self-contained, no HTML/JS, headless-rasterizable) that the HTML and
+interactive-web targets do not deliver. `svg/export.py` lowers the sample Concrete
+IR to a byte-deterministic SMIL-animated standalone SVG (floor native, above-floor
+degraded via the `VIR5033` policy, every keyframe -> one animation, no Concrete IR
+change — I3.3), proven byte-stable by `svg/test_svg_export.py`. `svg/rasterize.py`
+adds optional render-side rasterization to PNG/PDF via `cairosvg`/`resvg`, gated by
+`check_environment()` and skipping cleanly when absent (I3.2). It stays in
+`experiments/` (the M21 feasibility gate ships no production adapters); the
+remaining promotion-checklist items to land it in `src/viroc/adapters/svg/` are
+tracked in `svg/README.md`. Full record: `svg/README.md`.
+
+REMEDIATION: native vector = NO-GO embedded renderer; GO as SVG export consolidation (deterministic emit + optional render-side raster implemented)

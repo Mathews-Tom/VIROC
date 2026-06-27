@@ -59,8 +59,11 @@ There is no distinct deterministic emit that native-vector uniquely requires.
 * **WebGPU backend = NO-GO.** Either a runtime detail of interactive web (path a)
   or a high-complexity duplicate with worse render determinism (path b). No unique
   deterministic source emit; nudges VIROC into owning a renderer.
-* **native vector backend = NO-GO.** Its deterministic source emit is SVG, already
-  covered by the HTML / interactive-web targets.
+* **native vector backend = NO-GO as an embedded renderer.** VIROC must not own a
+  renderer. But its deterministic source emit *is* SVG, and that is now a
+  first-class deliverable: see the **SVG export consolidation** remediation in
+  `../svg/` (doc §3, Option A) — native vector is **GO as SVG export**, NO-GO as an
+  embedded renderer.
 
 Re-evaluate only if a future showcase needs GPU-only effects (shaders, particle
 systems) that the SVG/canvas floor genuinely cannot express — at which point it
