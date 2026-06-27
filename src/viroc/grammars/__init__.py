@@ -153,15 +153,17 @@ def registered_ids() -> frozenset[str]:
 def register_builtins() -> None:
     """Register the built-in v1 grammars; idempotent and safe to call repeatedly.
 
-    The contract module stays free of grammar imports, so the import is local;
+    The contract module stays free of grammar imports, so the imports are local;
     callers (the layout driver, grammar-fit pre-validation) invoke this before
     consulting the registry so the built-ins are present without importing the
-    grammar package directly. An already-registered grammar is skipped.
+    grammar packages directly. An already-registered grammar is skipped.
     """
     from viroc.grammars.pipeline.grammar import pipeline_grammar
+    from viroc.grammars.showcase.grammar import showcase_grammar
 
-    if not is_registered(pipeline_grammar.id):
-        register(pipeline_grammar)
+    for grammar in (pipeline_grammar, showcase_grammar):
+        if not is_registered(grammar.id):
+            register(grammar)
 
 
 def overlaps(a: Box, b: Box) -> bool:
