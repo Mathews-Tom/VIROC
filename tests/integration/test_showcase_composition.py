@@ -56,14 +56,15 @@ def test_showcase_compiles_with_stable_hash(
 
 
 @pytest.mark.integration
-def test_showcase_on_manim_fails_with_explicit_capability_diagnostic(
+def test_showcase_on_manim_degrades_deterministically(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Manim cannot render code/formula, so it fails with VIR5031, not a downgrade."""
+    """Manim lacks code/formula, so it degrades to rect with VIR5033 notes, exit 0."""
     _clean_build()
-    assert main(["compile", str(_EXAMPLE), "--backend", "manim"]) == 1
-    err = capsys.readouterr().err
-    assert "VIR5031" in err
-    assert 'does not support primitive "code"' in err
-    assert 'does not support primitive "formula"' in err
-    assert not (_EXAMPLE / "build" / "generated" / "manim").exists()
+    assert main(["compile", str(_EXAMPLE), "--backend", "manim"]) == 0
+    captured = capsys.readouterr()
+    assert "VIR5033" in captured.err
+    assert 'renders primitive "code" as "rect"' in captured.err
+    assert 'renders primitive "formula" as "rect"' in captured.err
+    assert "VIR5031" not in captured.err
+    assert (_EXAMPLE / "build" / "generated" / "manim" / "scene.py").exists()

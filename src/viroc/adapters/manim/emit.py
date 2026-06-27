@@ -54,6 +54,10 @@ def _object_lines(objects: list[ResolvedObject]) -> str:
     return "".join(lines)
 
 
+DEGRADED_PRIMITIVES: dict[str, str] = {"code": "rect", "formula": "rect"}
+"""Above-floor primitives Manim renders as their floor primitive (design §19)."""
+
+
 def _object_expression(obj: ResolvedObject) -> str:
     box = obj.box
     args = ", ".join(
@@ -65,11 +69,12 @@ def _object_expression(obj: ResolvedObject) -> str:
             _string(obj.style_ref),
         ]
     )
-    if obj.primitive == "rect":
+    primitive = DEGRADED_PRIMITIVES.get(obj.primitive, obj.primitive)
+    if primitive == "rect":
         return f"_rect({args})"
-    if obj.primitive == "text":
+    if primitive == "text":
         return f"_text({_string(display_text(obj))}, {args})"
-    if obj.primitive == "arrow":
+    if primitive == "arrow":
         return f"_arrow({args})"
     raise ValueError(f"Manim emitter cannot lower primitive {obj.primitive!r}")
 
@@ -134,4 +139,4 @@ def _string(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
-__all__ = ["emit", "source_for"]
+__all__ = ["DEGRADED_PRIMITIVES", "emit", "source_for"]

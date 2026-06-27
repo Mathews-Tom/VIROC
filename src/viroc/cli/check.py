@@ -8,6 +8,7 @@ from typing import Any
 from viroc.adapters.registry import UnknownBackendError
 from viroc.cli._common import (
     compile_storyboard,
+    has_errors,
     load_project,
     print_diagnostics,
     register_backend_argument,
@@ -45,8 +46,8 @@ def run(args: argparse.Namespace) -> int:
         return 1
     assert result.state is not None
     diagnostics = adapter.supports(result.state.concrete)
-    if diagnostics:
-        print_diagnostics(diagnostics)
+    print_diagnostics(diagnostics)
+    if has_errors(diagnostics):
         return 1
     return 0
 
