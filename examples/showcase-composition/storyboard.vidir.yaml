@@ -1,0 +1,53 @@
+vidir_version: "0.1"
+video:
+  id: "showcase-composition"
+  title: "VIROC Showcase Grammar — Composition Primitives"
+  resolution: { width: 1920, height: 1080 }
+  fps: 30
+  duration_target: 18
+
+entities:
+  # Composition vocabulary (grid scene): one entity per showcase kind.
+  - { id: input_panel, label: "Authored input", type: data_source }
+  - { id: ir_card, label: "Semantic IR", type: intermediate }
+  - { id: author_note, label: "Author note", type: user }
+  - { id: proof_block, label: "Source hashes", type: storage }
+  # Fan-out scene: a resolver service fanning to three artifacts.
+  - { id: resolver, label: "Resolver", type: service }
+  - { id: concrete_ir, label: "Concrete IR", type: intermediate }
+  - { id: review_surface, label: "Review surface", type: data_source }
+  - { id: build_manifest, label: "build.json", type: storage }
+  # Comparison scene: two backend paths placed side by side.
+  - { id: html_path, label: "HTML path", type: service }
+  - { id: remotion_path, label: "Remotion path", type: service }
+  - { id: html_source, label: "scene.html", type: intermediate }
+  - { id: remotion_source, label: "Composition.tsx", type: intermediate }
+
+scenes:
+  - id: primitives
+    grammar: showcase
+    duration: 6s
+    nodes: [input_panel, ir_card, author_note, proof_block]
+    narration: "Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid."
+  - id: fanout
+    grammar: showcase
+    duration: 6s
+    nodes: [resolver, concrete_ir, review_surface, build_manifest]
+    edges:
+      - { from: resolver, to: concrete_ir, kind: split }
+      - { from: resolver, to: review_surface, kind: split }
+      - { from: resolver, to: build_manifest, kind: split }
+    narration: "One resolver fans out into Concrete IR, a review surface, and a build manifest."
+  - id: comparison
+    grammar: showcase
+    duration: 6s
+    nodes: [html_path, remotion_path, html_source, remotion_source]
+    edges:
+      - { from: html_path, to: html_source, kind: compare }
+      - { from: remotion_path, to: remotion_source, kind: compare }
+    narration: "Two portable backend paths compared side by side: HTML versus Remotion source."
+
+validation:
+  required_entities:
+    [input_panel, ir_card, author_note, proof_block, resolver, concrete_ir, review_surface, build_manifest, html_path, remotion_path, html_source, remotion_source]
+  checks: [schema, layout, timing]
