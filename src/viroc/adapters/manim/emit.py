@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections import defaultdict
 
+from viroc.adapters._text import display_text
 from viroc.adapters.manim.templates import GEOMETRY_HELPERS, SOURCE_HEADER, STYLE_BLOCK
 from viroc.core import BuildArtifact, BuildContext, artifact_from_text
 from viroc.ir import ConcreteIR, Keyframe, ResolvedObject
@@ -67,7 +68,7 @@ def _object_expression(obj: ResolvedObject) -> str:
     if obj.primitive == "rect":
         return f"_rect({args})"
     if obj.primitive == "text":
-        return f"_text({_string(_display_text(obj))}, {args})"
+        return f"_text({_string(display_text(obj))}, {args})"
     if obj.primitive == "arrow":
         return f"_arrow({args})"
     raise ValueError(f"Manim emitter cannot lower primitive {obj.primitive!r}")
@@ -122,12 +123,6 @@ def _animation_expression(keyframe: Keyframe) -> str:
     if keyframe.kind == "fade_out":
         return f"FadeOut({obj}, rate_func=_rate_func({_string(keyframe.easing)}))"
     raise ValueError(f"Manim emitter cannot lower keyframe kind {keyframe.kind!r}")
-
-
-def _display_text(obj: ResolvedObject) -> str:
-    parts = obj.id.split(".")
-    source = parts[-2] if len(parts) >= 2 and parts[-1] == "label" else parts[-1]
-    return source.replace("_", " ").title()
 
 
 def _fmt(value: float) -> str:

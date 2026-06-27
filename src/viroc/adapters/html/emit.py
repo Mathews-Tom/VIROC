@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 
+from viroc.adapters._text import display_text
 from viroc.adapters.html.templates import BASE_CSS, RUNTIME_SCRIPT, SOURCE_HEADER, STYLE_TOKENS
 from viroc.core import BuildArtifact, BuildContext, artifact_from_text, canonical_json
 from viroc.ir import Caption, ConcreteIR, Keyframe, ResolvedObject
@@ -61,11 +62,11 @@ def _object_element(obj: ResolvedObject) -> str:
     if obj.primitive == "rect":
         body = "</div>\n"
     elif obj.primitive == "text":
-        body = f"<span>{html.escape(_display_text(obj))}</span></div>\n"
+        body = f"<span>{html.escape(display_text(obj))}</span></div>\n"
     elif obj.primitive == "code":
-        body = f"<pre><code>{html.escape(_display_text(obj))}</code></pre></div>\n"
+        body = f"<pre><code>{html.escape(display_text(obj))}</code></pre></div>\n"
     elif obj.primitive == "formula":
-        body = f"<div>{html.escape(_display_text(obj))}</div></div>\n"
+        body = f"<div>{html.escape(display_text(obj))}</div></div>\n"
     elif obj.primitive == "icon":
         body = f"<div>{html.escape(_icon_glyph(obj))}</div></div>\n"
     elif obj.primitive == "arrow":
@@ -152,14 +153,8 @@ def _style_class(style_ref: str) -> str:
     return style_ref.replace(".", "-").replace("_", "-")
 
 
-def _display_text(obj: ResolvedObject) -> str:
-    parts = obj.id.split(".")
-    source = parts[-2] if len(parts) >= 2 and parts[-1] == "label" else parts[-1]
-    return source.replace("_", " ").title()
-
-
 def _icon_glyph(obj: ResolvedObject) -> str:
-    text = _display_text(obj)
+    text = display_text(obj)
     initials = [part[0] for part in text.split() if part]
     if not initials:
         return "•"

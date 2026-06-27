@@ -8,6 +8,7 @@ import json
 from pathlib import Path, PurePosixPath
 from typing import Any, cast
 
+from viroc.adapters._text import display_text
 from viroc.adapters.remotion.templates import (
     INDEX_TS,
     PACKAGE_JSON_TEMPLATE,
@@ -347,7 +348,7 @@ def _object_data(obj: ResolvedObject) -> dict[str, Any]:
         "primitive": obj.primitive,
         "style": dict(sorted(style.items())),
         "styleRef": obj.style_ref,
-        "text": _display_text(obj),
+        "text": display_text(obj),
         "w": obj.box.w,
         "x": obj.box.x,
         "y": obj.box.y,
@@ -391,14 +392,8 @@ def _total_frames(ir: ConcreteIR) -> int:
     return max(end_frames, default=1)
 
 
-def _display_text(obj: ResolvedObject) -> str:
-    parts = obj.id.split(".")
-    source = parts[-2] if len(parts) >= 2 and parts[-1] == "label" else parts[-1]
-    return source.replace("_", " ").title()
-
-
 def _icon_glyph(obj: ResolvedObject) -> str:
-    initials = [part[0] for part in _display_text(obj).split() if part]
+    initials = [part[0] for part in display_text(obj).split() if part]
     return "".join(initials[:2]).upper()
 
 
