@@ -9,10 +9,17 @@ from collections import defaultdict
 from pathlib import Path, PurePosixPath
 from typing import cast
 
-from viroc.core import BuildArtifact, BuildContext, artifact_from_text, canonical_json
+from viroc.core import (
+    BuildArtifact,
+    BuildContext,
+    artifact_from_text,
+    canonical_json,
+    hash_bytes,
+)
 from viroc.ir import Caption, ConcreteIR, Keyframe, ResolvedObject
 
 _ADAPTER_SOURCE_VERSION = "static-storyboard-source-v0.1"
+REVIEW_MANIFEST_FILENAME = "review-manifest.json"
 
 
 def emit(ir: ConcreteIR, ctx: BuildContext) -> BuildArtifact:
@@ -54,6 +61,25 @@ def source_tree(source: BuildArtifact) -> dict[str, str]:
             raise ValueError(f"static-storyboard source path escapes project root: {key!r}")
         tree[str(relative)] = value
     return dict(sorted(tree.items()))
+
+
+def review_manifest(source: BuildArtifact) -> str:
+    """Serialize a deterministic manifest linking each review artifact to its hash.
+
+    The manifest is derived from the materialized source tree, so it carries the
+    overall source digest plus a per-file content hash for ``storyboard.md``,
+    ``script.md``, ``scene-cards.json``, and ``captions.md``. It is a review
+    surface only and is never part of the source tree, so it does not affect the
+    backend source hash or any committed generated-source baseline.
+    """
+    tree = source_tree(source)
+    artifacts = {name: hash_bytes(body.encode("utf-8")) for name, body in tree.items()}
+    manifest: dict[str, object] = {
+        "adapter_source_version": _ADAPTER_SOURCE_VERSION,
+        "artifacts": artifacts,
+        "source_hash": source.digest,
+    }
+    return f"{canonical_json(manifest)}\n"
 
 
 def scene_cards(ir: ConcreteIR) -> list[dict[str, object]]:
@@ -242,8 +268,10 @@ def _seconds(frame: int, fps: int) -> float:
 
 
 __all__ = [
+    "REVIEW_MANIFEST_FILENAME",
     "emit",
     "materialize_source",
+    "review_manifest",
     "scene_cards",
     "source_for",
     "source_tree",

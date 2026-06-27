@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import shutil
 from collections.abc import Iterable
+from pathlib import Path
 
 from viroc.adapters.capabilities import (
     VIR_UNSUPPORTED_ANIMATION,
@@ -12,8 +14,10 @@ from viroc.adapters.capabilities import (
     support_diagnostics,
 )
 from viroc.adapters.static_storyboard.emit import (
+    REVIEW_MANIFEST_FILENAME,
     emit,
     materialize_source,
+    review_manifest,
     scene_cards,
     source_for,
     source_tree,
@@ -88,7 +92,28 @@ def render(
     return BuildArtifact(kind="video", digest=artifact.digest, path=root / "storyboard.md")
 
 
+def materialize_review(source: BuildArtifact, destination: Path) -> BuildArtifact:
+    """Write the review artifact tree plus the deterministic review manifest.
+
+    Unlike :func:`render`, this is the dedicated critique review surface: it
+    materializes the artifact tree and a ``review-manifest.json`` linking each
+    artifact to its content hash, without writing the build manifest.
+    """
+    artifact = materialize_source(source, destination)
+    root = artifact.path
+    assert root is not None
+    (root / REVIEW_MANIFEST_FILENAME).write_text(review_manifest(source), encoding="utf-8")
+    return artifact
+
+
+def invalidate_review(destination: Path) -> None:
+    """Remove a stale review directory so failed validation leaves no fresh outputs."""
+    if destination.exists():
+        shutil.rmtree(destination)
+
+
 __all__ = [
+    "REVIEW_MANIFEST_FILENAME",
     "SUPPORTED_ANIMATIONS",
     "SUPPORTED_PRIMITIVES",
     "VIR_UNSUPPORTED_ANIMATION",
@@ -97,8 +122,11 @@ __all__ = [
     "check_environment",
     "emit",
     "id",
+    "invalidate_review",
+    "materialize_review",
     "materialize_source",
     "render",
+    "review_manifest",
     "scene_cards",
     "source_filename",
     "source_for",
