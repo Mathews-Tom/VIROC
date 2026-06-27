@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
@@ -18,6 +18,7 @@ from viroc.core import (
     BuildContext,
     BuildPaths,
     Diagnostic,
+    Severity,
     artifact_from_path,
     render,
 )
@@ -171,6 +172,15 @@ def print_diagnostics(diagnostics: list[Diagnostic]) -> None:
     print("\n\n".join(render(diagnostic) for diagnostic in diagnostics), file=sys.stderr)
 
 
+def has_errors(diagnostics: Iterable[Diagnostic]) -> bool:
+    """Return whether any diagnostic is error severity and so blocks the command.
+
+    Non-error diagnostics (notes/warnings, e.g. a deterministic primitive
+    degradation) are still printed but must not fail the command.
+    """
+    return any(diagnostic.severity is Severity.ERROR for diagnostic in diagnostics)
+
+
 def load_expected_source_hash(project: Project, *, backend: str) -> str | None:
     """Return the committed source-hash baseline for ``backend`` when provided."""
     path = _expected_path(project, backend, "source.sha256")
@@ -297,6 +307,7 @@ __all__ = [
     "load_expected_render_baseline",
     "load_expected_source_hash",
     "load_project",
+    "has_errors",
     "print_diagnostics",
     "register_backend_argument",
     "resolve_backend",
