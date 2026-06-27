@@ -19,11 +19,13 @@ def register(subparsers: Any) -> None:
     """Register the ``critique`` subcommand."""
     parser = subparsers.add_parser(
         "critique",
-        help="emit deterministic static-storyboard review artifacts before render",
+        help="review the storyboard as static-storyboard artifacts before render",
         description=(
             "Compile a storyboard and materialize the static-storyboard review "
-            "surface (storyboard.md, script.md, scene-cards.json) so the script "
-            "and scene structure are inspectable before compile/render."
+            "surface (storyboard.md, script.md, scene-cards.json) plus a review "
+            "manifest, so the script and scene structure are inspectable before "
+            "compile/render. Critique is the default review step in the guided "
+            "flow: ingest -> plan -> critique -> compile -> render."
         ),
     )
     parser.add_argument(
@@ -68,6 +70,7 @@ def run(args: argparse.Namespace) -> int:
     print(root / "scene-cards.json")
     print(root / static_storyboard.REVIEW_MANIFEST_FILENAME)
     print(f"source_hash: {materialized.digest}")
+    print(f"next: viroc compile {project.project_root}")
     return 0
 
 

@@ -97,6 +97,7 @@ def run(args: argparse.Namespace) -> int:
     print(scene_plan_path)
     print(script_path)
     print(storyboard_path)
+    print(f"next: viroc critique {project_root}")
     return 0
 
 
