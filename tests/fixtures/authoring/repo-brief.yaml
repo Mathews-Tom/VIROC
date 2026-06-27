@@ -1,0 +1,37 @@
+request_version: "0.1"
+project:
+  path: repo-context-project
+  id: viroc_codebase_story
+  title: How the VIROC Codebase Compiles Itself
+  duration_target: 30
+  default_backend: manim
+source:
+  kind: repo
+  title: How the VIROC Codebase Compiles Itself
+  prompt: Start from repository context and explain how VIROC turns authored intent into deterministic outputs.
+  audience: Engineers onboarding to the codebase
+  objective: Use repo files as source material for a starter brief before any storyboard YAML is written.
+entities:
+  - { id: repo_docs, label: Repo docs, type: data_source }
+  - { id: brief, label: Authoring brief, type: intermediate }
+  - { id: storyboard, label: Storyboard VidIR, type: storage }
+  - { id: proof, label: Proof artifacts, type: data_source }
+scene_seeds:
+  - title: Repo intake
+    goal: Anchor the brief in checked-in documentation.
+    narration: The repository docs become a stable authoring brief before storyboard editing begins.
+    nodes: [repo_docs, brief]
+    duration: 6s
+  - title: Proof handoff
+    goal: Keep VidIR editable while the repo flow points toward proof artifacts.
+    narration: The brief still lowers into editable VidIR, which leads toward proof artifacts instead of backend code.
+    nodes: [brief, storyboard, proof]
+    duration: 7s
+context:
+  repo:
+    root: ../../..
+    files:
+      - README.md
+      - docs/design.md
+  notes:
+    - Keep the walkthrough grounded in real repo files.
