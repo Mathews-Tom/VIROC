@@ -48,6 +48,32 @@ together in `webgpu/` because they collapse onto the same boundary question.
 target preserves the deterministic emit boundary and is dependency-light enough to
 become a follow-on milestone candidate; NO-GO means it does not (and why).
 
-<!-- Export-format decisions (PR-1) appended below. -->
+## Export-format feasibility (PR-1)
+
+Probes: `lottie/` (prototype + test), `rive/` (capability map). Both evaluated as
+*export formats*, not full timeline renderers, per acceptance criterion (2).
+
+### Lottie
+
+Open JSON schema -> the lowering is pure stdlib + Concrete IR, serialized with
+`viroc.core.canonical_json` and proven byte-stable by `lottie/test_lottie_export.py`.
+Floor maps natively (`rect`/`arrow` -> shape layers, `text` -> text layer,
+`fade_*` -> opacity, `move` -> position, `draw` -> Trim Paths); above-floor content
+degrades explicitly (`icon`/`code`/`formula` -> rect floor, `highlight` -> scale
+pulse, `spring` -> ease-in-out) and captions go to an SRT sidecar. No new core
+dependency. Full map: `lottie/README.md`.
+
+DECISION: Lottie export = GO
+
+### Rive
+
+Closed binary `.riv`, authored in the Rive editor; no open, deterministic writer
+exists, so a direct emit would force non-determinism or the closed toolchain across
+the ADR-0002 boundary. The Rive visual model fits the floor, so the blocker is the
+format/tooling, not the vocabulary. The deterministic route is GO'd Lottie export
+plus a manual, render-side Rive-editor Lottie import. Full map: `rive/README.md`.
+
+DECISION: Rive export = NO-GO
+
 <!-- Render-platform decisions (PR-2) appended below. -->
 <!-- Follow-on milestone candidates (PR-3) appended below. -->
