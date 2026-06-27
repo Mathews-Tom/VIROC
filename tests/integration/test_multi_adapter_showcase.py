@@ -52,13 +52,13 @@ _EXPECTED_SOURCE_HASHES = {
 }
 
 _STORY_ARC_IDS = [
-    "entry_point",
-    "project_scaffold",
-    "authored_input",
-    "validation_boundary",
-    "resolver_boundary",
-    "adapter_fanout",
-    "proof_artifacts",
+    "concept_input",
+    "script_and_scene_plan",
+    "editable_vidir",
+    "validate_repair",
+    "storyboard_review",
+    "compile_fanout",
+    "parity_proof",
 ]
 _PREVIEW_FILES = {
     "video_entry": "expected/preview/manim/viroc-codebase.mp4",
@@ -78,8 +78,10 @@ def test_viroc_codebase_showcase_check_compile_and_gallery(
 ) -> None:
     _clean_build()
 
+    # Default backend is manim, which degrades the richer showcase's code/formula
+    # primitives to rect; check still exits 0 and surfaces the VIR5033 notes.
     assert main(["check", str(_EXAMPLE)]) == 0
-    assert capsys.readouterr().err == ""
+    assert "VIR5033" in capsys.readouterr().err
 
     for backend, generated in _COMPILE_OUTPUTS.items():
         assert main(["compile", str(_EXAMPLE), "--backend", backend]) == 0
@@ -89,10 +91,12 @@ def test_viroc_codebase_showcase_check_compile_and_gallery(
         assert generated.exists()
 
     assert _GALLERY["project"] == "viroc-codebase"
-    assert _GALLERY["tagline"] == "Video IR. Open compiler. Pluggable renderers."
+    assert _GALLERY["tagline"] == "Topic to verified video. Typed IR. Portable renderers."
     story_arc = cast(list[dict[str, str]], _GALLERY["story_arc"])
     assert [entry["id"] for entry in story_arc] == _STORY_ARC_IDS
-    assert story_arc[1]["claim"] == "viroc init creates viroc.yaml and storyboard.vidir.yaml."
+    assert story_arc[1]["claim"] == (
+        "The guided planner derives a script, a scene plan, and an outline."
+    )
     preview = cast(dict[str, str], _GALLERY["preview"])
     assert preview["backend"] == "manim"
     for key, value in _PREVIEW_FILES.items():

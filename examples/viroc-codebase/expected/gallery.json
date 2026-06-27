@@ -1,42 +1,42 @@
 {
   "project": "viroc-codebase",
-  "tagline": "Video IR. Open compiler. Pluggable renderers.",
+  "tagline": "Topic to verified video. Typed IR. Portable renderers.",
   "storyboard": "storyboard.vidir.yaml",
   "story_arc": [
     {
-      "id": "entry_point",
-      "claim": "Start from repo context and a video goal."
+      "id": "concept_input",
+      "claim": "Start from a concept: a repo, a document set, and a topic brief."
     },
     {
-      "id": "project_scaffold",
-      "claim": "viroc init creates viroc.yaml and storyboard.vidir.yaml."
+      "id": "script_and_scene_plan",
+      "claim": "The guided planner derives a script, a scene plan, and an outline."
     },
     {
-      "id": "authored_input",
-      "claim": "The authored storyboard becomes typed Semantic IR."
+      "id": "editable_vidir",
+      "claim": "The approved outline becomes editable VidIR the user owns."
     },
     {
-      "id": "validation_boundary",
-      "claim": "VIR diagnostics reject schema, timing, layout, asset, and toolchain failures before render."
+      "id": "validate_repair",
+      "claim": "viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render."
     },
     {
-      "id": "resolver_boundary",
-      "claim": "The resolver fixes layout, timing, and animation into Concrete IR."
+      "id": "storyboard_review",
+      "claim": "The review surface shows scene cards and the script before final render."
     },
     {
-      "id": "adapter_fanout",
-      "claim": "One Concrete IR lowers through the registry to the top-three outputs and rendered artifacts."
+      "id": "compile_fanout",
+      "claim": "One Concrete IR compiles deterministically to Manim, HTML, and Remotion source."
     },
     {
-      "id": "proof_artifacts",
-      "claim": "Sources, hashes, build.json, render pHash, and gallery metadata close the proof."
+      "id": "parity_proof",
+      "claim": "Backends are compared and source hashes plus build.json close the reproducibility proof."
     }
   ],
   "backends": [
     {
       "id": "manim",
       "source_entry": "expected/generated/manim/scene.py",
-      "source_hash": "sha256:d1c9e648d5fd5a1cc7cec34fd4bfc19c85975fde6154a2530574beb6c4f0b5c3",
+      "source_hash": "sha256:0899d90d30b7d97b23404a4a186202cce300dfc3d614f68b6d7ec5bde1ad398b",
       "render_status": "baseline-committed",
       "render_baseline": "expected/manim/render.json",
       "capabilities": {
@@ -52,36 +52,16 @@
           "highlight"
         ]
       },
+      "degradations": {
+        "code": "rect",
+        "formula": "rect"
+      },
       "source_root": "expected/generated/manim"
     },
     {
       "id": "html",
       "source_entry": "expected/generated/html/scene.html",
-      "source_hash": "sha256:fb9409d4ef3231483252ba3531158be4ad666c86acbe9b7129a2debba1587132",
-      "render_status": "baseline-committed",
-      "render_baseline": "expected/html/render.json",
-      "capabilities": {
-        "primitives": [
-          "arrow",
-          "code",
-          "formula",
-          "icon",
-          "rect",
-          "text"
-        ],
-        "animations": [
-          "draw",
-          "fade_in",
-          "fade_out",
-          "highlight"
-        ]
-      },
-      "source_root": "expected/generated/html"
-    },
-    {
-      "id": "remotion",
-      "source_entry": "expected/generated/remotion/package.json",
-      "source_hash": "sha256:e52bf848307409f59740099c3bc4be00b6bf3381a12151cd05f58dcef9501eea",
+      "source_hash": "sha256:6ed01bc515acad379a17d71d4b4f1c1fb1da20311bbe9dbc019c0c0ef0a82991",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {
@@ -100,6 +80,32 @@
           "highlight"
         ]
       },
+      "degradations": {},
+      "source_root": "expected/generated/html"
+    },
+    {
+      "id": "remotion",
+      "source_entry": "expected/generated/remotion/package.json",
+      "source_hash": "sha256:fd1432205913e634f68b90360cdac13a99e24354da04640e94843af7f3708250",
+      "render_status": "env-gated",
+      "render_baseline": null,
+      "capabilities": {
+        "primitives": [
+          "arrow",
+          "code",
+          "formula",
+          "icon",
+          "rect",
+          "text"
+        ],
+        "animations": [
+          "draw",
+          "fade_in",
+          "fade_out",
+          "highlight"
+        ]
+      },
+      "degradations": {},
       "source_root": "expected/generated/remotion"
     }
   ],

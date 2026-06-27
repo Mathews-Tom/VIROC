@@ -1,27 +1,27 @@
 1
-00:00:00,000 --> 00:00:04,000
-Users start VIROC with repo context and a video goal, not renderer code.
+00:00:00,000 --> 00:00:05,000
+Start from a concept: a repo, a document set, and a topic brief, not renderer code.
 
 2
-00:00:04,000 --> 00:00:09,000
-viroc init scaffolds the project surface: viroc.yaml leads into storyboard.vidir.yaml.
+00:00:05,000 --> 00:00:11,000
+The guided planner derives a script, a scene plan, and an outline before any IR exists.
 
 3
-00:00:09,000 --> 00:00:15,000
-With project config loaded, the authored storyboard is parsed into typed Semantic IR for the compiler.
+00:00:11,000 --> 00:00:16,000
+The approved outline becomes editable VidIR the user and agents refine.
 
 4
-00:00:15,000 --> 00:00:21,000
-VIR checks reject schema, timing, layout, asset, and toolchain problems before any render step.
+00:00:16,000 --> 00:00:22,000
+viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.
 
 5
-00:00:21,000 --> 00:00:27,000
-Once the storyboard passes validation, the resolver fixes layout, timing, and animation into Concrete IR.
+00:00:22,000 --> 00:00:28,000
+The review surface shows scene cards and the script as an inspectable artifact before final render.
 
 6
-00:00:27,000 --> 00:00:33,000
-One Concrete IR enters the registry, becomes top-three outputs, and renders artifacts.
+00:00:28,000 --> 00:00:34,000
+One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.
 
 7
-00:00:33,000 --> 00:00:40,000
-The payoff is proof: sources, stable hashes, build.json, render pHash, and gallery metadata line up.
+00:00:34,000 --> 00:00:40,000
+Backend paths compared side by side; source hashes and build.json close the proof.
