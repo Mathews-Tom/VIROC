@@ -36,9 +36,16 @@ def register(subparsers: Any) -> None:
 
 
 def run(args: argparse.Namespace) -> int:
-    """Compile a storyboard and write the static-storyboard review artifacts."""
+    """Compile a storyboard and write the static-storyboard review artifacts.
+
+    The review directory is invalidated up front, so a failed compile or an
+    unsupported Concrete IR never leaves stale, fresh-looking review outputs
+    behind. Fresh review artifacts and the review manifest are written only when
+    validation succeeds.
+    """
     project = load_project(args.path)
     review_dir = project.out_dir / _REVIEW_DIRNAME
+    static_storyboard.invalidate_review(review_dir)
 
     result = compile_storyboard(project)
     if result.diagnostics:
@@ -52,13 +59,14 @@ def run(args: argparse.Namespace) -> int:
         return 1
 
     source = static_storyboard.emit(result.state.concrete, result.ctx)
-    materialized = static_storyboard.materialize_source(source, review_dir)
+    materialized = static_storyboard.materialize_review(source, review_dir)
     root = materialized.path
     assert root is not None
 
     print(root / "storyboard.md")
     print(root / "script.md")
     print(root / "scene-cards.json")
+    print(root / static_storyboard.REVIEW_MANIFEST_FILENAME)
     print(f"source_hash: {materialized.digest}")
     return 0
 
