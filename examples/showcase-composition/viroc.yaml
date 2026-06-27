@@ -1,0 +1,4 @@
+project: showcase-composition
+default_backend: static_storyboard
+paths:
+  out: build
