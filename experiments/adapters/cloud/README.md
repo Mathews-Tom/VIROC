@@ -57,3 +57,40 @@ the existing env-gated `render()`, not a new backend; it preserves the determini
 boundary precisely because it lives entirely to the right of it. If pursued, it
 belongs in an out-of-tree orchestrator (CI/service), never as a core dependency or
 a Concrete IR change.
+
+## Remediation (Option A) — implemented
+
+Per `.docs/2026-06-27-no-go-renderer-remediation.md` §4, cloud rendering stays
+**NO-GO as a core backend** and is built as an **out-of-tree orchestrator** with
+zero core change. The orchestrator lives entirely here, under
+`experiments/adapters/cloud/`, never in `src/viroc`:
+
+```bash
+uv run pytest experiments/adapters/cloud -q      # determinism + CAS + boundary
+```
+
+- **`compile_step.py`** (I4.1, left of emit) — `compile_source(ir, emit_fn)` runs a
+  pure adapter emit and hashes it into `source_hash`. Imports only `viroc.core` +
+  stdlib; no network, no credentials.
+- **`orchestrator.py`** — `CASCache` (I4.2) keyed on `source_hash`: identical source
+  ⇒ reuse the cached render, never re-render. A `RenderWorker` protocol with a
+  default `LocalWorker` and a credential-gated `RemoteWorker` (`from_env()` returns
+  `None` without `$VIROC_CLOUD_ENDPOINT`/`$VIROC_CLOUD_TOKEN`; `default_worker()`
+  falls back to local). `orchestrate(...)` wires compile → cache → `worker.render`
+  → perceptual verify against a baseline.
+
+### I4.3 — credential boundary (proven)
+
+`test_compile_path_imports_no_network_or_credentials` loads the compile path
+(`compile_step.py` + the emit it drives) in a **fresh subprocess** and asserts no
+provider SDK (requests/httpx/boto3/anthropic/…) is imported and the worker module
+is never loaded. The remote worker imports its HTTP client lazily *inside*
+`render()`, so credentials/network are touched only at dispatch, on a worker — never
+left of emit. Stdlib `socket`/`ssl`/`urllib` are pulled transitively by pydantic and
+are not treated as credential/network intent.
+
+### Decision (unchanged, now evidenced)
+
+Cloud rendering = **NO-GO as a core backend**, **GO as an out-of-tree orchestrator**
+(implemented here, zero core dependency). It preserves ADR-0002 precisely because it
+lives entirely to the right of the emit boundary.
