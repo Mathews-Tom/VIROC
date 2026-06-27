@@ -38,6 +38,7 @@ def test_authoring_commands_appear_in_help(capsys: pytest.CaptureFixture[str]) -
     plan_help = capsys.readouterr()
     assert "script.md" in plan_help.out
     assert "storyboard.vidir.yaml" in plan_help.out
+    assert "--force" in plan_help.out
     assert plan_help.err == ""
 
 
