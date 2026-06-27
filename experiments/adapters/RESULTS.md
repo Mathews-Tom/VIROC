@@ -173,3 +173,18 @@ A binary `.riv` writer stays gated on I1.1 (no open serialization exists). Full
 record: `rive/README.md`.
 
 REMEDIATION: Rive export = NO-GO backend; GO via Lottie + render-side editor import (harness implemented)
+
+### cloud rendering (doc §4, Option A)
+
+I4.1 / I4.2 / I4.3 executed. `cloud/` is an out-of-tree orchestrator (outside
+`src/viroc`, zero core change): `compile_step.py` runs the local deterministic
+compile (`source_hash`), `orchestrator.py` adds a `CASCache` keyed on `source_hash`
+(identical source ⇒ reuse, never re-render), a pluggable `RenderWorker` (`LocalWorker`
+default; credential-gated `RemoteWorker.from_env()` that returns `None` without
+`$VIROC_CLOUD_ENDPOINT`/`$VIROC_CLOUD_TOKEN`), and a perceptual verify against a
+baseline. `test_cloud_orchestrator.py` proves compile determinism, content-addressed
+reuse, and — via a fresh subprocess — that the compile path imports no provider SDK
+and never loads the worker layer (I4.3). The HTTP client is imported lazily at
+dispatch only. Full record: `cloud/README.md`.
+
+REMEDIATION: cloud rendering = NO-GO core backend; GO as out-of-tree orchestrator (implemented, zero core change)
