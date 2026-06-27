@@ -7,6 +7,7 @@ from pathlib import Path
 from textwrap import dedent
 from typing import Any
 
+from viroc.authoring import viroc_config_text
 from viroc.cli._common import CliError
 
 
@@ -32,14 +33,7 @@ def run(args: argparse.Namespace) -> int:
     title = project_id.replace("-", " ").replace("_", " ").title()
 
     (target / "viroc.yaml").write_text(
-        dedent(
-            f"""\
-            project: {project_id}
-            default_backend: manim
-            paths:
-              out: build
-            """
-        ),
+        viroc_config_text(project_id, default_backend="manim"),
         encoding="utf-8",
     )
     (target / "storyboard.vidir.yaml").write_text(
