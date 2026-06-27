@@ -75,5 +75,47 @@ plus a manual, render-side Rive-editor Lottie import. Full map: `rive/README.md`
 
 DECISION: Rive export = NO-GO
 
-<!-- Render-platform decisions (PR-2) appended below. -->
+## Render-platform feasibility (PR-2)
+
+Probes: `interactive_web/` (prototype + test), `webgpu/` (analysis, covers WebGPU
+and native vector), `cloud/` (analysis). Each is judged on whether it has a
+distinct, byte-deterministic *source* emit, or whether it lives to the right of the
+ADR-0002 emit boundary (acceptance criterion 3).
+
+### Interactive web export
+
+A deterministic, dependency-light bundle: a canonical `timeline.json` plus a fixed
+vanilla-JS/SVG viewer with a scrubber and play/pause. Byte-stability and full
+native keyframe coverage are proven by `interactive_web/test_interactive_web_export.py`
+(`unsupported_keyframes` is empty). Playback is browser-side (right of emit). No new
+core dependency. Full map: `interactive_web/README.md`.
+
+DECISION: interactive web export = GO
+
+### WebGPU
+
+A GPU API, not a source format. Either a runtime detail of the interactive web
+bundle or a high-complexity WGSL+JS duplicate with worse render determinism that
+pushes VIROC toward owning a renderer. No unique deterministic source emit. Full
+analysis: `webgpu/README.md`.
+
+DECISION: WebGPU backend = NO-GO
+
+### native vector
+
+Its only deterministic source emit is SVG, already owned by the HTML and
+interactive-web targets. A "native" renderer would mean VIROC embedding one,
+against the compile-into-frameworks strategy. Full analysis: `webgpu/README.md`.
+
+DECISION: native vector backend = NO-GO
+
+### cloud rendering
+
+Runs an existing adapter's env-gated `render()` on remote infra; sits entirely to
+the right of the emit boundary. No new Concrete IR primitive, emit, or adapter;
+needs SaaS credentials at render time (out of scope); buildable out of tree with
+zero core dependency. Full analysis: `cloud/README.md`.
+
+DECISION: cloud rendering backend = NO-GO
+
 <!-- Follow-on milestone candidates (PR-3) appended below. -->
