@@ -9,6 +9,7 @@ import json
 from pathlib import Path, PurePosixPath
 from typing import Any, cast
 
+from viroc.adapters._text import display_text
 from viroc.core import BuildArtifact, BuildContext, artifact_from_text, canonical_json
 from viroc.ir import Caption, ConcreteIR, Keyframe, ResolvedObject
 
@@ -165,7 +166,7 @@ def _object_data(obj: ResolvedObject) -> dict[str, object]:
         "primitive": obj.primitive,
         "style": dict(sorted(style.items())),
         "style_ref": obj.style_ref,
-        "text": _display_text(obj),
+        "text": display_text(obj),
         "w": obj.box.w,
         "x": obj.box.x,
         "y": obj.box.y,
@@ -240,14 +241,8 @@ def _sorted_captions(captions: list[Caption]) -> list[Caption]:
     return sorted(captions, key=lambda item: (item.start_f, item.end_f, item.text))
 
 
-def _display_text(obj: ResolvedObject) -> str:
-    parts = obj.id.split(".")
-    source = parts[-2] if len(parts) >= 2 and parts[-1] == "label" else parts[-1]
-    return source.replace("_", " ").title()
-
-
 def _icon_glyph(obj: ResolvedObject) -> str:
-    initials = [part[0] for part in _display_text(obj).split() if part]
+    initials = [part[0] for part in display_text(obj).split() if part]
     return "".join(initials[:2]).upper()
 
 

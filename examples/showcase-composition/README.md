@@ -35,9 +35,9 @@ Each prints a stable `source_hash:` matching the committed baseline under
 
 | Backend | `expected/<backend>/source.sha256` |
 |---|---|
-| `static_storyboard` | `sha256:fb29449e63cb28bb3a6aeb2123eca74bc686670c812e606e16c19b3b8f6a3ed5` |
-| `html` | `sha256:0db65853affcd155da0bce37bc0a9487e4d29348e4f6870fe606c5203c6c480c` |
-| `remotion` | `sha256:719cd7c3030b076b0a0ee06016cbeed2bf3b1874d2b31694d957cfa318b927a2` |
+| `static_storyboard` | `sha256:1e7704642f264d78787c4fa841edd49dbe2143fe9f9415ad018b1f22ba4d4d82` |
+| `html` | `sha256:0ca3acc173f0fa5cdcf696e6a6954bd6c9ad00ba9a928afcd49f861315d1e4ab` |
+| `remotion` | `sha256:57fef780de372ff521a6342052d1acd331abf3580a168467b9573f6bd8c65b01` |
 
 ## Unsupported backends fail explicitly
 

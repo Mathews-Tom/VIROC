@@ -8,6 +8,7 @@ import json
 from pathlib import Path, PurePosixPath
 from typing import cast
 
+from viroc.adapters._text import display_text
 from viroc.adapters.motion_canvas.templates import (
     MOTION_CANVAS_D_TS,
     PACKAGE_JSON_TEMPLATE,
@@ -176,21 +177,21 @@ def _object_lines(
         color = STYLE_TOKENS.get(obj.style_ref, _DEFAULT_STYLE)["color"]
         return [
             "  view.add(\n",
-            f"    <Txt ref={{{ref}}} x={{{_fmt(center_x)}}} y={{{_fmt(center_y)}}} text={{{_string(_display_text(obj))}}} fill={{{_string(color)}}} fontFamily={{{_string('Inter, ui-sans-serif, system-ui')}}} fontSize={{32}} fontWeight={{600}} opacity={{0}} />\n",
+            f"    <Txt ref={{{ref}}} x={{{_fmt(center_x)}}} y={{{_fmt(center_y)}}} text={{{_string(display_text(obj))}}} fill={{{_string(color)}}} fontFamily={{{_string('Inter, ui-sans-serif, system-ui')}}} fontSize={{32}} fontWeight={{600}} opacity={{0}} />\n",
             "  );\n",
         ]
     if obj.primitive == "code":
         color = STYLE_TOKENS.get(obj.style_ref, _DEFAULT_STYLE)["color"]
         return [
             "  view.add(\n",
-            f"    <Code ref={{{ref}}} x={{{_fmt(center_x)}}} y={{{_fmt(center_y)}}} code={{{_string(_display_text(obj))}}} fill={{{_string(color)}}} fontSize={{28}} opacity={{0}} />\n",
+            f"    <Code ref={{{ref}}} x={{{_fmt(center_x)}}} y={{{_fmt(center_y)}}} code={{{_string(display_text(obj))}}} fill={{{_string(color)}}} fontSize={{28}} opacity={{0}} />\n",
             "  );\n",
         ]
     if obj.primitive == "formula":
         color = STYLE_TOKENS.get(obj.style_ref, _DEFAULT_STYLE)["color"]
         return [
             "  view.add(\n",
-            f"    <Txt ref={{{ref}}} x={{{_fmt(center_x)}}} y={{{_fmt(center_y)}}} text={{{_string(_display_text(obj))}}} fill={{{_string(color)}}} fontFamily={{{_string('Times New Roman, serif')}}} fontStyle={{{_string('italic')}}} fontSize={{30}} opacity={{0}} />\n",
+            f"    <Txt ref={{{ref}}} x={{{_fmt(center_x)}}} y={{{_fmt(center_y)}}} text={{{_string(display_text(obj))}}} fill={{{_string(color)}}} fontFamily={{{_string('Times New Roman, serif')}}} fontStyle={{{_string('italic')}}} fontSize={{30}} opacity={{0}} />\n",
             "  );\n",
         ]
     if obj.primitive == "icon":
@@ -256,14 +257,8 @@ def _caption_data(caption: Caption) -> dict[str, object]:
     }
 
 
-def _display_text(obj: ResolvedObject) -> str:
-    parts = obj.id.split(".")
-    source = parts[-2] if len(parts) >= 2 and parts[-1] == "label" else parts[-1]
-    return source.replace("_", " ").title()
-
-
 def _icon_glyph(obj: ResolvedObject) -> str:
-    initials = [part[0] for part in _display_text(obj).split() if part]
+    initials = [part[0] for part in display_text(obj).split() if part]
     return "".join(initials[:2]).upper()
 
 

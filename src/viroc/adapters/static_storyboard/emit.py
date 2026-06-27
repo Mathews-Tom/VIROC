@@ -9,6 +9,7 @@ from collections import defaultdict
 from pathlib import Path, PurePosixPath
 from typing import cast
 
+from viroc.adapters._text import display_text
 from viroc.core import (
     BuildArtifact,
     BuildContext,
@@ -222,7 +223,7 @@ def _object_data(obj: ResolvedObject) -> dict[str, object]:
         "id": obj.id,
         "primitive": obj.primitive,
         "style_ref": obj.style_ref,
-        "text": _display_text(obj),
+        "text": display_text(obj),
         "w": obj.box.w,
         "h": obj.box.h,
         "x": obj.box.x,
@@ -255,12 +256,6 @@ def _sorted_keyframes(keyframes: list[Keyframe]) -> list[Keyframe]:
 
 def _sorted_captions(captions: list[Caption]) -> list[Caption]:
     return sorted(captions, key=lambda item: (item.start_f, item.end_f, item.text))
-
-
-def _display_text(obj: ResolvedObject) -> str:
-    parts = obj.id.split(".")
-    source = parts[-2] if len(parts) >= 2 and parts[-1] == "label" else parts[-1]
-    return source.replace("_", " ").title()
 
 
 def _seconds(frame: int, fps: int) -> float:
