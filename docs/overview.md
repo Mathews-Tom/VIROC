@@ -167,6 +167,8 @@ The top risk is #1, and it is cheap to test. Everything else is reprioritization
 | Perceptual stability check | visual regression suite |
 | CLI: `init`, `check`, `compile`, `render`, `graph`, `doctor` | `plan`, `ingest`, `critique`, studio UI |
 
+> Post-v1 (M17–M18): the guided authoring and review surfaces `ingest`, `plan`, and `critique` have since shipped on top of the v1 core. `critique` promotes the static-storyboard review surface into the default `ingest -> plan -> critique -> compile -> render` path (see the README guided flow). Studio UI remains out of scope.
+
 **v1 success criterion:** given a hand-authored `pipeline` storyboard, VIROC validates it, compiles it to byte-deterministic Manim source, renders a clean 1080p video, and emits a manifest — and a senior engineer prefers editing the VidIR to editing the equivalent Manim.
 
 ---

@@ -138,3 +138,35 @@ def test_plan_hands_off_into_critique(
     assert (review_dir / "review-manifest.json").is_file()
     assert "next: viroc compile" in critique_out.out
     assert critique_out.err == ""
+
+
+@pytest.mark.integration
+def test_critique_review_manifest_is_stable_across_runs(tmp_path: Path) -> None:
+    project = _project(tmp_path)
+    manifest_path = project / "build" / "review" / "review-manifest.json"
+
+    assert main(["critique", str(project)]) == 0
+    first = manifest_path.read_text(encoding="utf-8")
+
+    assert main(["critique", str(project)]) == 0
+    second = manifest_path.read_text(encoding="utf-8")
+
+    assert first == second
+
+
+@pytest.mark.integration
+def test_critique_broken_vidir_emits_no_review_surface(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    project = tmp_path / "broken"
+    project.mkdir()
+    (project / "viroc.yaml").write_text("project: broken\n", encoding="utf-8")
+    bad_vidir = _ROOT / "tests" / "fixtures" / "bad-time.vidir.yaml"
+    (project / "storyboard.vidir.yaml").write_text(
+        bad_vidir.read_text(encoding="utf-8"), encoding="utf-8"
+    )
+
+    assert main(["critique", str(project)]) == 1
+    captured = capsys.readouterr()
+    assert "VIR2001" in captured.err
+    assert not (project / "build" / "review").exists()
