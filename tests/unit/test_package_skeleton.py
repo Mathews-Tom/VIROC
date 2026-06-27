@@ -15,6 +15,7 @@ SUBPACKAGES = [
     "viroc.adapters",
     "viroc.adapters.manim",
     "viroc.validators",
+    "viroc.authoring",
     "viroc.cli",
 ]
 

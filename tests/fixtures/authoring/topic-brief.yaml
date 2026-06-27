@@ -1,0 +1,48 @@
+request_version: "0.1"
+project:
+  path: happy-path-project
+  id: guided_authoring_flow
+  title: Guided VIROC Authoring Flow
+  duration_target: 24
+  default_backend: manim
+source:
+  kind: topic
+  title: Guided VIROC Authoring Flow
+  prompt: Show how a user moves from a topic into brief, script, scene plan, and editable VidIR.
+  audience: Senior engineers evaluating VIROC
+  objective: Prove that VIROC starts before storyboard.vidir.yaml while keeping VidIR the only compiler input.
+entities:
+  - { id: topic, label: Topic, type: data_source }
+  - { id: brief, label: Authoring brief, type: intermediate }
+  - { id: script, label: Script, type: intermediate }
+  - { id: scene_plan, label: Scene plan, type: intermediate }
+  - { id: vidir, label: Storyboard VidIR, type: storage }
+  - { id: checks, label: viroc check, type: service }
+  - { id: video, label: Render-ready plan, type: data_source }
+scene_seeds:
+  - title: Topic intake
+    goal: Capture the topic as a stable brief before any storyboard YAML exists.
+    narration: A topic becomes a stable authoring brief before any storyboard YAML exists.
+    nodes: [topic, brief]
+    duration: 5s
+  - title: Script drafting
+    goal: Turn the brief into a reviewable script that keeps the video goal explicit.
+    narration: The brief turns into a reviewable script that keeps the video goal explicit.
+    nodes: [brief, script]
+    duration: 6s
+  - title: Scene planning
+    goal: Shape the script into a scene plan and starter VidIR for editing.
+    narration: From the script, VIROC shapes a scene plan and emits starter VidIR for editing.
+    nodes: [script, scene_plan, vidir]
+    duration: 6s
+  - title: Validation handoff
+    goal: Validate the starter VidIR before render work begins.
+    narration: viroc check validates the starter VidIR so the flow reaches a safe render-ready plan.
+    nodes: [vidir, checks, video]
+    duration: 7s
+context:
+  documents:
+    - path: ../../../docs/overview.md
+      label: overview
+  notes:
+    - Keep the intermediate editable and renderer-neutral.
