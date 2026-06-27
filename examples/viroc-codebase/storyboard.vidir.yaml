@@ -1,93 +1,90 @@
 vidir_version: "0.1"
 video:
   id: "viroc-codebase"
-  title: "How the VIROC Codebase Compiles Itself"
+  title: "From a Topic to a Verified Video with VIROC"
   resolution: { width: 1920, height: 1080 }
   fps: 30
   duration_target: 40
 
 entities:
-  - { id: author, label: "New VIROC user", type: user }
-  - { id: repo_docs, label: "Repo / docs", type: data_source }
-  - { id: video_brief, label: "Video goal", type: data_source }
-  - { id: viroc_init, label: "viroc init", type: service }
-  - { id: project_config, label: "viroc.yaml", type: storage }
-  - { id: storyboard_file, label: "storyboard.vidir.yaml", type: storage }
-  - { id: semantic_ir, label: "Semantic IR", type: intermediate }
-  - { id: vir_checks, label: "VIR diagnostics", type: service }
-  - { id: validated_storyboard, label: "Validated storyboard", type: intermediate }
-  - { id: resolver, label: "Resolver", type: service }
+  # 1. Concept input the guided flow starts from.
+  - { id: author, label: "User", type: user }
+  - { id: repo_context, label: "Repo context", type: data_source }
+  - { id: doc_set, label: "Document set", type: data_source }
+  - { id: topic, label: "Topic brief", type: data_source }
+  # 2. Script and scene-plan authoring stage.
+  - { id: planner, label: "Guided planner", type: service }
+  - { id: script, label: "Script", type: intermediate }
+  - { id: scene_plan, label: "Scene plan", type: intermediate }
+  - { id: outline, label: "Outline", type: intermediate }
+  # 3-4. Editable VidIR and validation/repair.
+  - { id: storyboard, label: "Editable VidIR", type: intermediate }
+  - { id: checks, label: "VIR diagnostics", type: service }
+  - { id: repaired, label: "Repaired VidIR", type: intermediate }
+  # 5. Review surface before render.
+  - { id: review, label: "Review surface", type: data_source }
+  - { id: scene_cards, label: "Scene cards", type: intermediate }
+  - { id: script_review, label: "Script review", type: intermediate }
+  # 6. Deterministic compile fan-out.
   - { id: concrete_ir, label: "Concrete IR", type: intermediate }
-  - { id: registry, label: "Registry", type: service }
-  - { id: top_three_outputs, label: "Top-three outputs", type: data_source }
-  - { id: rendered_artifact, label: "MP4 + SRT", type: data_source }
-  - { id: editable_outputs, label: "Sources", type: data_source }
+  - { id: manim_source, label: "Manim source", type: intermediate }
+  - { id: html_source, label: "HTML source", type: intermediate }
+  - { id: remotion_source, label: "Remotion source", type: intermediate }
+  # 7. Backend parity and reproducibility proof.
+  - { id: html_path, label: "HTML path", type: service }
+  - { id: remotion_path, label: "Remotion path", type: service }
   - { id: source_hashes, label: "Source hashes", type: storage }
   - { id: build_manifest, label: "build.json", type: storage }
-  - { id: render_phash, label: "Render pHash", type: storage }
-  - { id: gallery_manifest, label: "gallery.json", type: storage }
 
 scenes:
-  - id: entry_point
-    grammar: pipeline
-    duration: 4s
-    nodes: [repo_docs, author, video_brief]
-    edges:
-      - { from: author, to: video_brief, kind: flow }
-    narration: "Users start VIROC with repo context and a video goal, not renderer code."
-  - id: project_scaffold
-    grammar: pipeline
+  - id: concept_input
+    grammar: showcase
     duration: 5s
-    nodes: [author, viroc_init, project_config, storyboard_file]
-    edges:
-      - { from: author, to: viroc_init, kind: flow }
-      - { from: viroc_init, to: project_config, kind: store }
-      - { from: project_config, to: storyboard_file, kind: store }
-    narration: "viroc init scaffolds the project surface: viroc.yaml leads into storyboard.vidir.yaml."
-  - id: authored_input
-    grammar: pipeline
+    nodes: [repo_context, doc_set, topic, author]
+    narration: "Start from a concept: a repo, a document set, and a topic brief, not renderer code."
+  - id: script_and_scene_plan
+    grammar: showcase
     duration: 6s
-    nodes: [storyboard_file, semantic_ir, project_config]
+    nodes: [planner, script, scene_plan, outline]
     edges:
-      - { from: storyboard_file, to: semantic_ir, kind: transform }
-    narration: "With project config loaded, the authored storyboard is parsed into typed Semantic IR for the compiler."
-  - id: validation_boundary
-    grammar: pipeline
+      - { from: planner, to: script, kind: split }
+      - { from: planner, to: scene_plan, kind: split }
+      - { from: planner, to: outline, kind: split }
+    narration: "The guided planner derives a script, a scene plan, and an outline before any IR exists."
+  - id: editable_vidir
+    grammar: showcase
+    duration: 5s
+    nodes: [outline, storyboard, author]
+    narration: "The approved outline becomes editable VidIR the user and agents refine."
+  - id: validate_repair
+    grammar: showcase
     duration: 6s
-    nodes: [semantic_ir, vir_checks, validated_storyboard]
-    edges:
-      - { from: semantic_ir, to: vir_checks, kind: transform }
-      - { from: vir_checks, to: validated_storyboard, kind: flow }
-    narration: "VIR checks reject schema, timing, layout, asset, and toolchain problems before any render step."
-  - id: resolver_boundary
-    grammar: pipeline
+    nodes: [storyboard, checks, repaired]
+    narration: "viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render."
+  - id: storyboard_review
+    grammar: showcase
     duration: 6s
-    nodes: [validated_storyboard, resolver, concrete_ir]
-    edges:
-      - { from: validated_storyboard, to: resolver, kind: transform }
-      - { from: resolver, to: concrete_ir, kind: transform }
-    narration: "Once the storyboard passes validation, the resolver fixes layout, timing, and animation into Concrete IR."
-  - id: adapter_fanout
-    grammar: pipeline
+    nodes: [review, scene_cards, script_review, author]
+    narration: "The review surface shows scene cards and the script as an inspectable artifact before final render."
+  - id: compile_fanout
+    grammar: showcase
     duration: 6s
-    nodes: [concrete_ir, registry, top_three_outputs, rendered_artifact]
+    nodes: [concrete_ir, manim_source, html_source, remotion_source]
     edges:
-      - { from: concrete_ir, to: registry, kind: flow }
-      - { from: registry, to: top_three_outputs, kind: transform }
-      - { from: top_three_outputs, to: rendered_artifact, kind: flow }
-    narration: "One Concrete IR enters the registry, becomes top-three outputs, and renders artifacts."
-  - id: proof_artifacts
-    grammar: pipeline
-    duration: 7s
-    nodes: [editable_outputs, source_hashes, build_manifest, render_phash, gallery_manifest]
+      - { from: concrete_ir, to: manim_source, kind: split }
+      - { from: concrete_ir, to: html_source, kind: split }
+      - { from: concrete_ir, to: remotion_source, kind: split }
+    narration: "One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source."
+  - id: parity_proof
+    grammar: showcase
+    duration: 6s
+    nodes: [html_path, source_hashes, remotion_path, build_manifest]
     edges:
-      - { from: editable_outputs, to: source_hashes, kind: transform }
-      - { from: source_hashes, to: build_manifest, kind: store }
-      - { from: build_manifest, to: render_phash, kind: store }
-      - { from: render_phash, to: gallery_manifest, kind: store }
-    narration: "The payoff is proof: sources, stable hashes, build.json, render pHash, and gallery metadata line up."
+      - { from: html_path, to: source_hashes, kind: compare }
+      - { from: remotion_path, to: build_manifest, kind: compare }
+    narration: "Backend paths compared side by side; source hashes and build.json close the proof."
 
 validation:
   required_entities:
-    [author, repo_docs, video_brief, viroc_init, project_config, storyboard_file, semantic_ir, vir_checks, validated_storyboard, resolver, concrete_ir, registry, top_three_outputs, rendered_artifact, editable_outputs, source_hashes, build_manifest, render_phash, gallery_manifest]
+    [author, repo_context, doc_set, topic, planner, script, scene_plan, outline, storyboard, checks, repaired, review, scene_cards, script_review, concrete_ir, manim_source, html_source, remotion_source, html_path, remotion_path, source_hashes, build_manifest]
   checks: [schema, layout, timing]
