@@ -38,6 +38,7 @@ _IMAGE_SEQUENCE_GOLDEN = _HERE / "rag_pipeline_image_sequence_artifacts.json"
 _MOTION_CANVAS_GOLDEN = _HERE / "rag_pipeline_motion_canvas_project.json"
 _REMOTION_GOLDEN = _HERE / "rag_pipeline_remotion_project.json"
 _STATIC_STORYBOARD_GOLDEN = _HERE / "rag_pipeline_static_storyboard_artifacts.json"
+_SHOWCASE_FIXTURE = _HERE.parent / "fixtures" / "showcase-composition.vidir.yaml"
 
 class _FakeAdapter:
     id = "fake"
@@ -339,3 +340,31 @@ def test_registry_dispatch_preserves_builtin_emit_hashes() -> None:
         == hash_bytes(_STATIC_STORYBOARD_GOLDEN.read_bytes())
     )
     assert static_storyboard_dispatched.data == static_storyboard_direct.data
+
+
+def _compile_showcase() -> ConcreteIR:
+    """Compile the showcase fixture to its fully-resolved Concrete IR."""
+    ir, diagnostics = validate_schema(load_document(_SHOWCASE_FIXTURE))
+    assert ir is not None
+    assert diagnostics == []
+    state = run_pipeline(ir, _ctx())
+    assert state.diagnostics == []
+    return state.concrete
+
+
+def test_showcase_composition_supported_by_review_html_remotion() -> None:
+    """Backends carrying the code/formula primitives accept the showcase grammar."""
+    concrete = _compile_showcase()
+    for adapter in (static_storyboard_adapter, html_adapter, remotion_adapter):
+        assert adapter.supports(concrete) == []
+
+
+def test_showcase_composition_unsupported_on_manim_is_explicit() -> None:
+    """Manim lacks code/formula, so showcase fails with explicit VIR5031, no downgrade."""
+    diagnostics = manim.supports(_compile_showcase())
+    assert diagnostics
+    assert {diagnostic.code for diagnostic in diagnostics} == {VIR_UNSUPPORTED_PRIMITIVE}
+    assert all(diagnostic.code.startswith("VIR5") for diagnostic in diagnostics)
+    messages = " ".join(diagnostic.message for diagnostic in diagnostics)
+    assert 'primitive "code"' in messages
+    assert 'primitive "formula"' in messages
