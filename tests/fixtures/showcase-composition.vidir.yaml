@@ -1,0 +1,45 @@
+vidir_version: "0.1"
+video:
+  id: "showcase-composition"
+  title: "Showcase grammar composition"
+  resolution: { width: 1920, height: 1080 }
+  fps: 30
+  duration_target: 18
+
+entities:
+  - { id: sources, label: "Source repo", type: data_source }
+  - { id: semantic_ir, label: "Semantic IR", type: intermediate }
+  - { id: author, label: "Author", type: user }
+  - { id: source_hashes, label: "Source hashes", type: storage }
+  - { id: resolver, label: "Resolver", type: service }
+  - { id: concrete_ir, label: "Concrete IR", type: intermediate }
+  - { id: review_surface, label: "Review surface", type: data_source }
+  - { id: build_manifest, label: "build.json", type: storage }
+  - { id: manim_path, label: "Manim path", type: service }
+  - { id: html_path, label: "HTML path", type: service }
+  - { id: manim_source, label: "scene.py", type: intermediate }
+  - { id: html_source, label: "scene.html", type: intermediate }
+
+scenes:
+  - id: panels
+    grammar: showcase
+    duration: 6s
+    nodes: [sources, semantic_ir, author, source_hashes]
+    narration: "A grid of composition panels: input, IR, author callout, and evidence."
+  - id: fanout
+    grammar: showcase
+    duration: 6s
+    nodes: [resolver, concrete_ir, review_surface, build_manifest]
+    edges:
+      - { from: resolver, to: concrete_ir, kind: split }
+      - { from: resolver, to: review_surface, kind: split }
+      - { from: resolver, to: build_manifest, kind: split }
+    narration: "The resolver fans out into Concrete IR, a review surface, and a manifest."
+  - id: comparison
+    grammar: showcase
+    duration: 6s
+    nodes: [manim_path, html_path, manim_source, html_source]
+    edges:
+      - { from: manim_path, to: manim_source, kind: compare }
+      - { from: html_path, to: html_source, kind: compare }
+    narration: "Two backend paths compared side by side: Manim versus HTML source."
