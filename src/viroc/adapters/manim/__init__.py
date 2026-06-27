@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from viroc.adapters.capabilities import (
+    VIR_DEGRADED_PRIMITIVE,
     VIR_UNSUPPORTED_ANIMATION,
     VIR_UNSUPPORTED_PRIMITIVE,
     CapabilityManifest,
     support_diagnostics,
 )
-from viroc.adapters.manim.emit import emit, source_for
+from viroc.adapters.manim.emit import DEGRADED_PRIMITIVES, emit, source_for
 from viroc.adapters.manim.render import (
     VIR_MISSING_FFMPEG,
     VIR_MISSING_FFPROBE,
@@ -32,6 +33,7 @@ SUPPORTED_ANIMATIONS = frozenset({"draw", "fade_in", "fade_out", "highlight"})
 capabilities = CapabilityManifest(
     primitives=SUPPORTED_PRIMITIVES,
     animations=SUPPORTED_ANIMATIONS,
+    degradations=DEGRADED_PRIMITIVES,
 )
 tool_version = manim_version
 
@@ -46,8 +48,10 @@ def supports(ir: ConcreteIR) -> list[Diagnostic]:
 
 
 __all__ = [
+    "DEGRADED_PRIMITIVES",
     "SUPPORTED_ANIMATIONS",
     "SUPPORTED_PRIMITIVES",
+    "VIR_DEGRADED_PRIMITIVE",
     "VIR_UNSUPPORTED_ANIMATION",
     "VIR_UNSUPPORTED_PRIMITIVE",
     "RenderCommandError",

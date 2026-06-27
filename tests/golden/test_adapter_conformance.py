@@ -13,6 +13,9 @@ import viroc.adapters.remotion as remotion_adapter
 import viroc.adapters.static_storyboard as static_storyboard_adapter
 from viroc.adapters import CapabilityManifest, RendererAdapter
 from viroc.adapters.capabilities import (
+    COMMON_FLOOR_ANIMATIONS,
+    COMMON_FLOOR_PRIMITIVES,
+    VIR_DEGRADED_PRIMITIVE,
     VIR_UNSUPPORTED_ANIMATION,
     VIR_UNSUPPORTED_PRIMITIVE,
     support_diagnostics,
@@ -24,6 +27,7 @@ from viroc.core import (
     BuildContext,
     BuildPaths,
     Diagnostic,
+    Severity,
     artifact_from_text,
     hash_bytes,
 )
@@ -359,12 +363,25 @@ def test_showcase_composition_supported_by_review_html_remotion() -> None:
         assert adapter.supports(concrete) == []
 
 
-def test_showcase_composition_unsupported_on_manim_is_explicit() -> None:
-    """Manim lacks code/formula, so showcase fails with explicit VIR5031, no downgrade."""
+def test_showcase_composition_degrades_on_manim_not_omitted() -> None:
+    """Manim lacks code/formula, so showcase degrades deterministically (VIR5033 notes)."""
     diagnostics = manim.supports(_compile_showcase())
     assert diagnostics
-    assert {diagnostic.code for diagnostic in diagnostics} == {VIR_UNSUPPORTED_PRIMITIVE}
-    assert all(diagnostic.code.startswith("VIR5") for diagnostic in diagnostics)
+    assert {diagnostic.code for diagnostic in diagnostics} == {VIR_DEGRADED_PRIMITIVE}
+    assert all(diagnostic.severity is Severity.NOTE for diagnostic in diagnostics)
+    assert VIR_UNSUPPORTED_PRIMITIVE not in {diagnostic.code for diagnostic in diagnostics}
     messages = " ".join(diagnostic.message for diagnostic in diagnostics)
     assert 'primitive "code"' in messages
     assert 'primitive "formula"' in messages
+
+
+def test_top_three_share_the_common_primitive_floor() -> None:
+    """Manim/HTML/Remotion render the floor natively; above-floor is supported or degraded."""
+    above_floor = {"code", "formula"}
+    for adapter in (manim, html_adapter, remotion_adapter):
+        manifest = adapter.capabilities
+        assert manifest.primitives >= COMMON_FLOOR_PRIMITIVES
+        assert manifest.animations >= COMMON_FLOOR_ANIMATIONS
+        for primitive in above_floor:
+            degraded = manifest.degraded_to(primitive)
+            assert primitive in manifest.primitives or degraded in COMMON_FLOOR_PRIMITIVES

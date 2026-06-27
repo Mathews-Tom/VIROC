@@ -39,15 +39,19 @@ Each prints a stable `source_hash:` matching the committed baseline under
 | `html` | `sha256:0ca3acc173f0fa5cdcf696e6a6954bd6c9ad00ba9a928afcd49f861315d1e4ab` |
 | `remotion` | `sha256:57fef780de372ff521a6342052d1acd331abf3580a168467b9573f6bd8c65b01` |
 
-## Unsupported backends fail explicitly
+## Above-floor primitives degrade deterministically on Manim
 
-Manim supports only `rect`/`text`/`arrow`, not `code`/`formula`. Compiling this
-example on Manim does not silently degrade — it fails with explicit `VIR5031`
-renderer-compatibility diagnostics, one per unsupported object:
+Manim renders only the common floor (`rect`/`text`/`arrow`), not the above-floor
+`code`/`formula` primitives. Compiling on Manim does not silently drop them and
+does not hard-fail: each is rendered as its floor primitive (`rect`), keeping the
+object's placement and title, and the degradation is surfaced as an explicit,
+non-blocking `VIR5033` note — one per degraded object:
 
 ```bash
-uv run viroc compile examples/showcase-composition --backend manim   # exit 1, VIR5031
+uv run viroc compile examples/showcase-composition --backend manim   # exit 0, VIR5033 notes
 ```
 
-Closing that gap (Manim parity for the richer primitive set, or an explicit
-deterministic degradation policy) is M20, not M19.
+The parity policy is explicit (M20): every top-three backend renders the floor
+natively, and above-floor primitives are either supported natively (HTML,
+Remotion) or degraded deterministically with a diagnostic (Manim) — never
+silently omitted. HTML and Remotion keep full `code`/`formula` fidelity.

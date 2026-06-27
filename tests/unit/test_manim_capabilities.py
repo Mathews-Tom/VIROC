@@ -9,7 +9,7 @@ import pytest
 
 import viroc.adapters.manim as manim
 from viroc.adapters import RendererAdapter
-from viroc.core import BuildContext, BuildPaths
+from viroc.core import BuildContext, BuildPaths, Severity
 from viroc.ir import ConcreteIR, Keyframe, ResolvedObject
 
 
@@ -86,6 +86,37 @@ def test_unsupported_primitive_is_vir5031_with_help() -> None:
     assert diagnostics[0].message == 'renderer "manim" does not support primitive "icon"'
     assert diagnostics[0].help == (
         'use renderer "html", or provide a fallback image asset for object "demo.panel"'
+    )
+
+
+def test_degraded_primitive_is_vir5033_note() -> None:
+    diagnostics = manim.supports(
+        _ir(
+            objects=[
+                _object(
+                    id="scene.semantic_ir.code_card",
+                    primitive="code",
+                    style_ref="code_card.intermediate",
+                ),
+                _object(
+                    id="scene.hashes.evidence",
+                    primitive="formula",
+                    style_ref="evidence.storage",
+                ),
+            ]
+        )
+    )
+
+    assert [diag.code for diag in diagnostics] == [
+        manim.VIR_DEGRADED_PRIMITIVE,
+        manim.VIR_DEGRADED_PRIMITIVE,
+    ]
+    assert all(diag.severity is Severity.NOTE for diag in diagnostics)
+    assert diagnostics[0].message == (
+        'renderer "manim" renders primitive "code" as "rect" (deterministic degradation)'
+    )
+    assert diagnostics[1].message == (
+        'renderer "manim" renders primitive "formula" as "rect" (deterministic degradation)'
     )
 
 

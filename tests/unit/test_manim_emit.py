@@ -89,3 +89,32 @@ def test_simultaneous_keyframes_with_different_easing_share_one_play() -> None:
         in source
     )
     assert 'FadeIn(objects["pipeline.documents.label"], rate_func=_rate_func("linear"))' in source
+
+
+def test_degraded_code_and_formula_lower_to_rect() -> None:
+    ir = ConcreteIR(
+        fps=30,
+        resolution=(1920, 1080),
+        objects=[
+            ResolvedObject(
+                id="scene.semantic_ir.code_card",
+                primitive="code",
+                box=Box(x=10.0, y=10.0, w=240.0, h=168.0),
+                style_ref="code_card.intermediate",
+            ),
+            ResolvedObject(
+                id="scene.hashes.evidence",
+                primitive="formula",
+                box=Box(x=300.0, y=10.0, w=240.0, h=168.0),
+                style_ref="evidence.storage",
+            ),
+        ],
+        keyframes=[],
+        captions=[],
+    )
+
+    source = source_for(ir)
+
+    assert 'objects["scene.semantic_ir.code_card"] = _rect(' in source
+    assert 'objects["scene.hashes.evidence"] = _rect(' in source
+    assert source_for(ir) == source
