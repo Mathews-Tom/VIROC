@@ -123,9 +123,11 @@ def validate_references(ir: SemanticIR, doc: LoadedDocument) -> list[Diagnostic]
 def validate_grammar_fit(ir: SemanticIR, doc: LoadedDocument) -> list[Diagnostic]:
     """Check each scene's grammar is registered and minimally satisfiable.
 
-    An unregistered grammar or a ``pipeline`` scene with no nodes is a
-    ``VIR1005`` grammar-fit error: the scene cannot be laid out as declared. The
-    grammar registry is the single source of truth for what "registered" means.
+    An unregistered grammar or a scene with no nodes is a ``VIR1005`` grammar-fit
+    error: the scene cannot be laid out as declared. Both v1 grammars
+    (``pipeline`` and ``showcase``) lay out nodes, so an empty scene fails
+    regardless of grammar. The grammar registry is the single source of truth for
+    what "registered" means.
     """
     register_builtins()
     diagnostics: list[Diagnostic] = []
@@ -147,17 +149,17 @@ def validate_grammar_fit(ir: SemanticIR, doc: LoadedDocument) -> list[Diagnostic
                 )
             )
             continue
-        if scene.grammar == "pipeline" and not scene.nodes:
+        if not scene.nodes:
             location = nearest_location(doc, ("scenes", scene_index))
             span = (
-                span_from_location(location, "pipeline needs at least one node")
+                span_from_location(location, f"{scene.grammar} needs at least one node")
                 if location is not None
                 else None
             )
             diagnostics.append(
                 Diagnostic(
                     code=VIR_GRAMMAR_FIT,
-                    message=f'pipeline scene "{scene.id}" has no nodes',
+                    message=f'{scene.grammar} scene "{scene.id}" has no nodes',
                     span=span,
                     help="add at least one node to the scene",
                 )
