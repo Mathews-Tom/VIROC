@@ -1,0 +1,101 @@
+vidir_version: '0.1'
+video:
+  id: guided_authoring_flow
+  title: Guided VIROC Authoring Flow
+  fps: 30
+  resolution:
+    width: 1920
+    height: 1080
+  duration_target: 24
+entities:
+- id: topic
+  label: Topic
+  type: data_source
+- id: brief
+  label: Authoring brief
+  type: intermediate
+- id: script
+  label: Script
+  type: intermediate
+- id: scene_plan
+  label: Scene plan
+  type: intermediate
+- id: vidir
+  label: Storyboard VidIR
+  type: storage
+- id: checks
+  label: viroc check
+  type: service
+- id: video
+  label: Render-ready plan
+  type: data_source
+scenes:
+- id: topic_intake
+  grammar: pipeline
+  duration: 5s
+  nodes:
+  - topic
+  - brief
+  edges:
+  - from: topic
+    to: brief
+    kind: flow
+  beats: []
+  narration: A topic becomes a stable authoring brief before any storyboard YAML exists.
+- id: script_drafting
+  grammar: pipeline
+  duration: 6s
+  nodes:
+  - brief
+  - script
+  edges:
+  - from: brief
+    to: script
+    kind: flow
+  beats: []
+  narration: The brief turns into a reviewable script that keeps the video goal explicit.
+- id: scene_planning
+  grammar: pipeline
+  duration: 6s
+  nodes:
+  - script
+  - scene_plan
+  - vidir
+  edges:
+  - from: script
+    to: scene_plan
+    kind: flow
+  - from: scene_plan
+    to: vidir
+    kind: flow
+  beats: []
+  narration: From the script, VIROC shapes a scene plan and emits starter VidIR for editing.
+- id: validation_handoff
+  grammar: pipeline
+  duration: 7s
+  nodes:
+  - vidir
+  - checks
+  - video
+  edges:
+  - from: vidir
+    to: checks
+    kind: flow
+  - from: checks
+    to: video
+    kind: flow
+  beats: []
+  narration: viroc check validates the starter VidIR so the flow reaches a safe render-ready plan.
+validation:
+  required_entities:
+  - topic
+  - brief
+  - script
+  - scene_plan
+  - vidir
+  - checks
+  - video
+  checks:
+  - schema
+  - layout
+  - timing
