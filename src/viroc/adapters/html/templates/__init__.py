@@ -13,20 +13,6 @@ SOURCE_HEADER = """<!doctype html>
 <title>VIROC Scene</title>
 """
 
-STYLE_TOKENS: dict[str, dict[str, str]] = {
-    "edge.default": {"color": "#94A3B8"},
-    "edge.lookup": {"color": "#38BDF8"},
-    "edge.split": {"color": "#38BDF8"},
-    "edge.store": {"color": "#22C55E"},
-    "edge.transform": {"color": "#A78BFA"},
-    "label": {"color": "#E5E7EB"},
-    "node.data_source": {"fill_color": "#1D4ED8", "stroke_color": "#60A5FA"},
-    "node.intermediate": {"fill_color": "#7C3AED", "stroke_color": "#C4B5FD"},
-    "node.model": {"fill_color": "#BE123C", "stroke_color": "#FDA4AF"},
-    "node.process": {"fill_color": "#0891B2", "stroke_color": "#67E8F9"},
-    "node.storage": {"fill_color": "#047857", "stroke_color": "#6EE7B7"},
-}
-
 BASE_CSS = """<style>
 :root {
   color-scheme: dark;
@@ -281,4 +267,4 @@ applyFrame(initialFrame);
 </script>
 """
 
-__all__ = ["BASE_CSS", "RUNTIME_SCRIPT", "SOURCE_HEADER", "STYLE_TOKENS"]
+__all__ = ["BASE_CSS", "RUNTIME_SCRIPT", "SOURCE_HEADER"]

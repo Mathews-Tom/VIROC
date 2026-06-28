@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import html
 
+from viroc.adapters import _palette
 from viroc.adapters._text import display_text
-from viroc.adapters.html.templates import BASE_CSS, RUNTIME_SCRIPT, SOURCE_HEADER, STYLE_TOKENS
+from viroc.adapters.html.templates import BASE_CSS, RUNTIME_SCRIPT, SOURCE_HEADER
 from viroc.core import BuildArtifact, BuildContext, artifact_from_text, canonical_json
 from viroc.ir import Caption, ConcreteIR, Keyframe, ResolvedObject
 
-_ADAPTER_SOURCE_VERSION = "html-source-v0.1"
+_ADAPTER_SOURCE_VERSION = "html-source-v0.2"
 
 
 def emit(ir: ConcreteIR, ctx: BuildContext) -> BuildArtifact:
@@ -141,12 +142,12 @@ def _total_frames(ir: ConcreteIR) -> int:
 
 
 def _css_vars(style_ref: str) -> str:
-    tokens: dict[str, str] = STYLE_TOKENS.get(style_ref, {"color": "#E5E7EB"})
-    parts: list[str] = []
-    for key, value in sorted(tokens.items()):
-        css_key = key.replace("_", "-")
-        parts.append(f"--{css_key}:{value}")
-    return ";".join(parts)
+    if style_ref.startswith("edge."):
+        return f"--color:{_palette.edge_color(style_ref)}"
+    if style_ref in ("label", "showcase.title"):
+        return f"--color:{_palette.LABEL_COLOR}"
+    fill, stroke = _palette.box_style(style_ref)
+    return f"--fill-color:{fill};--stroke-color:{stroke}"
 
 
 def _style_class(style_ref: str) -> str:
