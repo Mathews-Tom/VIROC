@@ -44,6 +44,14 @@ def _golden() -> list[dict[str, Any]]:
     return json.loads(_GOLDEN.read_text(encoding="utf-8"))
 
 
+def _nested(a: ResolvedObject, b: ResolvedObject) -> bool:
+    """A text object fully contained in the other box is legitimate nesting."""
+    if (a.primitive == "text") == (b.primitive == "text"):
+        return False
+    text, container = (a, b) if a.primitive == "text" else (b, a)
+    return contains(container.box, text.box)
+
+
 def test_layout_matches_golden_boxes() -> None:
     """The resolved layout equals the committed golden boxes, object for object."""
     resolved = [obj.model_dump() for obj in _resolve()]
@@ -63,7 +71,9 @@ def test_layout_has_no_overlapping_boxes() -> None:
     """No two resolved boxes share positive area."""
     resolved = _resolve()
     collisions = [
-        (a.id, b.id) for a, b in combinations(resolved, 2) if overlaps(a.box, b.box)
+        (a.id, b.id)
+        for a, b in combinations(resolved, 2)
+        if overlaps(a.box, b.box) and not _nested(a, b)
     ]
     assert collisions == []
 

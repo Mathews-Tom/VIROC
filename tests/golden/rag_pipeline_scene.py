@@ -11,6 +11,8 @@
 # pyright: reportUntypedBaseClass=false
 from manim import (
     BOLD,
+    NORMAL,
+    RIGHT,
     Arrow,
     Create,
     FadeIn,
@@ -24,7 +26,7 @@ from manim import (
     smooth,
 )
 
-# viroc-adapter-source-version: manim-source-v0.2
+# viroc-adapter-source-version: manim-source-v0.3
 config.pixel_width = 1920
 config.pixel_height = 1080
 config.frame_width = 14.222222222222
@@ -36,6 +38,8 @@ _FONT = "Helvetica"
 _FONT_SIZE = 34
 _CAPTION_SIZE = 30
 _CAPTION_COLOR = "#E2E8F0"
+_MONO_FONT = "Menlo"
+_INNER_PAD = 28
 
 
 def _x(value: float) -> float:
@@ -76,15 +80,22 @@ def _rect(x: float, y: float, w: float, h: float, fill: str, stroke: str) -> Rou
     ).move_to(_center(x, y, w, h))
 
 
-def _text(text: str, x: float, y: float, w: float, h: float, color: str) -> Text:
-    label = Text(text, font=_FONT, font_size=_FONT_SIZE, color=color, weight=BOLD)
-    max_w = _width(w) * 0.86
-    max_h = _height(h) * 0.72
+def _text(
+    text: str, x: float, y: float, w: float, h: float,
+    color: str, size: float, bold: bool, mono: bool, align: str,
+) -> Text:
+    label = Text(
+        text, font=_MONO_FONT if mono else _FONT, color=color,
+        weight=BOLD if bold else NORMAL,
+    )
+    label.scale_to_fit_height(_height(size))
+    max_w = _width(w) * 0.94
     if label.width > max_w:
         label.scale_to_fit_width(max_w)
-    if label.height > max_h:
-        label.scale_to_fit_height(max_h)
-    return label.move_to(_center(x, y, w, h))
+    label.move_to(_center(x, y, w, h))
+    if align == "left":
+        label.shift(RIGHT * (label.width / 2 - _width(w) / 2 + _width(_INNER_PAD)))
+    return label
 
 
 def _arrow(x: float, y: float, w: float, h: float, color: str) -> Arrow:
@@ -111,13 +122,13 @@ class VirocScene(Scene):
         self.camera.background_color = _BACKGROUND
         objects = {}
         objects["pipeline.documents.box"] = _rect(264, 482, 258, 68, "#1D4ED8", "#60A5FA")
-        objects["pipeline.documents.label"] = _text("Documents", 330, 562, 126, 36, "#F8FAFC")
+        objects["pipeline.documents.label"] = _text("Documents", 330, 498, 126, 36, "#F8FAFC", 40, True, False, "center")
         objects["pipeline.chunks.box"] = _rect(642, 482, 258, 68, "#7C3AED", "#C4B5FD")
-        objects["pipeline.chunks.label"] = _text("Chunks", 729, 562, 84, 36, "#F8FAFC")
+        objects["pipeline.chunks.label"] = _text("Chunks", 729, 498, 84, 36, "#F8FAFC", 40, True, False, "center")
         objects["pipeline.embedder.box"] = _rect(1020, 482, 258, 68, "#BE123C", "#FDA4AF")
-        objects["pipeline.embedder.label"] = _text("Embedding Model", 1044, 562, 210, 36, "#F8FAFC")
+        objects["pipeline.embedder.label"] = _text("Embedding Model", 1044, 498, 210, 36, "#F8FAFC", 40, True, False, "center")
         objects["pipeline.vector_db.box"] = _rect(1398, 482, 258, 68, "#047857", "#6EE7B7")
-        objects["pipeline.vector_db.label"] = _text("Vector DB", 1464, 562, 126, 36, "#F8FAFC")
+        objects["pipeline.vector_db.label"] = _text("Vector DB", 1464, 498, 126, 36, "#F8FAFC", 40, True, False, "center")
         objects["pipeline.documents.chunks.arrow"] = _arrow(522, 512, 120, 8, "#38BDF8")
         objects["pipeline.chunks.embedder.arrow"] = _arrow(900, 512, 120, 8, "#A78BFA")
         objects["pipeline.embedder.vector_db.arrow"] = _arrow(1278, 512, 120, 8, "#22C55E")

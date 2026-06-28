@@ -51,7 +51,7 @@ _EXPECTED_SOURCE_HASHES = {
     .strip()
     for backend in _SUPPORTED_BACKENDS
 }
-_STORY_ARC_IDS = ["primitives", "fanout", "comparison"]
+_STORY_ARC_IDS = ["title_card", "primitives", "fanout", "comparison"]
 _GUIDED_FLOW_ARTIFACTS = (
     "authoring-request.yaml",
     "authoring-brief.yaml",

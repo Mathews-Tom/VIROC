@@ -121,5 +121,7 @@ def test_composition_kinds_cover_every_entity_type() -> None:
         "storage",
         "service",
         "user",
+        "heading",
+        "statement",
     }
     assert set(COMPOSITION_KINDS) == entity_types

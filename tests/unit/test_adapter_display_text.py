@@ -48,5 +48,5 @@ def test_html_emit_renders_showcase_title_from_node_id() -> None:
         captions=[],
     )
     source = source_for(ir)
-    assert "<span>Semantic Ir</span>" in source
-    assert "<span>Title</span>" not in source
+    assert ">Semantic Ir</span>" in source
+    assert ">Title</span>" not in source
