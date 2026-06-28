@@ -164,7 +164,10 @@ def test_gallery_schema_and_above_floor_parity() -> None:
     )
     assert gallery["project"] == "showcase-composition"
     assert gallery["grammar"] == "showcase"
-    assert gallery["preview"] is None
+    preview = cast(dict[str, str], gallery["preview"])
+    assert preview["backend"] == "manim"
+    assert preview["video_entry"] == "expected/preview/manim/showcase-composition.mp4"
+    assert (_EXAMPLE / preview["video_entry"]).exists()
 
     authoring = cast(dict[str, str], gallery["authoring"])
     assert authoring["request"] == "authoring-request.yaml"

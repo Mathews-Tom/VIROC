@@ -57,6 +57,7 @@ class ResolvedObject(_Model):
     box: Box
     z: int = 0
     style_ref: str
+    text: str | None = None
 
 
 class Keyframe(_Model):

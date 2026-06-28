@@ -9,7 +9,8 @@
       "h": 68.0
     },
     "z": 0,
-    "style_ref": "node.data_source"
+    "style_ref": "node.data_source",
+    "text": null
   },
   {
     "id": "pipeline.documents.label",
@@ -21,7 +22,8 @@
       "h": 36.0
     },
     "z": 0,
-    "style_ref": "label"
+    "style_ref": "label",
+    "text": "Documents"
   },
   {
     "id": "pipeline.chunks.box",
@@ -33,7 +35,8 @@
       "h": 68.0
     },
     "z": 0,
-    "style_ref": "node.intermediate"
+    "style_ref": "node.intermediate",
+    "text": null
   },
   {
     "id": "pipeline.chunks.label",
@@ -45,7 +48,8 @@
       "h": 36.0
     },
     "z": 0,
-    "style_ref": "label"
+    "style_ref": "label",
+    "text": "Chunks"
   },
   {
     "id": "pipeline.embedder.box",
@@ -57,7 +61,8 @@
       "h": 68.0
     },
     "z": 0,
-    "style_ref": "node.model"
+    "style_ref": "node.model",
+    "text": null
   },
   {
     "id": "pipeline.embedder.label",
@@ -69,7 +74,8 @@
       "h": 36.0
     },
     "z": 0,
-    "style_ref": "label"
+    "style_ref": "label",
+    "text": "Embedding Model"
   },
   {
     "id": "pipeline.vector_db.box",
@@ -81,7 +87,8 @@
       "h": 68.0
     },
     "z": 0,
-    "style_ref": "node.storage"
+    "style_ref": "node.storage",
+    "text": null
   },
   {
     "id": "pipeline.vector_db.label",
@@ -93,7 +100,8 @@
       "h": 36.0
     },
     "z": 0,
-    "style_ref": "label"
+    "style_ref": "label",
+    "text": "Vector DB"
   },
   {
     "id": "pipeline.documents.chunks.arrow",
@@ -105,7 +113,8 @@
       "h": 8.0
     },
     "z": 0,
-    "style_ref": "edge.split"
+    "style_ref": "edge.split",
+    "text": null
   },
   {
     "id": "pipeline.chunks.embedder.arrow",
@@ -117,7 +126,8 @@
       "h": 8.0
     },
     "z": 0,
-    "style_ref": "edge.transform"
+    "style_ref": "edge.transform",
+    "text": null
   },
   {
     "id": "pipeline.embedder.vector_db.arrow",
@@ -129,6 +139,7 @@
       "h": 8.0
     },
     "z": 0,
-    "style_ref": "edge.store"
+    "style_ref": "edge.store",
+    "text": null
   }
 ]

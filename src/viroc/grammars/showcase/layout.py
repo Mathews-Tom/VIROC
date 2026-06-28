@@ -282,6 +282,7 @@ def _resolve(
                     ),
                     z=label.z,
                     style_ref=label.style_ref,
+                    text=label.text,
                 )
             )
     for connector_id, style_ref, box in connectors:

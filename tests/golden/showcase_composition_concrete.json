@@ -15,7 +15,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "panel.data_source"
+      "style_ref": "panel.data_source",
+      "text": null
     },
     {
       "id": "panels.sources.title",
@@ -27,7 +28,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "Source repo"
     },
     {
       "id": "panels.semantic_ir.code_card",
@@ -39,7 +41,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "code_card.intermediate"
+      "style_ref": "code_card.intermediate",
+      "text": null
     },
     {
       "id": "panels.semantic_ir.title",
@@ -51,7 +54,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "Semantic IR"
     },
     {
       "id": "panels.author.callout",
@@ -63,7 +67,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "callout.user"
+      "style_ref": "callout.user",
+      "text": null
     },
     {
       "id": "panels.author.title",
@@ -75,7 +80,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "Author"
     },
     {
       "id": "panels.source_hashes.evidence",
@@ -87,7 +93,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "evidence.storage"
+      "style_ref": "evidence.storage",
+      "text": null
     },
     {
       "id": "panels.source_hashes.title",
@@ -99,7 +106,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "Source hashes"
     },
     {
       "id": "fanout.resolver.panel",
@@ -111,7 +119,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "panel.service"
+      "style_ref": "panel.service",
+      "text": null
     },
     {
       "id": "fanout.resolver.title",
@@ -123,7 +132,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "Resolver"
     },
     {
       "id": "fanout.concrete_ir.code_card",
@@ -135,7 +145,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "code_card.intermediate"
+      "style_ref": "code_card.intermediate",
+      "text": null
     },
     {
       "id": "fanout.concrete_ir.title",
@@ -147,7 +158,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "Concrete IR"
     },
     {
       "id": "fanout.review_surface.panel",
@@ -159,7 +171,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "panel.data_source"
+      "style_ref": "panel.data_source",
+      "text": null
     },
     {
       "id": "fanout.review_surface.title",
@@ -171,7 +184,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "Review surface"
     },
     {
       "id": "fanout.build_manifest.evidence",
@@ -183,7 +197,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "evidence.storage"
+      "style_ref": "evidence.storage",
+      "text": null
     },
     {
       "id": "fanout.build_manifest.title",
@@ -195,7 +210,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "build.json"
     },
     {
       "id": "fanout.resolver.concrete_ir.link",
@@ -207,7 +223,8 @@
         "h": 8.0
       },
       "z": 0,
-      "style_ref": "edge.split"
+      "style_ref": "edge.split",
+      "text": null
     },
     {
       "id": "fanout.resolver.review_surface.link",
@@ -219,7 +236,8 @@
         "h": 8.0
       },
       "z": 0,
-      "style_ref": "edge.split"
+      "style_ref": "edge.split",
+      "text": null
     },
     {
       "id": "fanout.resolver.build_manifest.link",
@@ -231,7 +249,8 @@
         "h": 8.0
       },
       "z": 0,
-      "style_ref": "edge.split"
+      "style_ref": "edge.split",
+      "text": null
     },
     {
       "id": "comparison.manim_path.panel",
@@ -243,7 +262,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "panel.service"
+      "style_ref": "panel.service",
+      "text": null
     },
     {
       "id": "comparison.manim_path.title",
@@ -255,7 +275,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "Manim path"
     },
     {
       "id": "comparison.html_path.panel",
@@ -267,7 +288,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "panel.service"
+      "style_ref": "panel.service",
+      "text": null
     },
     {
       "id": "comparison.html_path.title",
@@ -279,7 +301,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "HTML path"
     },
     {
       "id": "comparison.manim_source.code_card",
@@ -291,7 +314,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "code_card.intermediate"
+      "style_ref": "code_card.intermediate",
+      "text": null
     },
     {
       "id": "comparison.manim_source.title",
@@ -303,7 +327,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "scene.py"
     },
     {
       "id": "comparison.html_source.code_card",
@@ -315,7 +340,8 @@
         "h": 168.0
       },
       "z": 0,
-      "style_ref": "code_card.intermediate"
+      "style_ref": "code_card.intermediate",
+      "text": null
     },
     {
       "id": "comparison.html_source.title",
@@ -327,7 +353,8 @@
         "h": 36.0
       },
       "z": 0,
-      "style_ref": "showcase.title"
+      "style_ref": "showcase.title",
+      "text": "scene.html"
     },
     {
       "id": "comparison.compare.0",
@@ -339,7 +366,8 @@
         "h": 8.0
       },
       "z": 0,
-      "style_ref": "edge.compare"
+      "style_ref": "edge.compare",
+      "text": null
     },
     {
       "id": "comparison.compare.1",
@@ -351,7 +379,8 @@
         "h": 8.0
       },
       "z": 0,
-      "style_ref": "edge.compare"
+      "style_ref": "edge.compare",
+      "text": null
     }
   ],
   "keyframes": [

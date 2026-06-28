@@ -4,16 +4,19 @@
 # pyright: reportUnknownVariableType=false
 # pyright: reportUnknownMemberType=false
 # pyright: reportUnknownParameterType=false
+# pyright: reportUnknownArgumentType=false
+# pyright: reportArgumentType=false
+# pyright: reportAttributeAccessIssue=false
+# pyright: reportCallIssue=false
 # pyright: reportUntypedBaseClass=false
-from __future__ import annotations
-
 from manim import (
+    BOLD,
     Arrow,
     Create,
     FadeIn,
     FadeOut,
     Indicate,
-    Rectangle,
+    RoundedRectangle,
     Scene,
     Text,
     config,
@@ -21,7 +24,7 @@ from manim import (
     smooth,
 )
 
-# viroc-adapter-source-version: manim-source-v0.1
+# viroc-adapter-source-version: manim-source-v0.2
 config.pixel_width = 1920
 config.pixel_height = 1080
 config.frame_width = 14.222222222222
@@ -29,29 +32,11 @@ config.frame_height = 8
 config.frame_rate = 30
 
 _BACKGROUND = "#0B1020"
-_STYLES = {
-    "edge.default": {"color": "#94A3B8"},
-    "edge.lookup": {"color": "#38BDF8"},
-    "edge.split": {"color": "#38BDF8"},
-    "edge.store": {"color": "#22C55E"},
-    "edge.transform": {"color": "#A78BFA"},
-    "label": {"color": "#E5E7EB"},
-    "node.data_source": {"fill_color": "#1D4ED8", "stroke_color": "#60A5FA"},
-    "node.intermediate": {"fill_color": "#7C3AED", "stroke_color": "#C4B5FD"},
-    "node.model": {"fill_color": "#BE123C", "stroke_color": "#FDA4AF"},
-    "node.process": {"fill_color": "#0891B2", "stroke_color": "#67E8F9"},
-    "node.storage": {"fill_color": "#047857", "stroke_color": "#6EE7B7"},
-}
+_FONT = "Helvetica"
+_FONT_SIZE = 34
+_CAPTION_SIZE = 30
+_CAPTION_COLOR = "#E2E8F0"
 
-
-def _style(ref: str) -> dict[str, str]:
-    return _STYLES.get(ref, {"color": "#E5E7EB"})
-
-
-def _rate_func(name: str):
-    if name == "linear":
-        return linear
-    return smooth
 
 def _x(value: float) -> float:
     return (value / config.pixel_width) * config.frame_width - (config.frame_width / 2)
@@ -73,168 +58,236 @@ def _center(x: float, y: float, w: float, h: float) -> tuple[float, float, float
     return (_x(x + w / 2), _y(y + h / 2), 0.0)
 
 
-def _rect(x: float, y: float, w: float, h: float, style_ref: str) -> Rectangle:
-    style = _style(style_ref)
-    return Rectangle(
+def _rate_func(name: str):
+    if name == "linear":
+        return linear
+    return smooth
+
+
+def _rect(x: float, y: float, w: float, h: float, fill: str, stroke: str) -> RoundedRectangle:
+    return RoundedRectangle(
         width=_width(w),
         height=_height(h),
-        fill_opacity=0.75,
-        stroke_width=2,
-        **style,
+        corner_radius=min(_width(w), _height(h)) * 0.14,
+        fill_color=fill,
+        fill_opacity=0.92,
+        stroke_color=stroke,
+        stroke_width=3,
     ).move_to(_center(x, y, w, h))
 
 
-def _text(text: str, x: float, y: float, w: float, h: float, style_ref: str) -> Text:
-    style = _style(style_ref)
-    return Text(text, font_size=32, **style).scale_to_fit_width(_width(w)).move_to(
-        _center(x, y, w, h)
-    )
+def _text(text: str, x: float, y: float, w: float, h: float, color: str) -> Text:
+    label = Text(text, font=_FONT, font_size=_FONT_SIZE, color=color, weight=BOLD)
+    max_w = _width(w) * 0.86
+    max_h = _height(h) * 0.72
+    if label.width > max_w:
+        label.scale_to_fit_width(max_w)
+    if label.height > max_h:
+        label.scale_to_fit_height(max_h)
+    return label.move_to(_center(x, y, w, h))
 
 
-def _arrow(x: float, y: float, w: float, h: float, style_ref: str) -> Arrow:
-    style = _style(style_ref)
+def _arrow(x: float, y: float, w: float, h: float, color: str) -> Arrow:
     return Arrow(
         start=(_x(x), _y(y + h / 2), 0.0),
         end=(_x(x + w), _y(y + h / 2), 0.0),
         buff=0,
-        stroke_width=max(_height(h), 2),
-        **style,
+        stroke_width=6,
+        color=color,
+        max_tip_length_to_length_ratio=0.2,
     )
+
+
+def _caption(text: str) -> Text:
+    line = Text(text, font=_FONT, font_size=_CAPTION_SIZE, color=_CAPTION_COLOR)
+    max_w = config.frame_width * 0.86
+    if line.width > max_w:
+        line.scale_to_fit_width(max_w)
+    line.move_to((0.0, -config.frame_height / 2 + line.height / 2 + 0.4, 0.0))
+    return line
 
 class VirocScene(Scene):
     def construct(self) -> None:
         self.camera.background_color = _BACKGROUND
         objects = {}
-        objects["pipeline.documents.box"] = _rect(264, 482, 258, 68, "node.data_source")
-        objects["pipeline.documents.label"] = _text("Documents", 330, 562, 126, 36, "label")
-        objects["pipeline.chunks.box"] = _rect(642, 482, 258, 68, "node.intermediate")
-        objects["pipeline.chunks.label"] = _text("Chunks", 729, 562, 84, 36, "label")
-        objects["pipeline.embedder.box"] = _rect(1020, 482, 258, 68, "node.model")
-        objects["pipeline.embedder.label"] = _text("Embedder", 1044, 562, 210, 36, "label")
-        objects["pipeline.vector_db.box"] = _rect(1398, 482, 258, 68, "node.storage")
-        objects["pipeline.vector_db.label"] = _text("Vector Db", 1464, 562, 126, 36, "label")
-        objects["pipeline.documents.chunks.arrow"] = _arrow(522, 512, 120, 8, "edge.split")
-        objects["pipeline.chunks.embedder.arrow"] = _arrow(900, 512, 120, 8, "edge.transform")
-        objects["pipeline.embedder.vector_db.arrow"] = _arrow(1278, 512, 120, 8, "edge.store")
+        objects["pipeline.documents.box"] = _rect(264, 482, 258, 68, "#1D4ED8", "#60A5FA")
+        objects["pipeline.documents.label"] = _text("Documents", 330, 562, 126, 36, "#F8FAFC")
+        objects["pipeline.chunks.box"] = _rect(642, 482, 258, 68, "#7C3AED", "#C4B5FD")
+        objects["pipeline.chunks.label"] = _text("Chunks", 729, 562, 84, 36, "#F8FAFC")
+        objects["pipeline.embedder.box"] = _rect(1020, 482, 258, 68, "#BE123C", "#FDA4AF")
+        objects["pipeline.embedder.label"] = _text("Embedding Model", 1044, 562, 210, 36, "#F8FAFC")
+        objects["pipeline.vector_db.box"] = _rect(1398, 482, 258, 68, "#047857", "#6EE7B7")
+        objects["pipeline.vector_db.label"] = _text("Vector DB", 1464, 562, 126, 36, "#F8FAFC")
+        objects["pipeline.documents.chunks.arrow"] = _arrow(522, 512, 120, 8, "#38BDF8")
+        objects["pipeline.chunks.embedder.arrow"] = _arrow(900, 512, 120, 8, "#A78BFA")
+        objects["pipeline.embedder.vector_db.arrow"] = _arrow(1278, 512, 120, 8, "#22C55E")
 
         timeline_f = 0
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         self.play(
             FadeIn(objects["pipeline.documents.box"], rate_func=_rate_func("ease_in_out")),
             run_time=31 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 31
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 31:
             self.wait((31 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["pipeline.documents.label"], rate_func=_rate_func("ease_in_out")),
             run_time=31 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 62
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 62:
             self.wait((62 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["pipeline.chunks.box"], rate_func=_rate_func("ease_in_out")),
             run_time=31 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 93
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 93:
             self.wait((93 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["pipeline.chunks.label"], rate_func=_rate_func("ease_in_out")),
             run_time=31 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 124
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 124:
             self.wait((124 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["pipeline.embedder.box"], rate_func=_rate_func("ease_in_out")),
             run_time=31 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 155
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 155:
             self.wait((155 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["pipeline.embedder.label"], rate_func=_rate_func("ease_in_out")),
             run_time=31 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 186
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 186:
             self.wait((186 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["pipeline.vector_db.box"], rate_func=_rate_func("ease_in_out")),
             run_time=31 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 217
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 217:
             self.wait((217 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["pipeline.vector_db.label"], rate_func=_rate_func("ease_in_out")),
             run_time=31 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 248
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 248:
             self.wait((248 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["pipeline.documents.chunks.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=31 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 279
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 279:
             self.wait((279 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["pipeline.chunks.embedder.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=31 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 310
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 310:
             self.wait((310 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["pipeline.embedder.vector_db.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=31 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 341
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 350:
             self.wait((350 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["pipeline.documents.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["pipeline.documents.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=131 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 481
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 481:
             self.wait((481 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["pipeline.chunks.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["pipeline.chunks.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=131 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 612
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 612:
             self.wait((612 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["pipeline.embedder.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["pipeline.embedder.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=131 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 743
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 743:
             self.wait((743 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["pipeline.vector_db.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["pipeline.vector_db.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=131 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 874
+        caption = _caption("Documents are chunked, embedded, and stored in a vector database.")
+        self.add(caption)
         if timeline_f < 875:
             self.wait((875 - timeline_f) / config.frame_rate)
         self.play(
-            FadeOut(objects["pipeline.chunks.box"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["pipeline.chunks.embedder.arrow"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["pipeline.chunks.label"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["pipeline.documents.box"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["pipeline.documents.chunks.arrow"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["pipeline.documents.label"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["pipeline.chunks.box"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["pipeline.chunks.label"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["pipeline.embedder.box"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["pipeline.embedder.label"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["pipeline.embedder.vector_db.arrow"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["pipeline.vector_db.box"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["pipeline.vector_db.label"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["pipeline.documents.chunks.arrow"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["pipeline.chunks.embedder.arrow"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["pipeline.embedder.vector_db.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=175 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1050

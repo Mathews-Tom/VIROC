@@ -8,20 +8,19 @@ import json
 from pathlib import Path, PurePosixPath
 from typing import Any, cast
 
+from viroc.adapters import _palette
 from viroc.adapters._text import display_text
 from viroc.adapters.remotion.templates import (
     INDEX_TS,
     PACKAGE_JSON_TEMPLATE,
     SOURCE_HEADER,
-    STYLE_TOKENS,
     TSCONFIG_JSON_TEMPLATE,
 )
 from viroc.core import BuildArtifact, BuildContext, artifact_from_text, canonical_json
 from viroc.ir import Caption, ConcreteIR, Keyframe, ResolvedObject
 
-_ADAPTER_SOURCE_VERSION = "remotion-source-v0.1"
+_ADAPTER_SOURCE_VERSION = "remotion-source-v0.2"
 _COMPOSITION_ID = "VirocScene"
-_DEFAULT_STYLE = {"color": "#E5E7EB"}
 
 
 def emit(ir: ConcreteIR, ctx: BuildContext) -> BuildArtifact:
@@ -339,8 +338,17 @@ def _scene_data(ir: ConcreteIR) -> dict[str, Any]:
     }
 
 
+def _style_for(style_ref: str) -> dict[str, str]:
+    if style_ref.startswith("edge."):
+        return {"color": _palette.edge_color(style_ref)}
+    if style_ref in ("label", "showcase.title"):
+        return {"color": _palette.LABEL_COLOR}
+    fill, stroke = _palette.box_style(style_ref)
+    return {"fill_color": fill, "stroke_color": stroke}
+
+
 def _object_data(obj: ResolvedObject) -> dict[str, Any]:
-    style = STYLE_TOKENS.get(obj.style_ref, _DEFAULT_STYLE)
+    style = _style_for(obj.style_ref)
     return {
         "glyph": _icon_glyph(obj),
         "h": obj.box.h,

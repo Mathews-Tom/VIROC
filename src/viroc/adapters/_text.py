@@ -24,14 +24,18 @@ _LABEL_ROLES = frozenset({"label", "title"})
 
 
 def display_text(obj: ResolvedObject) -> str:
-    """Return the human-readable text for ``obj`` derived from its stable id.
+    """Return the human-readable text for ``obj``.
 
-    Ids are dot-namespaced. When the final segment is a label-like role
-    (:data:`_LABEL_ROLES`) the entity segment before it is the source; otherwise
-    the final segment is. The source's underscores become spaces and it is
-    title-cased, so ``"scene.vector_db.title"`` and ``"scene.vector_db.label"``
-    both render ``"Vector Db"``.
+    When the resolver threaded the authored label onto the object
+    (:attr:`~viroc.ir.ResolvedObject.text`), that label is the source of truth so
+    a node reads exactly as the author wrote it (``"Vector store"``), identically
+    across backends. Older objects that carry no text fall back to deriving it
+    from the stable id: a trailing label-like role (:data:`_LABEL_ROLES`) defers
+    to the preceding entity segment, otherwise the final segment is used, with
+    underscores becoming spaces and the result title-cased.
     """
+    if obj.text is not None:
+        return obj.text
     parts = obj.id.split(".")
     source = parts[-2] if len(parts) >= 2 and parts[-1] in _LABEL_ROLES else parts[-1]
     return source.replace("_", " ").title()

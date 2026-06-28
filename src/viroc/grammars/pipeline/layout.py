@@ -138,6 +138,7 @@ def layout(
                     box=label_box,
                     z=label.z,
                     style_ref=label.style_ref,
+                    text=label.text,
                 )
             )
 
