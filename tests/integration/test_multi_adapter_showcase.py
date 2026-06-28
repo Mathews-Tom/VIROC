@@ -65,6 +65,7 @@ _EXPECTED_SOURCE_HASHES = {
 }
 
 _STORY_ARC_IDS = [
+    "title_card",
     "concept_input",
     "script_and_scene_plan",
     "editable_vidir",
@@ -72,6 +73,7 @@ _STORY_ARC_IDS = [
     "storyboard_review",
     "compile_fanout",
     "parity_proof",
+    "closing",
 ]
 _PREVIEW_FILES = {
     "video_entry": "expected/preview/manim/viroc-codebase.mp4",
@@ -123,7 +125,8 @@ def test_viroc_codebase_showcase_check_compile_and_gallery(
     assert _GALLERY["storyboard"] == "storyboard.vidir.yaml"
     story_arc = cast(list[dict[str, str]], _GALLERY["story_arc"])
     assert [entry["id"] for entry in story_arc] == _STORY_ARC_IDS
-    assert story_arc[1]["claim"] == (
+    script_entry = next(e for e in story_arc if e["id"] == "script_and_scene_plan")
+    assert script_entry["claim"] == (
         "The guided planner derives a script, a scene plan, and an outline."
     )
     preview = cast(dict[str, str], _GALLERY["preview"])

@@ -3,6 +3,16 @@
 - audience: VIROC authors exploring richer composition
 - objective: Prove the showcase grammar's non-row compositions and above-floor primitives
 
+## Showcase title
+
+- scene_id: `title_card`
+- duration: `4s`
+- goal: Open on the grammar's promise.
+
+### Narration
+
+The showcase grammar composes content, not just boxes.
+
 ## Composition primitives
 
 - scene_id: `primitives`

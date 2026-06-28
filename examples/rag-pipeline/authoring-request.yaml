@@ -15,30 +15,39 @@ entities:
 - id: query
   label: User question
   type: data_source
+  detail: asked at runtime
 - id: documents
   label: Documents
   type: data_source
+  detail: the source corpus
 - id: chunks
   label: Chunks
   type: intermediate
+  detail: split for retrieval
 - id: embedder
   label: Embedding model
   type: model
+  detail: text to vectors
 - id: vector_db
   label: Vector store
   type: storage
+  detail: indexed embeddings
 - id: retrieved_context
   label: Retrieved context
   type: intermediate
+  detail: top-k neighbours
 - id: llm
   label: LLM
   type: model
+  detail: the generator
 - id: bare_answer
   label: Bare prompt answer
   type: data_source
+  detail: no grounding
 - id: grounded_answer
   label: Grounded answer
   type: data_source
+  detail: cites the corpus
 scene_seeds:
 - id: problem_setup
   title: The grounding gap

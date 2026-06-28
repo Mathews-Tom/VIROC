@@ -3,6 +3,16 @@
 - audience: Engineers evaluating VIROC
 - objective: Show a user starting from a concept and reaching a verified, portable video
 
+## Title
+
+- scene_id: `title_card`
+- duration: `4s`
+- goal: Open on the product promise.
+
+### Narration
+
+From a topic to a verified, portable video.
+
 ## Concept input
 
 - scene_id: `concept_input`
@@ -72,4 +82,14 @@ One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion
 ### Narration
 
 Backend paths compared side by side; source hashes and build.json close the proof.
+
+## Closing
+
+- scene_id: `closing`
+- duration: `4s`
+- goal: Close on the guarantees.
+
+### Narration
+
+Reviewable, testable, reproducible — VidIR is the source of truth.
 

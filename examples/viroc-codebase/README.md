@@ -22,6 +22,7 @@ viroc render   examples/viroc-codebase --backend manim         # env-gated rende
 
 | Scene | Claim | Code anchors |
 |---|---|---|
+| `title_card` | Open on the product promise. | `src/viroc/grammars/showcase/layout.py`, `src/viroc/ir/semantic.py` |
 | `concept_input` | Start from a concept: a repo, a document set, and a topic brief. | `src/viroc/cli/ingest.py`, `src/viroc/cli/plan.py`, `docs/overview.md` |
 | `script_and_scene_plan` | The guided planner derives a script, a scene plan, and an outline. | `src/viroc/authoring/planner.py`, `src/viroc/authoring/models.py`, `src/viroc/cli/plan.py` |
 | `editable_vidir` | The approved outline becomes editable VidIR the user owns. | `src/viroc/authoring/io.py`, `src/viroc/ir/semantic.py`, `src/viroc/ir/io.py` |
@@ -29,6 +30,7 @@ viroc render   examples/viroc-codebase --backend manim         # env-gated rende
 | `storyboard_review` | The review surface shows scene cards and the script before final render. | `src/viroc/cli/critique.py`, `src/viroc/adapters/static_storyboard`, `src/viroc/grammars/showcase` |
 | `compile_fanout` | One Concrete IR compiles deterministically to Manim, HTML, and Remotion source. | `src/viroc/adapters/registry.py`, `src/viroc/cli/compile.py`, `src/viroc/adapters/manim`, `src/viroc/adapters/html`, `src/viroc/adapters/remotion` |
 | `parity_proof` | Backends are compared and source hashes plus `build.json` close the reproducibility proof. | `src/viroc/core/manifest.py`, `src/viroc/cli/render.py`, `examples/viroc-codebase/expected/gallery.json` |
+| `closing` | Close on the guarantees. | `src/viroc/grammars/showcase/layout.py`, `src/viroc/ir/semantic.py` |
 
 ## Top-three parity
 
@@ -40,9 +42,9 @@ Committed generated source lives under `expected/generated/`, so the example can
 
 | Backend | Committed source root | Entry file | Source hash | Render reference |
 |---|---|---|---|---|
-| `manim` | `expected/generated/manim/` | `expected/generated/manim/scene.py` | `sha256:8ffe9c0ddeddf9740db24ead05f213ebea7bc61265655a635a87b97daf89511f` | preview video at `expected/preview/manim/viroc-codebase.mp4`; perceptual baseline at `expected/manim/render.json` (code/formula degraded to rect) |
-| `html` | `expected/generated/html/` | `expected/generated/html/scene.html` | `sha256:8af1ecb0753e52a80334faa540fbfd50fbeb34fc63ff6db899ef87f6b3e7e0e1` | env-gated render; skip when no browser is available (full code/formula fidelity) |
-| `remotion` | `expected/generated/remotion/` | `expected/generated/remotion/package.json` | `sha256:edc8bf7fb8fb2fd4b3c249597172efc7727092f2a824ddd6fc14e968dd47bb53` | env-gated render; skip when the Remotion CLI probe fails (full code/formula fidelity) |
+| `manim` | `expected/generated/manim/` | `expected/generated/manim/scene.py` | `sha256:2f73ca5b1e4894c4d489c37ba12154e8e0c04b3f320d8958700ef6108dc07f3c` | preview video at `expected/preview/manim/viroc-codebase.mp4`; perceptual baseline at `expected/manim/render.json` (code/formula degraded to rect) |
+| `html` | `expected/generated/html/` | `expected/generated/html/scene.html` | `sha256:76ccc1c7f6a1337722ad0981f74e28017185ada2d38a7ea762d370b80471202b` | env-gated render; skip when no browser is available (full code/formula fidelity) |
+| `remotion` | `expected/generated/remotion/` | `expected/generated/remotion/package.json` | `sha256:3671c07f06b134441fc0dd43d2dc97f74b3a6a191cb05c33a09f7d0a8d90d8e0` | env-gated render; skip when the Remotion CLI probe fails (full code/formula fidelity) |
 
 Guided-flow provenance, all committed and regenerable:
 

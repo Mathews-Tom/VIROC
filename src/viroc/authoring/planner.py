@@ -12,7 +12,7 @@ from viroc.authoring.models import (
     ScriptScene,
 )
 from viroc.core import slugify
-from viroc.ir import Edge, Scene, SemanticIR, ValidationSpec, VideoMeta
+from viroc.ir import Beat, Edge, Scene, SemanticIR, ValidationSpec, VideoMeta
 
 
 def scene_seed_edges(seed: SceneSeed) -> list[Edge]:
@@ -42,6 +42,7 @@ def build_scene_plan(brief: AuthoringBrief) -> ScenePlan:
             nodes=list(seed.nodes),
             edges=scene_seed_edges(seed),
             narration=seed.narration,
+            emphasis=list(seed.emphasis),
         )
         for seed in brief.scene_seeds
     ]
@@ -73,6 +74,27 @@ def build_script_document(brief: AuthoringBrief, scene_plan: ScenePlan) -> Scrip
     )
 
 
+def _emphasis_beats(scene: PlannedScene) -> list[Beat]:
+    """Synthesize a scene-spanning beat carrying narration + emphasis targets.
+
+    The beat reproduces the scene-level narration caption over the whole scene
+    (``_scene_captions`` reads beats once any exist) and names the entity ids the
+    showcase animator highlights. A scene without emphasis keeps an empty beat
+    list, so its caption path and keyframes are unchanged.
+    """
+    if not scene.emphasis:
+        return []
+    return [
+        Beat(
+            id=f"{scene.id}-emphasis",
+            at="0s",
+            duration=scene.duration,
+            narration=scene.narration,
+            emphasis=list(scene.emphasis),
+        )
+    ]
+
+
 def scene_plan_to_vidir(scene_plan: ScenePlan) -> SemanticIR:
     """Project the richer scene plan down into editable VidIR."""
 
@@ -88,6 +110,7 @@ def scene_plan_to_vidir(scene_plan: ScenePlan) -> SemanticIR:
                 nodes=scene.nodes,
                 edges=scene.edges,
                 narration=scene.narration,
+                beats=_emphasis_beats(scene),
             )
             for scene in scene_plan.scenes
         ],

@@ -1,30 +1,22 @@
 """The ``showcase`` grammar's template layout (design §4, pipeline phase P6).
 
-Layout places the abstract objects expansion produced into resolved boxes. Like
-``pipeline`` it is *template-driven, not a general solver* (ADR-0003), but where
-``pipeline`` lays out a single left-to-right row, ``showcase`` selects one of
-three deterministic *non-row* templates from the scene's connectivity:
+Layout places the abstract objects expansion produced into resolved boxes. It is
+*template-driven, not a general solver* (ADR-0003). A box node becomes a uniform
+primary box carrying its content: the title is centred inside the box near the
+top, body lines are stacked inside beneath the title, and an optional detail
+sub-caption sits in the reserved slot just below the box. A text-primary node
+(``heading`` / ``statement``) carries no box; a scene made entirely of them is
+laid out as a centred vertical stack of standalone typography (a title card or a
+run of claims).
 
-- **comparison** — a ``compare`` edge is present: two columns placed side by side,
-  paired row by row, with a horizontal connector per row in the central gap;
-- **fan-out** — one node sources two or more edges: that hub sits left, its
-  targets stack in a right column, and each connector is a horizontal stub at its
-  target's row in the column gap;
-- **grid** — otherwise: a row-major lattice of ``ceil(sqrt(n))`` columns, the
-  default "set of panels" arrangement.
-
-Every template is overlap-free and in-frame *by geometry*, not by search: cells
-are pitched a positive gap apart on an integer lattice, a uniform cell width
-sized to the widest title keeps each title within its own column, and connectors
-live strictly in the inter-column gap at a primary's vertical centre, so they
-never enter a cell or share a row with another connector. All arithmetic is
-integer, so output is byte-stable across runs and machines (the golden-digest
-guarantee).
-
-Text measurement lives here, in the Resolver, never in an adapter's ``emit()``
+Box nodes are placed with one of three connectivity-selected templates — grid,
+fan-out, or comparison — exactly as before; only the *content* each cell carries
+is new. The composition is centred inside the safe frame and is overlap-free and
+in-frame by geometry, not search. Text measurement lives here, in the Resolver
 (design §10, ADR-0002): :func:`measure_text` is a fixed-advance, font-independent
-metric so layout can size cells to their titles while ``emit()`` stays
-environment-invariant.
+metric, so layout can size cells to their content while ``emit()`` stays
+environment-invariant. All arithmetic is integer-valued, so output is byte-stable
+across runs and machines (the golden-digest guarantee).
 """
 
 from __future__ import annotations
@@ -34,6 +26,11 @@ from collections.abc import Iterable
 
 from viroc.core import BuildContext
 from viroc.grammars import AbstractObject
+from viroc.grammars.showcase import (
+    DETAIL_STYLE_REF,
+    HEADING_STYLE_REF,
+    TITLE_STYLE_REF,
+)
 from viroc.ir import Box, ResolvedObject
 
 CHAR_W = 14
@@ -41,13 +38,13 @@ CHAR_W = 14
 LINE_H = 36
 """Single-line title height (logical units)."""
 PAD_X = 28
-"""Horizontal padding inside a cell, each side, around its title."""
+"""Horizontal padding inside a cell, each side, around its content."""
 CARD_H = 168
 """Uniform height of every primary composition box (logical units)."""
 CARD_MIN_W = 240
 """Floor on the uniform cell width so short titles still read as cards."""
 TITLE_GAP = 12
-"""Vertical gap between a primary box's bottom and its title."""
+"""Vertical gap between a primary box's bottom and its detail sub-caption."""
 COL_GAP = 88
 """Horizontal gap between columns; holds a connector in flow templates."""
 ROW_GAP = 64
@@ -56,9 +53,23 @@ ARROW_T = 8
 """Thickness of a connector's band in the inter-column gap."""
 MARGIN_PCT = 7
 """Safe-frame inset as a percent of each axis; wider than the validator's floor."""
+INNER_PAD_TOP = 22
+"""Vertical inset of the title from the top of its box."""
+BODY_LINE_H = 32
+"""Height of one body line stacked inside a box."""
+BODY_GAP = 10
+"""Vertical gap between the title and the first body line."""
+HEADING_H = 132
+"""Box height of a ``heading`` text node in a statement stack."""
+STATEMENT_H = 104
+"""Box height of a ``statement`` text node in a statement stack."""
+STATEMENT_GAP = 56
+"""Vertical gap between stacked text nodes."""
+STATEMENT_W_PCT = 82
+"""Width of a stacked text node as a percent of the safe-frame width."""
 
 _GROUP_H = CARD_H + TITLE_GAP + LINE_H
-"""Full cell height: primary box, gap, then the single-line title beneath it."""
+"""Full cell height: primary box, gap, then the single-line detail beneath it."""
 _COMPARE_STYLE = "edge.compare"
 """Connector style ref that selects the comparison template."""
 
@@ -72,10 +83,9 @@ _Connector = tuple[str, str, Box]
 def measure_text(text: str) -> tuple[int, int]:
     """Return the ``(width, height)`` of ``text`` in logical units.
 
-    A deterministic fixed-advance metric: width is the character count times a
-    fixed advance, height a single line. Measurement is font-independent by
-    construction, so it is byte-stable and stays in the Resolver rather than
-    leaking environment state into an adapter's ``emit()`` (design §10).
+    A fixed-advance metric (``CHAR_W`` per character, ``LINE_H`` tall) that is
+    font- and environment-independent so layout stays deterministic and the
+    determinism boundary (measurement in the Resolver, not the adapter) holds.
     """
     return (max(len(text), 1) * CHAR_W, LINE_H)
 
@@ -96,9 +106,11 @@ def layout(
     """Place ``objects`` with the showcase template selected from connectivity.
 
     Returns the resolved objects in deterministic reading order — each primary
-    then its title in placement order, followed by any drawn connectors — laid
-    out overlap-free and within the safe frame. ``resolution`` is the target
-    frame size; the composition is centred on it.
+    then the content it owns, followed by any drawn connectors — laid out
+    overlap-free and within the safe frame. A scene whose nodes are all text
+    primaries is laid out as a centred vertical stack; otherwise the box nodes are
+    placed with the grid / fan-out / comparison template their connectivity
+    selects and each carries its title, body, and detail.
 
     ``ctx`` is part of the grammar contract (it threads config and, for grammars
     that need it, the measurement environment); the showcase templates read no
@@ -108,27 +120,33 @@ def layout(
     nodes = [obj for obj in objects if obj.role == "node"]
     if not nodes:
         return []
-    nodes_by_id = {node.id: node for node in nodes}
-    labels_by_owner = {obj.owner: obj for obj in objects if obj.role == "label"}
-    arrows = [obj for obj in objects if obj.role == "arrow"]
-
-    cell_w = _cell_width(nodes, labels_by_owner)
     frame = safe_frame(resolution)
 
+    if all(node.primitive == "text" for node in nodes):
+        return _statement_stack(nodes, frame)
+
+    nodes_by_id = {node.id: node for node in nodes}
+    owned_by_owner: dict[str, list[AbstractObject]] = {}
+    for obj in objects:
+        if obj.role == "label" and obj.owner is not None:
+            owned_by_owner.setdefault(obj.owner, []).append(obj)
+    arrows = [obj for obj in objects if obj.role == "arrow"]
+
+    cell_w = _cell_width(nodes, owned_by_owner)
     placements, connectors = _place(nodes, arrows, cell_w, frame)
-    return _resolve(placements, connectors, nodes_by_id, labels_by_owner, cell_w)
+    return _resolve(placements, connectors, nodes_by_id, owned_by_owner, cell_w)
 
 
 def _cell_width(
-    nodes: list[AbstractObject], labels_by_owner: dict[str | None, AbstractObject]
+    nodes: list[AbstractObject], owned_by_owner: dict[str, list[AbstractObject]]
 ) -> int:
-    """Size a uniform cell to fit the widest title, floored at ``CARD_MIN_W``."""
-    title_widths = [
-        measure_text(label.text)[0]
-        for node in nodes
-        if (label := labels_by_owner.get(node.id)) is not None and label.text
-    ]
-    return max([CARD_MIN_W, *(width + 2 * PAD_X for width in title_widths)])
+    """Size a uniform cell to fit the widest content line, floored at ``CARD_MIN_W``."""
+    widths = [CARD_MIN_W]
+    for node in nodes:
+        for obj in owned_by_owner.get(node.id, []):
+            if obj.text:
+                widths.append(measure_text(obj.text)[0] + 2 * PAD_X)
+    return max(widths)
 
 
 def _place(
@@ -247,14 +265,45 @@ def _comparison(
     return placements, connectors
 
 
+def _statement_stack(
+    nodes: list[AbstractObject], frame: Box
+) -> list[ResolvedObject]:
+    """Place text-primary nodes as a centred vertical stack of standalone text."""
+    heights = [_text_node_height(node) for node in nodes]
+    total_h = sum(heights) + STATEMENT_GAP * (len(nodes) - 1)
+    width = frame.w * STATEMENT_W_PCT // 100
+    start_x = frame.x + (frame.w - width) // 2
+    cursor_y = frame.y + (frame.h - total_h) // 2
+
+    resolved: list[ResolvedObject] = []
+    for node, height in zip(nodes, heights, strict=True):
+        resolved.append(
+            ResolvedObject(
+                id=node.id,
+                primitive="text",
+                box=Box(x=start_x, y=cursor_y, w=width, h=height),
+                z=node.z,
+                style_ref=node.style_ref,
+                text=node.text,
+            )
+        )
+        cursor_y += height + STATEMENT_GAP
+    return resolved
+
+
+def _text_node_height(node: AbstractObject) -> int:
+    """Box height for a stacked text node, by its heading/statement tier."""
+    return HEADING_H if node.style_ref == HEADING_STYLE_REF else STATEMENT_H
+
+
 def _resolve(
     placements: list[_Placement],
     connectors: list[_Connector],
     nodes_by_id: dict[str, AbstractObject],
-    labels_by_owner: dict[str | None, AbstractObject],
+    owned_by_owner: dict[str, list[AbstractObject]],
     cell_w: int,
 ) -> list[ResolvedObject]:
-    """Build resolved primaries with titles beneath them, then connectors."""
+    """Build resolved primaries with their inner content, then connectors."""
     resolved: list[ResolvedObject] = []
     for primary_id, box in placements:
         node = nodes_by_id[primary_id]
@@ -265,26 +314,10 @@ def _resolve(
                 box=box,
                 z=node.z,
                 style_ref=node.style_ref,
+                text=node.text,
             )
         )
-        label = labels_by_owner.get(primary_id)
-        if label is not None:
-            label_w = measure_text(label.text)[0] if label.text else 0
-            resolved.append(
-                ResolvedObject(
-                    id=label.id,
-                    primitive=label.primitive,
-                    box=Box(
-                        x=box.x + (cell_w - label_w) // 2,
-                        y=box.y + CARD_H + TITLE_GAP,
-                        w=label_w,
-                        h=LINE_H,
-                    ),
-                    z=label.z,
-                    style_ref=label.style_ref,
-                    text=label.text,
-                )
-            )
+        resolved.extend(_content(box, cell_w, owned_by_owner.get(primary_id, [])))
     for connector_id, style_ref, box in connectors:
         resolved.append(
             ResolvedObject(
@@ -293,6 +326,75 @@ def _resolve(
                 box=box,
                 z=0,
                 style_ref=style_ref,
+            )
+        )
+    return resolved
+
+
+def _content(
+    box: Box, cell_w: int, owned: list[AbstractObject]
+) -> list[ResolvedObject]:
+    """Place a box's title (inside top), body lines (inside), and detail (below)."""
+    title = next((obj for obj in owned if obj.style_ref == TITLE_STYLE_REF), None)
+    detail = next((obj for obj in owned if obj.style_ref == DETAIL_STYLE_REF), None)
+    bodies = [
+        obj
+        for obj in owned
+        if obj.style_ref not in (TITLE_STYLE_REF, DETAIL_STYLE_REF)
+    ]
+
+    resolved: list[ResolvedObject] = []
+    if title is not None and title.text:
+        width = measure_text(title.text)[0]
+        resolved.append(
+            ResolvedObject(
+                id=title.id,
+                primitive="text",
+                box=Box(
+                    x=box.x + (cell_w - width) // 2,
+                    y=box.y + INNER_PAD_TOP,
+                    w=width,
+                    h=LINE_H,
+                ),
+                z=title.z,
+                style_ref=title.style_ref,
+                text=title.text,
+            )
+        )
+
+    body_y = box.y + INNER_PAD_TOP + LINE_H + BODY_GAP
+    for index, body in enumerate(bodies):
+        if not body.text:
+            continue
+        width = measure_text(body.text)[0]
+        left_aligned = body.style_ref.startswith(("code_card.", "evidence."))
+        x = box.x + PAD_X if left_aligned else box.x + (cell_w - width) // 2
+        resolved.append(
+            ResolvedObject(
+                id=body.id,
+                primitive="text",
+                box=Box(x=x, y=body_y + index * BODY_LINE_H, w=width, h=BODY_LINE_H),
+                z=body.z,
+                style_ref=body.style_ref,
+                text=body.text,
+            )
+        )
+
+    if detail is not None and detail.text:
+        width = measure_text(detail.text)[0]
+        resolved.append(
+            ResolvedObject(
+                id=detail.id,
+                primitive="text",
+                box=Box(
+                    x=box.x + (cell_w - width) // 2,
+                    y=box.y + CARD_H + TITLE_GAP,
+                    w=width,
+                    h=LINE_H,
+                ),
+                z=detail.z,
+                style_ref=detail.style_ref,
+                text=detail.text,
             )
         )
     return resolved

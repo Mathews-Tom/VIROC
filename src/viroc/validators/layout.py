@@ -42,15 +42,34 @@ def _overlap_diagnostics(objects: list[ResolvedObject]) -> list[Diagnostic]:
         by_scene[_scene_id(obj.id)].append(obj)
     for scene_objects in by_scene.values():
         for first, second in combinations(scene_objects, 2):
-            if _overlaps(first.box, second.box):
-                diagnostics.append(
-                    Diagnostic(
-                        code=VIR_OBJECT_OVERLAP,
-                        message=f"objects {first.id!r} and {second.id!r} overlap",
-                        help="Adjust the grammar layout so resolved boxes share no positive area.",
-                    )
+            if not _overlaps(first.box, second.box):
+                continue
+            if _is_nested_content(first, second):
+                continue
+            diagnostics.append(
+                Diagnostic(
+                    code=VIR_OBJECT_OVERLAP,
+                    message=f"objects {first.id!r} and {second.id!r} overlap",
+                    help="Adjust the grammar layout so resolved boxes share no positive area.",
                 )
+            )
     return diagnostics
+
+
+def _is_nested_content(a: ResolvedObject, b: ResolvedObject) -> bool:
+    """Whether one object is a ``text`` object fully contained by the other box.
+
+    Content (titles, body lines) sits *inside* its node box by design, so a text
+    object wholly within a container box is legitimate nesting, not an overlap
+    defect. Box-on-box overlap, and text that only partially overlaps a box it
+    does not belong to, are still reported.
+    """
+    a_text = a.primitive == "text"
+    b_text = b.primitive == "text"
+    if a_text == b_text:
+        return False
+    text, container = (a, b) if a_text else (b, a)
+    return _contains(container.box, text.box)
 
 
 def _clipping_diagnostics(

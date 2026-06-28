@@ -61,6 +61,14 @@ def _scene_of(object_id: str) -> str:
     return object_id.split(".", 1)[0]
 
 
+def _nested(a: ResolvedObject, b: ResolvedObject) -> bool:
+    """A text object fully contained in the other box is legitimate nesting."""
+    if (a.primitive == "text") == (b.primitive == "text"):
+        return False
+    text, container = (a, b) if a.primitive == "text" else (b, a)
+    return contains(container.box, text.box)
+
+
 def test_layout_matches_golden_boxes() -> None:
     """The resolved layout equals the committed golden boxes, object for object."""
     resolved = [obj.model_dump() for obj in _resolve()]
@@ -84,7 +92,7 @@ def test_layout_has_no_overlapping_boxes_within_a_scene() -> None:
         (a.id, b.id)
         for scene_objects in by_scene.values()
         for a, b in combinations(scene_objects, 2)
-        if overlaps(a.box, b.box)
+        if overlaps(a.box, b.box) and not _nested(a, b)
     ]
     assert collisions == []
 

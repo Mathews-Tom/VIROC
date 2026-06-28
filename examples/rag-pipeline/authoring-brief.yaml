@@ -14,30 +14,48 @@ entities:
 - id: query
   label: User question
   type: data_source
+  detail: asked at runtime
+  body: []
 - id: documents
   label: Documents
   type: data_source
+  detail: the source corpus
+  body: []
 - id: chunks
   label: Chunks
   type: intermediate
+  detail: split for retrieval
+  body: []
 - id: embedder
   label: Embedding model
   type: model
+  detail: text to vectors
+  body: []
 - id: vector_db
   label: Vector store
   type: storage
+  detail: indexed embeddings
+  body: []
 - id: retrieved_context
   label: Retrieved context
   type: intermediate
+  detail: top-k neighbours
+  body: []
 - id: llm
   label: LLM
   type: model
+  detail: the generator
+  body: []
 - id: bare_answer
   label: Bare prompt answer
   type: data_source
+  detail: no grounding
+  body: []
 - id: grounded_answer
   label: Grounded answer
   type: data_source
+  detail: cites the corpus
+  body: []
 scene_seeds:
 - title: The grounding gap
   goal: 'Set up the problem: a bare model answer still needs the document corpus.'
@@ -53,6 +71,7 @@ scene_seeds:
     to: llm
     kind: flow
   edge_kind: flow
+  emphasis: []
   id: problem_setup
 - title: Index the corpus
   goal: Stage the offline indexing path from documents to a vector store.
@@ -75,6 +94,7 @@ scene_seeds:
     to: vector_db
     kind: store
   edge_kind: flow
+  emphasis: []
   id: indexing_path
 - title: Retrieve at query time
   goal: Probe the vector store with the question and pull back the nearest context.
@@ -93,6 +113,7 @@ scene_seeds:
     to: retrieved_context
     kind: flow
   edge_kind: flow
+  emphasis: []
   id: retrieval_path
 - title: Synthesize a grounded answer
   goal: Carry the question and retrieved context into the model for synthesis.
@@ -115,6 +136,7 @@ scene_seeds:
     to: grounded_answer
     kind: transform
   edge_kind: flow
+  emphasis: []
   id: answer_synthesis
 - title: Bare versus grounded
   goal: Contrast the bare-prompt answer with the grounded result.
@@ -133,6 +155,7 @@ scene_seeds:
     to: grounded_answer
     kind: merge
   edge_kind: flow
+  emphasis: []
   id: payoff
 context_items: []
 notes: []

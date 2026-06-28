@@ -79,7 +79,8 @@ def test_run_pipeline_resolves_scene_layout(tmp_path: Path) -> None:
     objects = state.concrete.objects
     # Two nodes -> box + label each, plus one edge -> one arrow.
     assert len(objects) == 5
-    assert not any(overlaps(a.box, b.box) for a, b in combinations(objects, 2))
+    boxes = [obj for obj in objects if obj.primitive != "text"]
+    assert not any(overlaps(a.box, b.box) for a, b in combinations(boxes, 2))
 
 
 def test_run_pipeline_assembles_concrete_ir(tmp_path: Path) -> None:

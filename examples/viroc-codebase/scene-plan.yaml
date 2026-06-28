@@ -11,70 +11,152 @@ entities:
 - id: author
   label: User
   type: user
+  detail: you, the author
+  body: []
 - id: repo_context
   label: Repo context
   type: data_source
+  detail: git + symbols
+  body: []
 - id: doc_set
   label: Document set
   type: data_source
+  detail: design + overview
+  body: []
 - id: topic
   label: Topic brief
   type: data_source
+  detail: audience + objective
+  body: []
 - id: planner
   label: Guided planner
   type: service
+  detail: topic to plan
+  body: []
 - id: script
   label: Script
   type: intermediate
+  detail: what is said
+  body: []
 - id: scene_plan
   label: Scene plan
   type: intermediate
+  detail: what is shown
+  body: []
 - id: outline
   label: Outline
   type: intermediate
+  detail: approved structure
+  body: []
 - id: storyboard
   label: Editable VidIR
   type: intermediate
+  detail: the only input
+  body:
+  - 'vidir_version: 0.1'
+  - 'scenes: 7  entities: 22'
 - id: checks
   label: VIR diagnostics
   type: service
+  detail: typed errors
+  body:
+  - 'error VIR1002:'
+  - unknown entity ref
+  - 'help: did you mean ...'
 - id: repaired
   label: Repaired VidIR
   type: intermediate
+  detail: clean to compile
+  body: []
 - id: review
   label: Review surface
   type: data_source
+  detail: inspect first
+  body: []
 - id: scene_cards
   label: Scene cards
   type: intermediate
+  detail: per-scene
+  body: []
 - id: script_review
   label: Script review
   type: intermediate
+  detail: read before render
+  body: []
 - id: concrete_ir
   label: Concrete IR
   type: intermediate
+  detail: resolved + timed
+  body:
+  - objects + boxes
+  - keyframes + captions
 - id: manim_source
   label: Manim source
   type: intermediate
+  detail: scene.py
+  body: []
 - id: html_source
   label: HTML source
   type: intermediate
+  detail: scene.html
+  body: []
 - id: remotion_source
   label: Remotion source
   type: intermediate
+  detail: Composition.tsx
+  body: []
 - id: html_path
   label: HTML path
   type: service
+  detail: browser render
+  body: []
 - id: remotion_path
   label: Remotion path
   type: service
+  detail: react render
+  body: []
 - id: source_hashes
   label: Source hashes
   type: storage
+  detail: byte-stable
+  body:
+  - manim    sha256
+  - html     sha256
+  - remotion sha256
 - id: build_manifest
   label: build.json
   type: storage
+  detail: reproducibility
+  body:
+  - renderer + phash
+  - source_hash + assets
+- id: brand_title
+  label: VIROC
+  type: heading
+  body: []
+- id: brand_claim
+  label: Typed storyboards. Validated before they render.
+  type: statement
+  body: []
+- id: closing_claim
+  label: Reviewable in a PR. Testable in CI. Reproducible by build.
+  type: statement
+  body: []
 scenes:
+- id: title_card
+  title: Title
+  goal: Open on the product promise.
+  grammar: showcase
+  duration: 4s
+  nodes:
+  - brand_title
+  - brand_claim
+  edges:
+  - from: brand_title
+    to: brand_claim
+    kind: flow
+  narration: From a topic to a verified, portable video.
+  emphasis: []
 - id: concept_input
   title: Concept input
   goal: 'Start from a concept: a repo, a document set, and a topic brief.'
@@ -96,6 +178,7 @@ scenes:
     to: author
     kind: flow
   narration: 'Start from a concept: a repo, a document set, and a topic brief, not renderer code.'
+  emphasis: []
 - id: script_and_scene_plan
   title: Script and scene plan
   goal: The guided planner derives a script, a scene plan, and an outline.
@@ -117,6 +200,7 @@ scenes:
     to: outline
     kind: split
   narration: The guided planner derives a script, a scene plan, and an outline before any IR exists.
+  emphasis: []
 - id: editable_vidir
   title: Editable VidIR
   goal: The approved outline becomes editable VidIR the user owns.
@@ -134,6 +218,8 @@ scenes:
     to: author
     kind: flow
   narration: The approved outline becomes editable VidIR the user and agents refine.
+  emphasis:
+  - storyboard
 - id: validate_repair
   title: Validate and repair
   goal: viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.
@@ -151,6 +237,8 @@ scenes:
     to: repaired
     kind: flow
   narration: viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.
+  emphasis:
+  - checks
 - id: storyboard_review
   title: Storyboard review
   goal: The review surface shows scene cards and the script before final render.
@@ -172,6 +260,7 @@ scenes:
     to: author
     kind: flow
   narration: The review surface shows scene cards and the script as an inspectable artifact before final render.
+  emphasis: []
 - id: compile_fanout
   title: Compile fan-out
   goal: One Concrete IR compiles deterministically to Manim, HTML, and Remotion source.
@@ -193,6 +282,8 @@ scenes:
     to: remotion_source
     kind: split
   narration: One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.
+  emphasis:
+  - concrete_ir
 - id: parity_proof
   title: Parity proof
   goal: Backends are compared and source hashes plus build.json close the reproducibility proof.
@@ -211,3 +302,15 @@ scenes:
     to: build_manifest
     kind: compare
   narration: Backend paths compared side by side; source hashes and build.json close the proof.
+  emphasis:
+  - source_hashes
+- id: closing
+  title: Closing
+  goal: Close on the guarantees.
+  grammar: showcase
+  duration: 4s
+  nodes:
+  - closing_claim
+  edges: []
+  narration: Reviewable, testable, reproducible — VidIR is the source of truth.
+  emphasis: []

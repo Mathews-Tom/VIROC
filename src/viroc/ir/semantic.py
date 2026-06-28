@@ -27,7 +27,8 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 EntityType = Literal[
-    "data_source", "intermediate", "model", "storage", "service", "user"
+    "data_source", "intermediate", "model", "storage", "service", "user",
+    "heading", "statement",
 ]
 """The kind of thing an :class:`Entity` represents (design §2.2)."""
 
@@ -67,11 +68,23 @@ class VideoMeta(_Model):
 
 
 class Entity(_Model):
-    """A named thing in the diagram (a data source, model, store, …)."""
+    """A named thing in the diagram (a data source, model, store, …).
+
+    ``label`` is the headline rendered inside the entity's box. ``detail`` is an
+    optional secondary line rendered as a sub-caption beneath the box, and
+    ``body`` an optional list of lines rendered inside the box under the label
+    (code lines for a ``model``/``intermediate`` code card, evidence/hash lines
+    for ``storage``, descriptive body for a panel). The ``heading`` and
+    ``statement`` types carry no box: their ``label`` is rendered as standalone
+    typographic text (a title card or a centered claim), so ``body``/``detail``
+    do not apply to them.
+    """
 
     id: str
     label: str
     type: EntityType
+    detail: str | None = None
+    body: list[str] = []
 
 
 class Edge(_Model):
@@ -98,6 +111,8 @@ class Beat(_Model):
     at: str
     duration: str
     narration: str | None = None
+    emphasis: list[str] = []
+    """Entity ids to highlight over this beat's window (focus choreography)."""
 
 
 class Scene(_Model):

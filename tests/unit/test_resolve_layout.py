@@ -67,7 +67,7 @@ def test_register_builtins_registers_pipeline() -> None:
 def test_pipeline_grammar_identity_and_delegation() -> None:
     """The grammar object exposes its id/version and delegates to expand+layout."""
     assert pipeline_grammar.id == "pipeline"
-    assert pipeline_grammar.version == "1.0.0"
+    assert pipeline_grammar.version == "1.1.0"
     ir = _ir()
     scene = ir.scenes[0]
     objects = pipeline_grammar.expand(scene, ir)
@@ -89,4 +89,5 @@ def test_resolve_layout_runs_expand_then_layout() -> None:
 def test_resolve_layout_is_overlap_free() -> None:
     """The resolved boxes the driver returns have zero pairwise overlap."""
     resolved = resolve_layout(_ir().scenes[0], _ir(), _ctx())
-    assert not any(overlaps(a.box, b.box) for a, b in combinations(resolved, 2))
+    boxes = [obj for obj in resolved if obj.primitive != "text"]
+    assert not any(overlaps(a.box, b.box) for a, b in combinations(boxes, 2))

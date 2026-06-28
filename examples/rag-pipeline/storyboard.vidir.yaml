@@ -11,30 +11,48 @@ entities:
 - id: query
   label: User question
   type: data_source
+  detail: asked at runtime
+  body: []
 - id: documents
   label: Documents
   type: data_source
+  detail: the source corpus
+  body: []
 - id: chunks
   label: Chunks
   type: intermediate
+  detail: split for retrieval
+  body: []
 - id: embedder
   label: Embedding model
   type: model
+  detail: text to vectors
+  body: []
 - id: vector_db
   label: Vector store
   type: storage
+  detail: indexed embeddings
+  body: []
 - id: retrieved_context
   label: Retrieved context
   type: intermediate
+  detail: top-k neighbours
+  body: []
 - id: llm
   label: LLM
   type: model
+  detail: the generator
+  body: []
 - id: bare_answer
   label: Bare prompt answer
   type: data_source
+  detail: no grounding
+  body: []
 - id: grounded_answer
   label: Grounded answer
   type: data_source
+  detail: cites the corpus
+  body: []
 scenes:
 - id: problem_setup
   grammar: pipeline

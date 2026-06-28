@@ -8,43 +8,102 @@ video:
     height: 1080
   duration_target: 18
 entities:
+- id: brand_title
+  label: Showcase grammar
+  type: heading
+  body: []
+- id: brand_claim
+  label: Panels, code cards, callouts, evidence — composed, not rowed.
+  type: statement
+  body: []
 - id: input_panel
   label: Authored input
   type: data_source
+  detail: viroc.yaml + vidir
+  body: []
 - id: ir_card
   label: Semantic IR
   type: intermediate
+  detail: the editable IR
+  body:
+  - 'scenes: [...]'
+  - 'entities: [...]'
 - id: author_note
   label: Author note
   type: user
+  detail: human in the loop
+  body: []
 - id: proof_block
   label: Source hashes
   type: storage
+  detail: byte-stable
+  body:
+  - manim    sha256
+  - html     sha256
+  - remotion sha256
 - id: resolver
   label: Resolver
   type: service
+  detail: layout + time
+  body: []
 - id: concrete_ir
   label: Concrete IR
   type: intermediate
+  detail: resolved + placed
+  body:
+  - objects + boxes
+  - keyframes
 - id: review_surface
   label: Review surface
   type: data_source
+  detail: before render
+  body: []
 - id: build_manifest
   label: build.json
   type: storage
+  detail: reproducibility
+  body:
+  - renderer + phash
+  - source_hash
 - id: html_path
   label: HTML path
   type: service
+  detail: browser render
+  body: []
 - id: remotion_path
   label: Remotion path
   type: service
+  detail: react render
+  body: []
 - id: html_source
   label: scene.html
   type: intermediate
+  detail: self-contained
+  body:
+  - positioned divs
+  - inline styles
 - id: remotion_source
   label: Composition.tsx
   type: intermediate
+  detail: generated project
+  body:
+  - <AbsoluteFill>
+  - <Sequence>
 scenes:
+- id: title_card
+  title: Showcase title
+  goal: Open on the grammar's promise.
+  grammar: showcase
+  duration: 4s
+  nodes:
+  - brand_title
+  - brand_claim
+  edges:
+  - from: brand_title
+    to: brand_claim
+    kind: flow
+  narration: The showcase grammar composes content, not just boxes.
+  emphasis: []
 - id: primitives
   title: Composition primitives
   goal: Show one of each composition kind in a non-row 2x2 grid.
@@ -66,6 +125,8 @@ scenes:
     to: proof_block
     kind: flow
   narration: Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.
+  emphasis:
+  - ir_card
 - id: fanout
   title: Fan-out
   goal: Fan one resolver service out to three artifacts.
@@ -87,6 +148,8 @@ scenes:
     to: build_manifest
     kind: split
   narration: One resolver fans out into Concrete IR, a review surface, and a build manifest.
+  emphasis:
+  - concrete_ir
 - id: comparison
   title: Comparison
   goal: Place two portable backend paths side by side.
@@ -105,3 +168,4 @@ scenes:
     to: remotion_source
     kind: compare
   narration: 'Two portable backend paths compared side by side: HTML versus Remotion source.'
+  emphasis: []

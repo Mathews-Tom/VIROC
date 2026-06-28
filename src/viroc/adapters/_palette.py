@@ -18,12 +18,16 @@ Style refs the grammars emit and this module resolves:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 BACKGROUND = "#0B1020"
 LABEL_COLOR = "#F8FAFC"
 CAPTION_COLOR = "#E2E8F0"
 CAPTION_PANEL = "#0F172A"
 NEUTRAL_FILL = "#1E293B"
 NEUTRAL_STROKE = "#64748B"
+BODY_COLOR = "#CBD5E1"
+CODE_TEXT_COLOR = "#7DD3FC"
 
 # Per entity-type (fill, stroke). One palette for every box-shaped node, so a
 # `data_source` is the same blue whether the pipeline grammar drew it as a node
@@ -75,18 +79,66 @@ def is_card(style_ref: str) -> bool:
     return style_ref.startswith(("code_card.", "evidence."))
 
 
+@dataclass(frozen=True, slots=True)
+class TextStyle:
+    """Resolved typography for a text object: size tier, color, weight, layout.
+
+    ``size`` is a logical pixel height in resolution space; each adapter maps it
+    into its own unit. The fields are baked literally into generated source so a
+    storyboard's type hierarchy reads identically across backends.
+    """
+
+    size: int
+    color: str
+    mono: bool
+    align: str
+    bold: bool
+
+
+_HEADLINE = TextStyle(size=40, color=LABEL_COLOR, mono=False, align="center", bold=True)
+
+
+def text_style(style_ref: str) -> TextStyle:
+    """Return the typography tier for a text object's ``style_ref``.
+
+    Headings and statements are the large standalone tiers; ``*.detail`` is a
+    muted sub-caption; ``*.body`` is a small body tier, monospace and left-aligned
+    for code/evidence cards; titles and bare labels are the headline tier.
+    """
+    if style_ref == "showcase.heading":
+        return TextStyle(size=76, color=LABEL_COLOR, mono=False, align="center", bold=True)
+    if style_ref == "showcase.statement":
+        return TextStyle(size=52, color=LABEL_COLOR, mono=False, align="center", bold=True)
+    if style_ref.endswith(".detail"):
+        return TextStyle(size=26, color=CAPTION_COLOR, mono=False, align="center", bold=False)
+    if style_ref.endswith(".body"):
+        mono = style_ref.startswith(("code_card.", "evidence."))
+        return TextStyle(
+            size=28,
+            color=CODE_TEXT_COLOR if mono else BODY_COLOR,
+            mono=mono,
+            align="left" if mono else "center",
+            bold=False,
+        )
+    return _HEADLINE
+
+
 __all__ = [
     "BACKGROUND",
+    "BODY_COLOR",
     "CAPTION_COLOR",
     "CAPTION_PANEL",
     "CODE_CARD",
+    "CODE_TEXT_COLOR",
     "EDGE_COLOR",
     "EVIDENCE_CARD",
     "LABEL_COLOR",
     "NEUTRAL_FILL",
     "NEUTRAL_STROKE",
     "TYPE_FILL",
+    "TextStyle",
     "box_style",
     "edge_color",
     "is_card",
+    "text_style",
 ]

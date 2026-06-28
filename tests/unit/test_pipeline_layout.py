@@ -65,6 +65,14 @@ def _by_id(resolved: list[ResolvedObject]) -> dict[str, ResolvedObject]:
     return {obj.id: obj for obj in resolved}
 
 
+def _nested(a: ResolvedObject, b: ResolvedObject) -> bool:
+    """A text object fully contained in the other box is legitimate nesting."""
+    if (a.primitive == "text") == (b.primitive == "text"):
+        return False
+    text, container = (a, b) if a.primitive == "text" else (b, a)
+    return contains(container.box, text.box)
+
+
 def test_measure_text_is_fixed_advance() -> None:
     """Measurement is a deterministic fixed-advance metric, font-independent."""
     assert measure_text("abcd")[0] == measure_text("wxyz")[0]
@@ -88,15 +96,15 @@ def test_node_boxes_are_uniform_and_fit_widest_label() -> None:
         assert by_id[f"pipeline.{node}.box"].box.w == expected_w
 
 
-def test_labels_sit_centered_below_their_box() -> None:
-    """Each label is placed below its node-box and horizontally centered in it."""
+def test_labels_sit_centered_inside_their_box() -> None:
+    """Each label is placed inside its node-box and horizontally centered in it."""
     by_id = _by_id(_layout())
     box = by_id["pipeline.documents.box"].box
     label = by_id["pipeline.documents.label"].box
-    assert label.y >= box.y + box.h  # below the box
+    assert box.y <= label.y and label.y + label.h <= box.y + box.h  # inside the box
     box_center = box.x + box.w / 2
     label_center = label.x + label.w / 2
-    assert box_center == label_center  # centered under the box
+    assert box_center == label_center  # centered in the box
 
 
 def test_arrows_occupy_the_inter_box_gap() -> None:
@@ -111,10 +119,12 @@ def test_arrows_occupy_the_inter_box_gap() -> None:
 
 
 def test_layout_has_zero_pairwise_overlap() -> None:
-    """No two resolved boxes share positive area (the milestone acceptance)."""
+    """No two resolved boxes overlap, except a label nested inside its node-box."""
     resolved = _layout()
     collisions = [
-        (a.id, b.id) for a, b in combinations(resolved, 2) if overlaps(a.box, b.box)
+        (a.id, b.id)
+        for a, b in combinations(resolved, 2)
+        if overlaps(a.box, b.box) and not _nested(a, b)
     ]
     assert collisions == []
 

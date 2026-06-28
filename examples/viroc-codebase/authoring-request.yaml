@@ -15,70 +15,127 @@ entities:
 - id: author
   label: User
   type: user
+  detail: you, the author
 - id: repo_context
   label: Repo context
   type: data_source
+  detail: git + symbols
 - id: doc_set
   label: Document set
   type: data_source
+  detail: design + overview
 - id: topic
   label: Topic brief
   type: data_source
+  detail: audience + objective
 - id: planner
   label: Guided planner
   type: service
+  detail: topic to plan
 - id: script
   label: Script
   type: intermediate
+  detail: what is said
 - id: scene_plan
   label: Scene plan
   type: intermediate
+  detail: what is shown
 - id: outline
   label: Outline
   type: intermediate
+  detail: approved structure
 - id: storyboard
   label: Editable VidIR
   type: intermediate
+  detail: the only input
+  body:
+  - 'vidir_version: 0.1'
+  - 'scenes: 7  entities: 22'
 - id: checks
   label: VIR diagnostics
   type: service
+  detail: typed errors
+  body:
+  - 'error VIR1002:'
+  - unknown entity ref
+  - 'help: did you mean ...'
 - id: repaired
   label: Repaired VidIR
   type: intermediate
+  detail: clean to compile
 - id: review
   label: Review surface
   type: data_source
+  detail: inspect first
 - id: scene_cards
   label: Scene cards
   type: intermediate
+  detail: per-scene
 - id: script_review
   label: Script review
   type: intermediate
+  detail: read before render
 - id: concrete_ir
   label: Concrete IR
   type: intermediate
+  detail: resolved + timed
+  body:
+  - objects + boxes
+  - keyframes + captions
 - id: manim_source
   label: Manim source
   type: intermediate
+  detail: scene.py
 - id: html_source
   label: HTML source
   type: intermediate
+  detail: scene.html
 - id: remotion_source
   label: Remotion source
   type: intermediate
+  detail: Composition.tsx
 - id: html_path
   label: HTML path
   type: service
+  detail: browser render
 - id: remotion_path
   label: Remotion path
   type: service
+  detail: react render
 - id: source_hashes
   label: Source hashes
   type: storage
+  detail: byte-stable
+  body:
+  - 'manim    sha256'
+  - 'html     sha256'
+  - 'remotion sha256'
 - id: build_manifest
   label: build.json
   type: storage
+  detail: reproducibility
+  body:
+  - renderer + phash
+  - source_hash + assets
+- id: brand_title
+  label: VIROC
+  type: heading
+- id: brand_claim
+  label: Typed storyboards. Validated before they render.
+  type: statement
+- id: closing_claim
+  label: Reviewable in a PR. Testable in CI. Reproducible by build.
+  type: statement
 scene_seeds:
+- id: title_card
+  title: Title
+  goal: Open on the product promise.
+  narration: From a topic to a verified, portable video.
+  nodes:
+  - brand_title
+  - brand_claim
+  duration: 4s
+  grammar: showcase
 - id: concept_input
   title: Concept input
   goal: 'Start from a concept: a repo, a document set, and a topic brief.'
@@ -121,6 +178,8 @@ scene_seeds:
   - author
   duration: 5s
   grammar: showcase
+  emphasis:
+  - storyboard
 - id: validate_repair
   title: Validate and repair
   goal: viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.
@@ -131,6 +190,8 @@ scene_seeds:
   - repaired
   duration: 6s
   grammar: showcase
+  emphasis:
+  - checks
 - id: storyboard_review
   title: Storyboard review
   goal: The review surface shows scene cards and the script before final render.
@@ -153,6 +214,8 @@ scene_seeds:
   - remotion_source
   duration: 6s
   grammar: showcase
+  emphasis:
+  - concrete_ir
   edges:
   - from: concrete_ir
     to: manim_source
@@ -174,6 +237,8 @@ scene_seeds:
   - build_manifest
   duration: 6s
   grammar: showcase
+  emphasis:
+  - source_hashes
   edges:
   - from: html_path
     to: source_hashes
@@ -181,6 +246,14 @@ scene_seeds:
   - from: remotion_path
     to: build_manifest
     kind: compare
+- id: closing
+  title: Closing
+  goal: Close on the guarantees.
+  narration: Reviewable, testable, reproducible — VidIR is the source of truth.
+  nodes:
+  - closing_claim
+  duration: 4s
+  grammar: showcase
 context:
   notes:
   - VIROC compiles a typed VidIR to Manim, HTML, and Remotion through a pluggable adapter registry.
