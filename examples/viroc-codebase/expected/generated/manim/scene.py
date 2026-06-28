@@ -4,16 +4,19 @@
 # pyright: reportUnknownVariableType=false
 # pyright: reportUnknownMemberType=false
 # pyright: reportUnknownParameterType=false
+# pyright: reportUnknownArgumentType=false
+# pyright: reportArgumentType=false
+# pyright: reportAttributeAccessIssue=false
+# pyright: reportCallIssue=false
 # pyright: reportUntypedBaseClass=false
-from __future__ import annotations
-
 from manim import (
+    BOLD,
     Arrow,
     Create,
     FadeIn,
     FadeOut,
     Indicate,
-    Rectangle,
+    RoundedRectangle,
     Scene,
     Text,
     config,
@@ -21,7 +24,7 @@ from manim import (
     smooth,
 )
 
-# viroc-adapter-source-version: manim-source-v0.1
+# viroc-adapter-source-version: manim-source-v0.2
 config.pixel_width = 1920
 config.pixel_height = 1080
 config.frame_width = 14.222222222222
@@ -29,29 +32,11 @@ config.frame_height = 8
 config.frame_rate = 30
 
 _BACKGROUND = "#0B1020"
-_STYLES = {
-    "edge.default": {"color": "#94A3B8"},
-    "edge.lookup": {"color": "#38BDF8"},
-    "edge.split": {"color": "#38BDF8"},
-    "edge.store": {"color": "#22C55E"},
-    "edge.transform": {"color": "#A78BFA"},
-    "label": {"color": "#E5E7EB"},
-    "node.data_source": {"fill_color": "#1D4ED8", "stroke_color": "#60A5FA"},
-    "node.intermediate": {"fill_color": "#7C3AED", "stroke_color": "#C4B5FD"},
-    "node.model": {"fill_color": "#BE123C", "stroke_color": "#FDA4AF"},
-    "node.process": {"fill_color": "#0891B2", "stroke_color": "#67E8F9"},
-    "node.storage": {"fill_color": "#047857", "stroke_color": "#6EE7B7"},
-}
+_FONT = "Helvetica"
+_FONT_SIZE = 34
+_CAPTION_SIZE = 30
+_CAPTION_COLOR = "#E2E8F0"
 
-
-def _style(ref: str) -> dict[str, str]:
-    return _STYLES.get(ref, {"color": "#E5E7EB"})
-
-
-def _rate_func(name: str):
-    if name == "linear":
-        return linear
-    return smooth
 
 def _x(value: float) -> float:
     return (value / config.pixel_width) * config.frame_width - (config.frame_width / 2)
@@ -73,799 +58,1098 @@ def _center(x: float, y: float, w: float, h: float) -> tuple[float, float, float
     return (_x(x + w / 2), _y(y + h / 2), 0.0)
 
 
-def _rect(x: float, y: float, w: float, h: float, style_ref: str) -> Rectangle:
-    style = _style(style_ref)
-    return Rectangle(
+def _rate_func(name: str):
+    if name == "linear":
+        return linear
+    return smooth
+
+
+def _rect(x: float, y: float, w: float, h: float, fill: str, stroke: str) -> RoundedRectangle:
+    return RoundedRectangle(
         width=_width(w),
         height=_height(h),
-        fill_opacity=0.75,
-        stroke_width=2,
-        **style,
+        corner_radius=min(_width(w), _height(h)) * 0.14,
+        fill_color=fill,
+        fill_opacity=0.92,
+        stroke_color=stroke,
+        stroke_width=3,
     ).move_to(_center(x, y, w, h))
 
 
-def _text(text: str, x: float, y: float, w: float, h: float, style_ref: str) -> Text:
-    style = _style(style_ref)
-    return Text(text, font_size=32, **style).scale_to_fit_width(_width(w)).move_to(
-        _center(x, y, w, h)
-    )
+def _text(text: str, x: float, y: float, w: float, h: float, color: str) -> Text:
+    label = Text(text, font=_FONT, font_size=_FONT_SIZE, color=color, weight=BOLD)
+    max_w = _width(w) * 0.86
+    max_h = _height(h) * 0.72
+    if label.width > max_w:
+        label.scale_to_fit_width(max_w)
+    if label.height > max_h:
+        label.scale_to_fit_height(max_h)
+    return label.move_to(_center(x, y, w, h))
 
 
-def _arrow(x: float, y: float, w: float, h: float, style_ref: str) -> Arrow:
-    style = _style(style_ref)
+def _arrow(x: float, y: float, w: float, h: float, color: str) -> Arrow:
     return Arrow(
         start=(_x(x), _y(y + h / 2), 0.0),
         end=(_x(x + w), _y(y + h / 2), 0.0),
         buff=0,
-        stroke_width=max(_height(h), 2),
-        **style,
+        stroke_width=6,
+        color=color,
+        max_tip_length_to_length_ratio=0.2,
     )
+
+
+def _caption(text: str) -> Text:
+    line = Text(text, font=_FONT, font_size=_CAPTION_SIZE, color=_CAPTION_COLOR)
+    max_w = config.frame_width * 0.86
+    if line.width > max_w:
+        line.scale_to_fit_width(max_w)
+    line.move_to((0.0, -config.frame_height / 2 + line.height / 2 + 0.4, 0.0))
+    return line
 
 class VirocScene(Scene):
     def construct(self) -> None:
         self.camera.background_color = _BACKGROUND
         objects = {}
-        objects["concept_input.repo_context.panel"] = _rect(676, 292, 240, 168, "panel.data_source")
-        objects["concept_input.repo_context.title"] = _text("Repo Context", 712, 472, 168, 36, "showcase.title")
-        objects["concept_input.doc_set.panel"] = _rect(1004, 292, 240, 168, "panel.data_source")
-        objects["concept_input.doc_set.title"] = _text("Doc Set", 1040, 472, 168, 36, "showcase.title")
-        objects["concept_input.topic.panel"] = _rect(676, 572, 240, 168, "panel.data_source")
-        objects["concept_input.topic.title"] = _text("Topic", 719, 752, 154, 36, "showcase.title")
-        objects["concept_input.author.callout"] = _rect(1004, 572, 240, 168, "callout.user")
-        objects["concept_input.author.title"] = _text("Author", 1096, 752, 56, 36, "showcase.title")
-        objects["script_and_scene_plan.planner.panel"] = _rect(664, 432, 252, 168, "panel.service")
-        objects["script_and_scene_plan.planner.title"] = _text("Planner", 692, 612, 196, 36, "showcase.title")
-        objects["script_and_scene_plan.script.code_card"] = _rect(1004, 152, 252, 168, "code_card.intermediate")
-        objects["script_and_scene_plan.script.title"] = _text("Script", 1088, 332, 84, 36, "showcase.title")
-        objects["script_and_scene_plan.scene_plan.code_card"] = _rect(1004, 432, 252, 168, "code_card.intermediate")
-        objects["script_and_scene_plan.scene_plan.title"] = _text("Scene Plan", 1060, 612, 140, 36, "showcase.title")
-        objects["script_and_scene_plan.outline.code_card"] = _rect(1004, 712, 252, 168, "code_card.intermediate")
-        objects["script_and_scene_plan.outline.title"] = _text("Outline", 1081, 892, 98, 36, "showcase.title")
-        objects["script_and_scene_plan.planner.script.link"] = _arrow(916, 232, 88, 8, "edge.split")
-        objects["script_and_scene_plan.planner.scene_plan.link"] = _arrow(916, 512, 88, 8, "edge.split")
-        objects["script_and_scene_plan.planner.outline.link"] = _arrow(916, 792, 88, 8, "edge.split")
-        objects["editable_vidir.outline.code_card"] = _rect(664, 292, 252, 168, "code_card.intermediate")
-        objects["editable_vidir.outline.title"] = _text("Outline", 741, 472, 98, 36, "showcase.title")
-        objects["editable_vidir.storyboard.code_card"] = _rect(1004, 292, 252, 168, "code_card.intermediate")
-        objects["editable_vidir.storyboard.title"] = _text("Storyboard", 1032, 472, 196, 36, "showcase.title")
-        objects["editable_vidir.author.callout"] = _rect(664, 572, 252, 168, "callout.user")
-        objects["editable_vidir.author.title"] = _text("Author", 762, 752, 56, 36, "showcase.title")
-        objects["validate_repair.storyboard.code_card"] = _rect(650, 292, 266, 168, "code_card.intermediate")
-        objects["validate_repair.storyboard.title"] = _text("Storyboard", 685, 472, 196, 36, "showcase.title")
-        objects["validate_repair.checks.panel"] = _rect(1004, 292, 266, 168, "panel.service")
-        objects["validate_repair.checks.title"] = _text("Checks", 1032, 472, 210, 36, "showcase.title")
-        objects["validate_repair.repaired.code_card"] = _rect(650, 572, 266, 168, "code_card.intermediate")
-        objects["validate_repair.repaired.title"] = _text("Repaired", 685, 752, 196, 36, "showcase.title")
-        objects["storyboard_review.review.panel"] = _rect(664, 292, 252, 168, "panel.data_source")
-        objects["storyboard_review.review.title"] = _text("Review", 692, 472, 196, 36, "showcase.title")
-        objects["storyboard_review.scene_cards.code_card"] = _rect(1004, 292, 252, 168, "code_card.intermediate")
-        objects["storyboard_review.scene_cards.title"] = _text("Scene Cards", 1053, 472, 154, 36, "showcase.title")
-        objects["storyboard_review.script_review.code_card"] = _rect(664, 572, 252, 168, "code_card.intermediate")
-        objects["storyboard_review.script_review.title"] = _text("Script Review", 699, 752, 182, 36, "showcase.title")
-        objects["storyboard_review.author.callout"] = _rect(1004, 572, 252, 168, "callout.user")
-        objects["storyboard_review.author.title"] = _text("Author", 1102, 752, 56, 36, "showcase.title")
-        objects["compile_fanout.concrete_ir.code_card"] = _rect(650, 432, 266, 168, "code_card.intermediate")
-        objects["compile_fanout.concrete_ir.title"] = _text("Concrete Ir", 706, 612, 154, 36, "showcase.title")
-        objects["compile_fanout.manim_source.code_card"] = _rect(1004, 152, 266, 168, "code_card.intermediate")
-        objects["compile_fanout.manim_source.title"] = _text("Manim Source", 1053, 332, 168, 36, "showcase.title")
-        objects["compile_fanout.html_source.code_card"] = _rect(1004, 432, 266, 168, "code_card.intermediate")
-        objects["compile_fanout.html_source.title"] = _text("Html Source", 1060, 612, 154, 36, "showcase.title")
-        objects["compile_fanout.remotion_source.code_card"] = _rect(1004, 712, 266, 168, "code_card.intermediate")
-        objects["compile_fanout.remotion_source.title"] = _text("Remotion Source", 1032, 892, 210, 36, "showcase.title")
-        objects["compile_fanout.concrete_ir.manim_source.link"] = _arrow(916, 232, 88, 8, "edge.split")
-        objects["compile_fanout.concrete_ir.html_source.link"] = _arrow(916, 512, 88, 8, "edge.split")
-        objects["compile_fanout.concrete_ir.remotion_source.link"] = _arrow(916, 792, 88, 8, "edge.split")
-        objects["parity_proof.html_path.panel"] = _rect(676, 292, 240, 168, "panel.service")
-        objects["parity_proof.html_path.title"] = _text("Html Path", 733, 472, 126, 36, "showcase.title")
-        objects["parity_proof.remotion_path.panel"] = _rect(676, 572, 240, 168, "panel.service")
-        objects["parity_proof.remotion_path.title"] = _text("Remotion Path", 705, 752, 182, 36, "showcase.title")
-        objects["parity_proof.source_hashes.evidence"] = _rect(1004, 292, 240, 168, "evidence.storage")
-        objects["parity_proof.source_hashes.title"] = _text("Source Hashes", 1033, 472, 182, 36, "showcase.title")
-        objects["parity_proof.build_manifest.evidence"] = _rect(1004, 572, 240, 168, "evidence.storage")
-        objects["parity_proof.build_manifest.title"] = _text("Build Manifest", 1054, 752, 140, 36, "showcase.title")
-        objects["parity_proof.compare.0"] = _arrow(916, 372, 88, 8, "edge.compare")
-        objects["parity_proof.compare.1"] = _arrow(916, 652, 88, 8, "edge.compare")
+        objects["concept_input.repo_context.panel"] = _rect(676, 292, 240, 168, "#1D4ED8", "#60A5FA")
+        objects["concept_input.repo_context.title"] = _text("Repo context", 712, 472, 168, 36, "#F8FAFC")
+        objects["concept_input.doc_set.panel"] = _rect(1004, 292, 240, 168, "#1D4ED8", "#60A5FA")
+        objects["concept_input.doc_set.title"] = _text("Document set", 1040, 472, 168, 36, "#F8FAFC")
+        objects["concept_input.topic.panel"] = _rect(676, 572, 240, 168, "#1D4ED8", "#60A5FA")
+        objects["concept_input.topic.title"] = _text("Topic brief", 719, 752, 154, 36, "#F8FAFC")
+        objects["concept_input.author.callout"] = _rect(1004, 572, 240, 168, "#B45309", "#FBBF24")
+        objects["concept_input.author.title"] = _text("User", 1096, 752, 56, 36, "#F8FAFC")
+        objects["script_and_scene_plan.planner.panel"] = _rect(664, 432, 252, 168, "#0891B2", "#67E8F9")
+        objects["script_and_scene_plan.planner.title"] = _text("Guided planner", 692, 612, 196, 36, "#F8FAFC")
+        objects["script_and_scene_plan.script.code_card"] = _rect(1004, 152, 252, 168, "#1E293B", "#38BDF8")
+        objects["script_and_scene_plan.script.title"] = _text("Script", 1088, 332, 84, 36, "#F8FAFC")
+        objects["script_and_scene_plan.scene_plan.code_card"] = _rect(1004, 432, 252, 168, "#1E293B", "#38BDF8")
+        objects["script_and_scene_plan.scene_plan.title"] = _text("Scene plan", 1060, 612, 140, 36, "#F8FAFC")
+        objects["script_and_scene_plan.outline.code_card"] = _rect(1004, 712, 252, 168, "#1E293B", "#38BDF8")
+        objects["script_and_scene_plan.outline.title"] = _text("Outline", 1081, 892, 98, 36, "#F8FAFC")
+        objects["script_and_scene_plan.planner.script.link"] = _arrow(916, 232, 88, 8, "#38BDF8")
+        objects["script_and_scene_plan.planner.scene_plan.link"] = _arrow(916, 512, 88, 8, "#38BDF8")
+        objects["script_and_scene_plan.planner.outline.link"] = _arrow(916, 792, 88, 8, "#38BDF8")
+        objects["editable_vidir.outline.code_card"] = _rect(664, 292, 252, 168, "#1E293B", "#38BDF8")
+        objects["editable_vidir.outline.title"] = _text("Outline", 741, 472, 98, 36, "#F8FAFC")
+        objects["editable_vidir.storyboard.code_card"] = _rect(1004, 292, 252, 168, "#1E293B", "#38BDF8")
+        objects["editable_vidir.storyboard.title"] = _text("Editable VidIR", 1032, 472, 196, 36, "#F8FAFC")
+        objects["editable_vidir.author.callout"] = _rect(664, 572, 252, 168, "#B45309", "#FBBF24")
+        objects["editable_vidir.author.title"] = _text("User", 762, 752, 56, 36, "#F8FAFC")
+        objects["validate_repair.storyboard.code_card"] = _rect(650, 292, 266, 168, "#1E293B", "#38BDF8")
+        objects["validate_repair.storyboard.title"] = _text("Editable VidIR", 685, 472, 196, 36, "#F8FAFC")
+        objects["validate_repair.checks.panel"] = _rect(1004, 292, 266, 168, "#0891B2", "#67E8F9")
+        objects["validate_repair.checks.title"] = _text("VIR diagnostics", 1032, 472, 210, 36, "#F8FAFC")
+        objects["validate_repair.repaired.code_card"] = _rect(650, 572, 266, 168, "#1E293B", "#38BDF8")
+        objects["validate_repair.repaired.title"] = _text("Repaired VidIR", 685, 752, 196, 36, "#F8FAFC")
+        objects["storyboard_review.review.panel"] = _rect(664, 292, 252, 168, "#1D4ED8", "#60A5FA")
+        objects["storyboard_review.review.title"] = _text("Review surface", 692, 472, 196, 36, "#F8FAFC")
+        objects["storyboard_review.scene_cards.code_card"] = _rect(1004, 292, 252, 168, "#1E293B", "#38BDF8")
+        objects["storyboard_review.scene_cards.title"] = _text("Scene cards", 1053, 472, 154, 36, "#F8FAFC")
+        objects["storyboard_review.script_review.code_card"] = _rect(664, 572, 252, 168, "#1E293B", "#38BDF8")
+        objects["storyboard_review.script_review.title"] = _text("Script review", 699, 752, 182, 36, "#F8FAFC")
+        objects["storyboard_review.author.callout"] = _rect(1004, 572, 252, 168, "#B45309", "#FBBF24")
+        objects["storyboard_review.author.title"] = _text("User", 1102, 752, 56, 36, "#F8FAFC")
+        objects["compile_fanout.concrete_ir.code_card"] = _rect(650, 432, 266, 168, "#1E293B", "#38BDF8")
+        objects["compile_fanout.concrete_ir.title"] = _text("Concrete IR", 706, 612, 154, 36, "#F8FAFC")
+        objects["compile_fanout.manim_source.code_card"] = _rect(1004, 152, 266, 168, "#1E293B", "#38BDF8")
+        objects["compile_fanout.manim_source.title"] = _text("Manim source", 1053, 332, 168, 36, "#F8FAFC")
+        objects["compile_fanout.html_source.code_card"] = _rect(1004, 432, 266, 168, "#1E293B", "#38BDF8")
+        objects["compile_fanout.html_source.title"] = _text("HTML source", 1060, 612, 154, 36, "#F8FAFC")
+        objects["compile_fanout.remotion_source.code_card"] = _rect(1004, 712, 266, 168, "#1E293B", "#38BDF8")
+        objects["compile_fanout.remotion_source.title"] = _text("Remotion source", 1032, 892, 210, 36, "#F8FAFC")
+        objects["compile_fanout.concrete_ir.manim_source.link"] = _arrow(916, 232, 88, 8, "#38BDF8")
+        objects["compile_fanout.concrete_ir.html_source.link"] = _arrow(916, 512, 88, 8, "#38BDF8")
+        objects["compile_fanout.concrete_ir.remotion_source.link"] = _arrow(916, 792, 88, 8, "#38BDF8")
+        objects["parity_proof.html_path.panel"] = _rect(676, 292, 240, 168, "#0891B2", "#67E8F9")
+        objects["parity_proof.html_path.title"] = _text("HTML path", 733, 472, 126, 36, "#F8FAFC")
+        objects["parity_proof.remotion_path.panel"] = _rect(676, 572, 240, 168, "#0891B2", "#67E8F9")
+        objects["parity_proof.remotion_path.title"] = _text("Remotion path", 705, 752, 182, 36, "#F8FAFC")
+        objects["parity_proof.source_hashes.evidence"] = _rect(1004, 292, 240, 168, "#312E81", "#818CF8")
+        objects["parity_proof.source_hashes.title"] = _text("Source hashes", 1033, 472, 182, 36, "#F8FAFC")
+        objects["parity_proof.build_manifest.evidence"] = _rect(1004, 572, 240, 168, "#312E81", "#818CF8")
+        objects["parity_proof.build_manifest.title"] = _text("build.json", 1054, 752, 140, 36, "#F8FAFC")
+        objects["parity_proof.compare.0"] = _arrow(916, 372, 88, 8, "#E879F9")
+        objects["parity_proof.compare.1"] = _arrow(916, 652, 88, 8, "#E879F9")
 
         timeline_f = 0
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         self.play(
             FadeIn(objects["concept_input.repo_context.panel"], rate_func=_rate_func("ease_in_out")),
             run_time=50 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 50
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 6:
             self.wait((6 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["concept_input.repo_context.title"], rate_func=_rate_func("ease_in_out")),
             run_time=44 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 50
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 12:
             self.wait((12 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["concept_input.doc_set.panel"], rate_func=_rate_func("ease_in_out")),
             run_time=38 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 50
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 18:
             self.wait((18 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["concept_input.doc_set.title"], rate_func=_rate_func("ease_in_out")),
             run_time=32 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 50
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 24:
             self.wait((24 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["concept_input.topic.panel"], rate_func=_rate_func("ease_in_out")),
             run_time=26 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 50
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 30:
             self.wait((30 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["concept_input.topic.title"], rate_func=_rate_func("ease_in_out")),
             run_time=20 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 50
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 36:
             self.wait((36 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["concept_input.author.callout"], rate_func=_rate_func("ease_in_out")),
             run_time=14 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 50
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 42:
             self.wait((42 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["concept_input.author.title"], rate_func=_rate_func("ease_in_out")),
             run_time=8 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 50
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 50:
             self.wait((50 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["concept_input.repo_context.panel"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["concept_input.repo_context.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=18 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 68
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 68:
             self.wait((68 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["concept_input.doc_set.panel"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["concept_input.doc_set.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=18 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 86
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 86:
             self.wait((86 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["concept_input.topic.panel"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["concept_input.topic.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=18 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 104
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 104:
             self.wait((104 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["concept_input.author.callout"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["concept_input.author.callout"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=18 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 122
+        caption = _caption("Start from a concept: a repo, a document set, and a topic brief, not renderer code.")
+        self.add(caption)
         if timeline_f < 125:
             self.wait((125 - timeline_f) / config.frame_rate)
         self.play(
-            FadeOut(objects["concept_input.author.callout"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["concept_input.author.title"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["concept_input.doc_set.panel"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["concept_input.doc_set.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["concept_input.repo_context.panel"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["concept_input.repo_context.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["concept_input.doc_set.panel"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["concept_input.doc_set.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["concept_input.topic.panel"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["concept_input.topic.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["concept_input.author.callout"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["concept_input.author.title"], rate_func=_rate_func("ease_in_out")),
             run_time=25 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 150
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 150:
             self.wait((150 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["script_and_scene_plan.planner.panel"], rate_func=_rate_func("ease_in_out")),
             run_time=60 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 155:
             self.wait((155 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["script_and_scene_plan.planner.title"], rate_func=_rate_func("ease_in_out")),
             run_time=55 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 160:
             self.wait((160 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["script_and_scene_plan.script.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=50 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 165:
             self.wait((165 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["script_and_scene_plan.script.title"], rate_func=_rate_func("ease_in_out")),
             run_time=45 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 170:
             self.wait((170 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["script_and_scene_plan.scene_plan.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=40 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 175:
             self.wait((175 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["script_and_scene_plan.scene_plan.title"], rate_func=_rate_func("ease_in_out")),
             run_time=35 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 180:
             self.wait((180 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["script_and_scene_plan.outline.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 185:
             self.wait((185 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["script_and_scene_plan.outline.title"], rate_func=_rate_func("ease_in_out")),
             run_time=25 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 190:
             self.wait((190 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["script_and_scene_plan.planner.script.link"], rate_func=_rate_func("ease_in_out")),
             run_time=20 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 195:
             self.wait((195 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["script_and_scene_plan.planner.scene_plan.link"], rate_func=_rate_func("ease_in_out")),
             run_time=15 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 200:
             self.wait((200 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["script_and_scene_plan.planner.outline.link"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 210:
             self.wait((210 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["script_and_scene_plan.planner.panel"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["script_and_scene_plan.planner.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 232
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 232:
             self.wait((232 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["script_and_scene_plan.script.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["script_and_scene_plan.script.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 254
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 254:
             self.wait((254 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["script_and_scene_plan.scene_plan.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["script_and_scene_plan.scene_plan.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 276
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 276:
             self.wait((276 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["script_and_scene_plan.outline.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["script_and_scene_plan.outline.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 298
+        caption = _caption("The guided planner derives a script, a scene plan, and an outline before any IR exists.")
+        self.add(caption)
         if timeline_f < 300:
             self.wait((300 - timeline_f) / config.frame_rate)
         self.play(
-            FadeOut(objects["script_and_scene_plan.outline.code_card"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["script_and_scene_plan.outline.title"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["script_and_scene_plan.planner.outline.link"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["script_and_scene_plan.planner.panel"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["script_and_scene_plan.planner.scene_plan.link"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["script_and_scene_plan.planner.script.link"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["script_and_scene_plan.planner.title"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["script_and_scene_plan.scene_plan.code_card"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["script_and_scene_plan.scene_plan.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["script_and_scene_plan.script.code_card"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["script_and_scene_plan.script.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["script_and_scene_plan.scene_plan.code_card"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["script_and_scene_plan.scene_plan.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["script_and_scene_plan.outline.code_card"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["script_and_scene_plan.outline.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["script_and_scene_plan.planner.script.link"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["script_and_scene_plan.planner.scene_plan.link"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["script_and_scene_plan.planner.outline.link"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 330
+        caption = _caption("The approved outline becomes editable VidIR the user and agents refine.")
+        self.add(caption)
         if timeline_f < 330:
             self.wait((330 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["editable_vidir.outline.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=50 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 380
+        caption = _caption("The approved outline becomes editable VidIR the user and agents refine.")
+        self.add(caption)
         if timeline_f < 338:
             self.wait((338 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["editable_vidir.outline.title"], rate_func=_rate_func("ease_in_out")),
             run_time=42 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 380
+        caption = _caption("The approved outline becomes editable VidIR the user and agents refine.")
+        self.add(caption)
         if timeline_f < 346:
             self.wait((346 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["editable_vidir.storyboard.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=34 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 380
+        caption = _caption("The approved outline becomes editable VidIR the user and agents refine.")
+        self.add(caption)
         if timeline_f < 354:
             self.wait((354 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["editable_vidir.storyboard.title"], rate_func=_rate_func("ease_in_out")),
             run_time=26 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 380
+        caption = _caption("The approved outline becomes editable VidIR the user and agents refine.")
+        self.add(caption)
         if timeline_f < 362:
             self.wait((362 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["editable_vidir.author.callout"], rate_func=_rate_func("ease_in_out")),
             run_time=18 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 380
+        caption = _caption("The approved outline becomes editable VidIR the user and agents refine.")
+        self.add(caption)
         if timeline_f < 370:
             self.wait((370 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["editable_vidir.author.title"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 380
+        caption = _caption("The approved outline becomes editable VidIR the user and agents refine.")
+        self.add(caption)
         if timeline_f < 380:
             self.wait((380 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["editable_vidir.outline.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["editable_vidir.outline.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=25 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 405
+        caption = _caption("The approved outline becomes editable VidIR the user and agents refine.")
+        self.add(caption)
         if timeline_f < 405:
             self.wait((405 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["editable_vidir.storyboard.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["editable_vidir.storyboard.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=25 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 430
+        caption = _caption("The approved outline becomes editable VidIR the user and agents refine.")
+        self.add(caption)
         if timeline_f < 430:
             self.wait((430 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["editable_vidir.author.callout"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["editable_vidir.author.callout"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=25 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 455
+        caption = _caption("The approved outline becomes editable VidIR the user and agents refine.")
+        self.add(caption)
         if timeline_f < 455:
             self.wait((455 - timeline_f) / config.frame_rate)
         self.play(
-            FadeOut(objects["editable_vidir.author.callout"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["editable_vidir.author.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["editable_vidir.outline.code_card"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["editable_vidir.outline.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["editable_vidir.storyboard.code_card"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["editable_vidir.storyboard.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["editable_vidir.author.callout"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["editable_vidir.author.title"], rate_func=_rate_func("ease_in_out")),
             run_time=25 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 480
+        caption = _caption("viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.")
+        self.add(caption)
         if timeline_f < 480:
             self.wait((480 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["validate_repair.storyboard.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=60 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 540
+        caption = _caption("viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.")
+        self.add(caption)
         if timeline_f < 490:
             self.wait((490 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["validate_repair.storyboard.title"], rate_func=_rate_func("ease_in_out")),
             run_time=50 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 540
+        caption = _caption("viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.")
+        self.add(caption)
         if timeline_f < 500:
             self.wait((500 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["validate_repair.checks.panel"], rate_func=_rate_func("ease_in_out")),
             run_time=40 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 540
+        caption = _caption("viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.")
+        self.add(caption)
         if timeline_f < 510:
             self.wait((510 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["validate_repair.checks.title"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 540
+        caption = _caption("viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.")
+        self.add(caption)
         if timeline_f < 520:
             self.wait((520 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["validate_repair.repaired.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=20 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 540
+        caption = _caption("viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.")
+        self.add(caption)
         if timeline_f < 530:
             self.wait((530 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["validate_repair.repaired.title"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 540
+        caption = _caption("viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.")
+        self.add(caption)
         if timeline_f < 540:
             self.wait((540 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["validate_repair.storyboard.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["validate_repair.storyboard.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 570
+        caption = _caption("viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.")
+        self.add(caption)
         if timeline_f < 570:
             self.wait((570 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["validate_repair.checks.panel"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["validate_repair.checks.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 600
+        caption = _caption("viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.")
+        self.add(caption)
         if timeline_f < 600:
             self.wait((600 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["validate_repair.repaired.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["validate_repair.repaired.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 630
+        caption = _caption("viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.")
+        self.add(caption)
         if timeline_f < 630:
             self.wait((630 - timeline_f) / config.frame_rate)
         self.play(
+            FadeOut(objects["validate_repair.storyboard.code_card"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["validate_repair.storyboard.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["validate_repair.checks.panel"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["validate_repair.checks.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["validate_repair.repaired.code_card"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["validate_repair.repaired.title"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["validate_repair.storyboard.code_card"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["validate_repair.storyboard.title"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 660
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 660:
             self.wait((660 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["storyboard_review.review.panel"], rate_func=_rate_func("ease_in_out")),
             run_time=60 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 720
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 667:
             self.wait((667 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["storyboard_review.review.title"], rate_func=_rate_func("ease_in_out")),
             run_time=53 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 720
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 674:
             self.wait((674 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["storyboard_review.scene_cards.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=46 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 720
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 681:
             self.wait((681 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["storyboard_review.scene_cards.title"], rate_func=_rate_func("ease_in_out")),
             run_time=39 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 720
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 688:
             self.wait((688 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["storyboard_review.script_review.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=32 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 720
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 695:
             self.wait((695 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["storyboard_review.script_review.title"], rate_func=_rate_func("ease_in_out")),
             run_time=25 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 720
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 702:
             self.wait((702 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["storyboard_review.author.callout"], rate_func=_rate_func("ease_in_out")),
             run_time=18 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 720
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 709:
             self.wait((709 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["storyboard_review.author.title"], rate_func=_rate_func("ease_in_out")),
             run_time=11 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 720
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 720:
             self.wait((720 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["storyboard_review.review.panel"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["storyboard_review.review.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 742
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 742:
             self.wait((742 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["storyboard_review.scene_cards.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["storyboard_review.scene_cards.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 764
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 764:
             self.wait((764 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["storyboard_review.script_review.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["storyboard_review.script_review.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 786
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 786:
             self.wait((786 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["storyboard_review.author.callout"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["storyboard_review.author.callout"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 808
+        caption = _caption("The review surface shows scene cards and the script as an inspectable artifact before final render.")
+        self.add(caption)
         if timeline_f < 810:
             self.wait((810 - timeline_f) / config.frame_rate)
         self.play(
-            FadeOut(objects["storyboard_review.author.callout"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["storyboard_review.author.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["storyboard_review.review.panel"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["storyboard_review.review.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["storyboard_review.scene_cards.code_card"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["storyboard_review.scene_cards.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["storyboard_review.script_review.code_card"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["storyboard_review.script_review.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["storyboard_review.author.callout"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["storyboard_review.author.title"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 840
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 840:
             self.wait((840 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["compile_fanout.concrete_ir.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=60 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 845:
             self.wait((845 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["compile_fanout.concrete_ir.title"], rate_func=_rate_func("ease_in_out")),
             run_time=55 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 850:
             self.wait((850 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["compile_fanout.manim_source.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=50 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 855:
             self.wait((855 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["compile_fanout.manim_source.title"], rate_func=_rate_func("ease_in_out")),
             run_time=45 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 860:
             self.wait((860 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["compile_fanout.html_source.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=40 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 865:
             self.wait((865 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["compile_fanout.html_source.title"], rate_func=_rate_func("ease_in_out")),
             run_time=35 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 870:
             self.wait((870 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["compile_fanout.remotion_source.code_card"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 875:
             self.wait((875 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["compile_fanout.remotion_source.title"], rate_func=_rate_func("ease_in_out")),
             run_time=25 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 880:
             self.wait((880 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["compile_fanout.concrete_ir.manim_source.link"], rate_func=_rate_func("ease_in_out")),
             run_time=20 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 885:
             self.wait((885 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["compile_fanout.concrete_ir.html_source.link"], rate_func=_rate_func("ease_in_out")),
             run_time=15 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 890:
             self.wait((890 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["compile_fanout.concrete_ir.remotion_source.link"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 900:
             self.wait((900 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["compile_fanout.concrete_ir.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["compile_fanout.concrete_ir.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 922
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 922:
             self.wait((922 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["compile_fanout.manim_source.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["compile_fanout.manim_source.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 944
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 944:
             self.wait((944 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["compile_fanout.html_source.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["compile_fanout.html_source.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 966
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 966:
             self.wait((966 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["compile_fanout.remotion_source.code_card"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["compile_fanout.remotion_source.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 988
+        caption = _caption("One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.")
+        self.add(caption)
         if timeline_f < 990:
             self.wait((990 - timeline_f) / config.frame_rate)
         self.play(
             FadeOut(objects["compile_fanout.concrete_ir.code_card"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["compile_fanout.concrete_ir.html_source.link"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["compile_fanout.concrete_ir.manim_source.link"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["compile_fanout.concrete_ir.remotion_source.link"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["compile_fanout.concrete_ir.title"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["compile_fanout.html_source.code_card"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["compile_fanout.html_source.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["compile_fanout.manim_source.code_card"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["compile_fanout.manim_source.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["compile_fanout.html_source.code_card"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["compile_fanout.html_source.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["compile_fanout.remotion_source.code_card"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["compile_fanout.remotion_source.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["compile_fanout.concrete_ir.manim_source.link"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["compile_fanout.concrete_ir.html_source.link"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["compile_fanout.concrete_ir.remotion_source.link"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1020
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1020:
             self.wait((1020 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["parity_proof.html_path.panel"], rate_func=_rate_func("ease_in_out")),
             run_time=60 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1080
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1026:
             self.wait((1026 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["parity_proof.html_path.title"], rate_func=_rate_func("ease_in_out")),
             run_time=54 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1080
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1032:
             self.wait((1032 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["parity_proof.remotion_path.panel"], rate_func=_rate_func("ease_in_out")),
             run_time=48 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1080
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1038:
             self.wait((1038 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["parity_proof.remotion_path.title"], rate_func=_rate_func("ease_in_out")),
             run_time=42 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1080
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1044:
             self.wait((1044 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["parity_proof.source_hashes.evidence"], rate_func=_rate_func("ease_in_out")),
             run_time=36 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1080
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1050:
             self.wait((1050 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["parity_proof.source_hashes.title"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1080
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1056:
             self.wait((1056 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["parity_proof.build_manifest.evidence"], rate_func=_rate_func("ease_in_out")),
             run_time=24 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1080
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1062:
             self.wait((1062 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["parity_proof.build_manifest.title"], rate_func=_rate_func("ease_in_out")),
             run_time=18 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1080
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1068:
             self.wait((1068 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["parity_proof.compare.0"], rate_func=_rate_func("ease_in_out")),
             run_time=12 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1080
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1074:
             self.wait((1074 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["parity_proof.compare.1"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1080
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1080:
             self.wait((1080 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["parity_proof.html_path.panel"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["parity_proof.html_path.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1102
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1102:
             self.wait((1102 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["parity_proof.remotion_path.panel"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["parity_proof.remotion_path.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1124
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1124:
             self.wait((1124 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["parity_proof.source_hashes.evidence"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["parity_proof.source_hashes.evidence"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1146
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1146:
             self.wait((1146 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["parity_proof.build_manifest.evidence"], color="#FBBF24", rate_func=_rate_func("ease_in_out")),
+            Indicate(objects["parity_proof.build_manifest.evidence"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
             run_time=22 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1168
+        caption = _caption("Backend paths compared side by side; source hashes and build.json close the proof.")
+        self.add(caption)
         if timeline_f < 1170:
             self.wait((1170 - timeline_f) / config.frame_rate)
         self.play(
-            FadeOut(objects["parity_proof.build_manifest.evidence"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["parity_proof.build_manifest.title"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["parity_proof.compare.0"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["parity_proof.compare.1"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["parity_proof.html_path.panel"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["parity_proof.html_path.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["parity_proof.remotion_path.panel"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["parity_proof.remotion_path.title"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["parity_proof.source_hashes.evidence"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["parity_proof.source_hashes.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["parity_proof.build_manifest.evidence"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["parity_proof.build_manifest.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["parity_proof.compare.0"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["parity_proof.compare.1"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1200

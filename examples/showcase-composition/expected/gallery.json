@@ -40,9 +40,9 @@
       "id": "manim",
       "source_root": "expected/generated/manim",
       "source_entry": "expected/generated/manim/scene.py",
-      "source_hash": "sha256:51db8dad88f912bbe876db82d0d8b04cb3fd399cd6d728f3f82fbb2b8dc58259",
-      "render_status": "env-gated",
-      "render_baseline": null,
+      "source_hash": "sha256:efd0d36e5771862aa945a50a2a81999fc71d2b1586d860dd00da06afab116ae2",
+      "render_status": "baseline-committed",
+      "render_baseline": "expected/manim/render.json",
       "capabilities": {
         "primitives": [
           "arrow",
@@ -65,7 +65,7 @@
       "id": "html",
       "source_root": "expected/generated/html",
       "source_entry": "expected/generated/html/scene.html",
-      "source_hash": "sha256:0ca3acc173f0fa5cdcf696e6a6954bd6c9ad00ba9a928afcd49f861315d1e4ab",
+      "source_hash": "sha256:0f1330cb57bf9e41ed345ee283439a12bf61ba3ab59dcf934beda00151a3aa28",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {
@@ -90,7 +90,7 @@
       "id": "remotion",
       "source_root": "expected/generated/remotion",
       "source_entry": "expected/generated/remotion/package.json",
-      "source_hash": "sha256:57fef780de372ff521a6342052d1acd331abf3580a168467b9573f6bd8c65b01",
+      "source_hash": "sha256:998c6233bac1b2ca42fb1505e597bb0aed03b92303ebd206c0fd31c4e3b5b018",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {
@@ -115,7 +115,7 @@
       "id": "static_storyboard",
       "source_root": "expected/generated/static_storyboard",
       "source_entry": "expected/generated/static_storyboard/storyboard.md",
-      "source_hash": "sha256:1e7704642f264d78787c4fa841edd49dbe2143fe9f9415ad018b1f22ba4d4d82",
+      "source_hash": "sha256:81859157b5ed1f5bf366800ce47cd74799a98377e2fe78f25a3771bba547afb7",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {
@@ -137,5 +137,10 @@
       "degradations": {}
     }
   ],
-  "preview": null
+  "preview": {
+    "backend": "manim",
+    "video_entry": "expected/preview/manim/showcase-composition.mp4",
+    "captions_entry": "expected/preview/manim/captions.srt",
+    "manifest_entry": "expected/preview/manim/build.json"
+  }
 }

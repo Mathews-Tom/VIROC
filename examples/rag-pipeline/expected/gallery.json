@@ -45,7 +45,7 @@
       "id": "manim",
       "source_root": "expected/generated/manim",
       "source_entry": "expected/generated/manim/scene.py",
-      "source_hash": "sha256:e9463d24776476d17e1b9c23a7be230f66d4a48f5cb6c739430fbefe4ea56946",
+      "source_hash": "sha256:6be1007dea16a3162288fbb38eef759276637fbbcd8c8b200eacb0646959eb0c",
       "render_status": "baseline-committed",
       "render_baseline": "expected/manim/render.json",
       "capabilities": {
@@ -70,7 +70,7 @@
       "id": "html",
       "source_root": "expected/generated/html",
       "source_entry": "expected/generated/html/scene.html",
-      "source_hash": "sha256:9929c0439c063d1a3dab82ef351c680f6ab9edd761bc2f8e73e7a39cde63f6b7",
+      "source_hash": "sha256:7b09d44ebd5824d45316f8a28d7b4c2d3f14a5f51469f2f782ec851a6d93068c",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {
@@ -95,7 +95,7 @@
       "id": "remotion",
       "source_root": "expected/generated/remotion",
       "source_entry": "expected/generated/remotion/package.json",
-      "source_hash": "sha256:1aa5b9bb3c3d5778d72655f20a7483f950356165be239dbc3ef6ff44d8a9b64f",
+      "source_hash": "sha256:ee3c919d86964cb7b8c5d4c292c9b778d571bae412d4090643acd58d45878733",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {

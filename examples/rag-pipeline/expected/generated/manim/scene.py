@@ -4,16 +4,19 @@
 # pyright: reportUnknownVariableType=false
 # pyright: reportUnknownMemberType=false
 # pyright: reportUnknownParameterType=false
+# pyright: reportUnknownArgumentType=false
+# pyright: reportArgumentType=false
+# pyright: reportAttributeAccessIssue=false
+# pyright: reportCallIssue=false
 # pyright: reportUntypedBaseClass=false
-from __future__ import annotations
-
 from manim import (
+    BOLD,
     Arrow,
     Create,
     FadeIn,
     FadeOut,
     Indicate,
-    Rectangle,
+    RoundedRectangle,
     Scene,
     Text,
     config,
@@ -21,7 +24,7 @@ from manim import (
     smooth,
 )
 
-# viroc-adapter-source-version: manim-source-v0.1
+# viroc-adapter-source-version: manim-source-v0.2
 config.pixel_width = 1920
 config.pixel_height = 1080
 config.frame_width = 14.222222222222
@@ -29,29 +32,11 @@ config.frame_height = 8
 config.frame_rate = 30
 
 _BACKGROUND = "#0B1020"
-_STYLES = {
-    "edge.default": {"color": "#94A3B8"},
-    "edge.lookup": {"color": "#38BDF8"},
-    "edge.split": {"color": "#38BDF8"},
-    "edge.store": {"color": "#22C55E"},
-    "edge.transform": {"color": "#A78BFA"},
-    "label": {"color": "#E5E7EB"},
-    "node.data_source": {"fill_color": "#1D4ED8", "stroke_color": "#60A5FA"},
-    "node.intermediate": {"fill_color": "#7C3AED", "stroke_color": "#C4B5FD"},
-    "node.model": {"fill_color": "#BE123C", "stroke_color": "#FDA4AF"},
-    "node.process": {"fill_color": "#0891B2", "stroke_color": "#67E8F9"},
-    "node.storage": {"fill_color": "#047857", "stroke_color": "#6EE7B7"},
-}
+_FONT = "Helvetica"
+_FONT_SIZE = 34
+_CAPTION_SIZE = 30
+_CAPTION_COLOR = "#E2E8F0"
 
-
-def _style(ref: str) -> dict[str, str]:
-    return _STYLES.get(ref, {"color": "#E5E7EB"})
-
-
-def _rate_func(name: str):
-    if name == "linear":
-        return linear
-    return smooth
 
 def _x(value: float) -> float:
     return (value / config.pixel_width) * config.frame_width - (config.frame_width / 2)
@@ -73,589 +58,810 @@ def _center(x: float, y: float, w: float, h: float) -> tuple[float, float, float
     return (_x(x + w / 2), _y(y + h / 2), 0.0)
 
 
-def _rect(x: float, y: float, w: float, h: float, style_ref: str) -> Rectangle:
-    style = _style(style_ref)
-    return Rectangle(
+def _rate_func(name: str):
+    if name == "linear":
+        return linear
+    return smooth
+
+
+def _rect(x: float, y: float, w: float, h: float, fill: str, stroke: str) -> RoundedRectangle:
+    return RoundedRectangle(
         width=_width(w),
         height=_height(h),
-        fill_opacity=0.75,
-        stroke_width=2,
-        **style,
+        corner_radius=min(_width(w), _height(h)) * 0.14,
+        fill_color=fill,
+        fill_opacity=0.92,
+        stroke_color=stroke,
+        stroke_width=3,
     ).move_to(_center(x, y, w, h))
 
 
-def _text(text: str, x: float, y: float, w: float, h: float, style_ref: str) -> Text:
-    style = _style(style_ref)
-    return Text(text, font_size=32, **style).scale_to_fit_width(_width(w)).move_to(
-        _center(x, y, w, h)
-    )
+def _text(text: str, x: float, y: float, w: float, h: float, color: str) -> Text:
+    label = Text(text, font=_FONT, font_size=_FONT_SIZE, color=color, weight=BOLD)
+    max_w = _width(w) * 0.86
+    max_h = _height(h) * 0.72
+    if label.width > max_w:
+        label.scale_to_fit_width(max_w)
+    if label.height > max_h:
+        label.scale_to_fit_height(max_h)
+    return label.move_to(_center(x, y, w, h))
 
 
-def _arrow(x: float, y: float, w: float, h: float, style_ref: str) -> Arrow:
-    style = _style(style_ref)
+def _arrow(x: float, y: float, w: float, h: float, color: str) -> Arrow:
     return Arrow(
         start=(_x(x), _y(y + h / 2), 0.0),
         end=(_x(x + w), _y(y + h / 2), 0.0),
         buff=0,
-        stroke_width=max(_height(h), 2),
-        **style,
+        stroke_width=6,
+        color=color,
+        max_tip_length_to_length_ratio=0.2,
     )
+
+
+def _caption(text: str) -> Text:
+    line = Text(text, font=_FONT, font_size=_CAPTION_SIZE, color=_CAPTION_COLOR)
+    max_w = config.frame_width * 0.86
+    if line.width > max_w:
+        line.scale_to_fit_width(max_w)
+    line.move_to((0.0, -config.frame_height / 2 + line.height / 2 + 0.4, 0.0))
+    return line
 
 class VirocScene(Scene):
     def construct(self) -> None:
         self.camera.background_color = _BACKGROUND
         objects = {}
-        objects["problem_setup.query.box"] = _rect(495, 482, 230, 68, "node.data_source")
-        objects["problem_setup.query.label"] = _text("Query", 519, 562, 182, 36, "label")
-        objects["problem_setup.llm.box"] = _rect(845, 482, 230, 68, "node.model")
-        objects["problem_setup.llm.label"] = _text("Llm", 939, 562, 42, 36, "label")
-        objects["problem_setup.documents.box"] = _rect(1195, 482, 230, 68, "node.data_source")
-        objects["problem_setup.documents.label"] = _text("Documents", 1247, 562, 126, 36, "label")
-        objects["problem_setup.query.llm.arrow"] = _arrow(725, 512, 120, 8, "edge.flow")
-        objects["indexing_path.documents.box"] = _rect(264, 482, 258, 68, "node.data_source")
-        objects["indexing_path.documents.label"] = _text("Documents", 330, 562, 126, 36, "label")
-        objects["indexing_path.chunks.box"] = _rect(642, 482, 258, 68, "node.intermediate")
-        objects["indexing_path.chunks.label"] = _text("Chunks", 729, 562, 84, 36, "label")
-        objects["indexing_path.embedder.box"] = _rect(1020, 482, 258, 68, "node.model")
-        objects["indexing_path.embedder.label"] = _text("Embedder", 1044, 562, 210, 36, "label")
-        objects["indexing_path.vector_db.box"] = _rect(1398, 482, 258, 68, "node.storage")
-        objects["indexing_path.vector_db.label"] = _text("Vector Db", 1443, 562, 168, 36, "label")
-        objects["indexing_path.documents.chunks.arrow"] = _arrow(522, 512, 120, 8, "edge.split")
-        objects["indexing_path.chunks.embedder.arrow"] = _arrow(900, 512, 120, 8, "edge.transform")
-        objects["indexing_path.embedder.vector_db.arrow"] = _arrow(1278, 512, 120, 8, "edge.store")
-        objects["retrieval_path.query.box"] = _rect(411, 482, 286, 68, "node.data_source")
-        objects["retrieval_path.query.label"] = _text("Query", 463, 562, 182, 36, "label")
-        objects["retrieval_path.vector_db.box"] = _rect(817, 482, 286, 68, "node.storage")
-        objects["retrieval_path.vector_db.label"] = _text("Vector Db", 876, 562, 168, 36, "label")
-        objects["retrieval_path.retrieved_context.box"] = _rect(1223, 482, 286, 68, "node.intermediate")
-        objects["retrieval_path.retrieved_context.label"] = _text("Retrieved Context", 1247, 562, 238, 36, "label")
-        objects["retrieval_path.query.vector_db.arrow"] = _arrow(697, 512, 120, 8, "edge.flow")
-        objects["retrieval_path.vector_db.retrieved_context.arrow"] = _arrow(1103, 512, 120, 8, "edge.flow")
-        objects["answer_synthesis.query.box"] = _rect(208, 482, 286, 68, "node.data_source")
-        objects["answer_synthesis.query.label"] = _text("Query", 260, 562, 182, 36, "label")
-        objects["answer_synthesis.retrieved_context.box"] = _rect(614, 482, 286, 68, "node.intermediate")
-        objects["answer_synthesis.retrieved_context.label"] = _text("Retrieved Context", 638, 562, 238, 36, "label")
-        objects["answer_synthesis.llm.box"] = _rect(1020, 482, 286, 68, "node.model")
-        objects["answer_synthesis.llm.label"] = _text("Llm", 1142, 562, 42, 36, "label")
-        objects["answer_synthesis.grounded_answer.box"] = _rect(1426, 482, 286, 68, "node.data_source")
-        objects["answer_synthesis.grounded_answer.label"] = _text("Grounded Answer", 1464, 562, 210, 36, "label")
-        objects["answer_synthesis.query.retrieved_context.arrow"] = _arrow(494, 512, 120, 8, "edge.flow")
-        objects["answer_synthesis.retrieved_context.llm.arrow"] = _arrow(900, 512, 120, 8, "edge.merge")
-        objects["answer_synthesis.llm.grounded_answer.arrow"] = _arrow(1306, 512, 120, 8, "edge.transform")
-        objects["payoff.bare_answer.box"] = _rect(390, 482, 300, 68, "node.data_source")
-        objects["payoff.bare_answer.label"] = _text("Bare Answer", 414, 562, 252, 36, "label")
-        objects["payoff.retrieved_context.box"] = _rect(810, 482, 300, 68, "node.intermediate")
-        objects["payoff.retrieved_context.label"] = _text("Retrieved Context", 841, 562, 238, 36, "label")
-        objects["payoff.grounded_answer.box"] = _rect(1230, 482, 300, 68, "node.data_source")
-        objects["payoff.grounded_answer.label"] = _text("Grounded Answer", 1275, 562, 210, 36, "label")
-        objects["payoff.bare_answer.retrieved_context.arrow"] = _arrow(690, 512, 120, 8, "edge.compare")
-        objects["payoff.retrieved_context.grounded_answer.arrow"] = _arrow(1110, 512, 120, 8, "edge.merge")
+        objects["problem_setup.query.box"] = _rect(495, 482, 230, 68, "#1D4ED8", "#60A5FA")
+        objects["problem_setup.query.label"] = _text("User question", 519, 562, 182, 36, "#F8FAFC")
+        objects["problem_setup.llm.box"] = _rect(845, 482, 230, 68, "#BE123C", "#FDA4AF")
+        objects["problem_setup.llm.label"] = _text("LLM", 939, 562, 42, 36, "#F8FAFC")
+        objects["problem_setup.documents.box"] = _rect(1195, 482, 230, 68, "#1D4ED8", "#60A5FA")
+        objects["problem_setup.documents.label"] = _text("Documents", 1247, 562, 126, 36, "#F8FAFC")
+        objects["problem_setup.query.llm.arrow"] = _arrow(725, 512, 120, 8, "#94A3B8")
+        objects["indexing_path.documents.box"] = _rect(264, 482, 258, 68, "#1D4ED8", "#60A5FA")
+        objects["indexing_path.documents.label"] = _text("Documents", 330, 562, 126, 36, "#F8FAFC")
+        objects["indexing_path.chunks.box"] = _rect(642, 482, 258, 68, "#7C3AED", "#C4B5FD")
+        objects["indexing_path.chunks.label"] = _text("Chunks", 729, 562, 84, 36, "#F8FAFC")
+        objects["indexing_path.embedder.box"] = _rect(1020, 482, 258, 68, "#BE123C", "#FDA4AF")
+        objects["indexing_path.embedder.label"] = _text("Embedding model", 1044, 562, 210, 36, "#F8FAFC")
+        objects["indexing_path.vector_db.box"] = _rect(1398, 482, 258, 68, "#047857", "#6EE7B7")
+        objects["indexing_path.vector_db.label"] = _text("Vector store", 1443, 562, 168, 36, "#F8FAFC")
+        objects["indexing_path.documents.chunks.arrow"] = _arrow(522, 512, 120, 8, "#38BDF8")
+        objects["indexing_path.chunks.embedder.arrow"] = _arrow(900, 512, 120, 8, "#A78BFA")
+        objects["indexing_path.embedder.vector_db.arrow"] = _arrow(1278, 512, 120, 8, "#22C55E")
+        objects["retrieval_path.query.box"] = _rect(411, 482, 286, 68, "#1D4ED8", "#60A5FA")
+        objects["retrieval_path.query.label"] = _text("User question", 463, 562, 182, 36, "#F8FAFC")
+        objects["retrieval_path.vector_db.box"] = _rect(817, 482, 286, 68, "#047857", "#6EE7B7")
+        objects["retrieval_path.vector_db.label"] = _text("Vector store", 876, 562, 168, 36, "#F8FAFC")
+        objects["retrieval_path.retrieved_context.box"] = _rect(1223, 482, 286, 68, "#7C3AED", "#C4B5FD")
+        objects["retrieval_path.retrieved_context.label"] = _text("Retrieved context", 1247, 562, 238, 36, "#F8FAFC")
+        objects["retrieval_path.query.vector_db.arrow"] = _arrow(697, 512, 120, 8, "#94A3B8")
+        objects["retrieval_path.vector_db.retrieved_context.arrow"] = _arrow(1103, 512, 120, 8, "#94A3B8")
+        objects["answer_synthesis.query.box"] = _rect(208, 482, 286, 68, "#1D4ED8", "#60A5FA")
+        objects["answer_synthesis.query.label"] = _text("User question", 260, 562, 182, 36, "#F8FAFC")
+        objects["answer_synthesis.retrieved_context.box"] = _rect(614, 482, 286, 68, "#7C3AED", "#C4B5FD")
+        objects["answer_synthesis.retrieved_context.label"] = _text("Retrieved context", 638, 562, 238, 36, "#F8FAFC")
+        objects["answer_synthesis.llm.box"] = _rect(1020, 482, 286, 68, "#BE123C", "#FDA4AF")
+        objects["answer_synthesis.llm.label"] = _text("LLM", 1142, 562, 42, 36, "#F8FAFC")
+        objects["answer_synthesis.grounded_answer.box"] = _rect(1426, 482, 286, 68, "#1D4ED8", "#60A5FA")
+        objects["answer_synthesis.grounded_answer.label"] = _text("Grounded answer", 1464, 562, 210, 36, "#F8FAFC")
+        objects["answer_synthesis.query.retrieved_context.arrow"] = _arrow(494, 512, 120, 8, "#94A3B8")
+        objects["answer_synthesis.retrieved_context.llm.arrow"] = _arrow(900, 512, 120, 8, "#F59E0B")
+        objects["answer_synthesis.llm.grounded_answer.arrow"] = _arrow(1306, 512, 120, 8, "#A78BFA")
+        objects["payoff.bare_answer.box"] = _rect(390, 482, 300, 68, "#1D4ED8", "#60A5FA")
+        objects["payoff.bare_answer.label"] = _text("Bare prompt answer", 414, 562, 252, 36, "#F8FAFC")
+        objects["payoff.retrieved_context.box"] = _rect(810, 482, 300, 68, "#7C3AED", "#C4B5FD")
+        objects["payoff.retrieved_context.label"] = _text("Retrieved context", 841, 562, 238, 36, "#F8FAFC")
+        objects["payoff.grounded_answer.box"] = _rect(1230, 482, 300, 68, "#1D4ED8", "#60A5FA")
+        objects["payoff.grounded_answer.label"] = _text("Grounded answer", 1275, 562, 210, 36, "#F8FAFC")
+        objects["payoff.bare_answer.retrieved_context.arrow"] = _arrow(690, 512, 120, 8, "#E879F9")
+        objects["payoff.retrieved_context.grounded_answer.arrow"] = _arrow(1110, 512, 120, 8, "#F59E0B")
 
         timeline_f = 0
+        caption = _caption("A user question reaches the model, but the answer still needs the document corpus.")
+        self.add(caption)
         self.play(
             FadeIn(objects["problem_setup.query.box"], rate_func=_rate_func("ease_in_out")),
             run_time=8 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 8
+        caption = _caption("A user question reaches the model, but the answer still needs the document corpus.")
+        self.add(caption)
         if timeline_f < 8:
             self.wait((8 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["problem_setup.query.label"], rate_func=_rate_func("ease_in_out")),
             run_time=8 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 16
+        caption = _caption("A user question reaches the model, but the answer still needs the document corpus.")
+        self.add(caption)
         if timeline_f < 16:
             self.wait((16 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["problem_setup.llm.box"], rate_func=_rate_func("ease_in_out")),
             run_time=8 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 24
+        caption = _caption("A user question reaches the model, but the answer still needs the document corpus.")
+        self.add(caption)
         if timeline_f < 24:
             self.wait((24 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["problem_setup.llm.label"], rate_func=_rate_func("ease_in_out")),
             run_time=8 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 32
+        caption = _caption("A user question reaches the model, but the answer still needs the document corpus.")
+        self.add(caption)
         if timeline_f < 32:
             self.wait((32 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["problem_setup.documents.box"], rate_func=_rate_func("ease_in_out")),
             run_time=8 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 40
+        caption = _caption("A user question reaches the model, but the answer still needs the document corpus.")
+        self.add(caption)
         if timeline_f < 40:
             self.wait((40 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["problem_setup.documents.label"], rate_func=_rate_func("ease_in_out")),
             run_time=8 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 48
+        caption = _caption("A user question reaches the model, but the answer still needs the document corpus.")
+        self.add(caption)
         if timeline_f < 48:
             self.wait((48 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["problem_setup.query.llm.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=8 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 56
+        caption = _caption("A user question reaches the model, but the answer still needs the document corpus.")
+        self.add(caption)
         if timeline_f < 60:
             self.wait((60 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["problem_setup.query.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["problem_setup.query.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 90
+        caption = _caption("A user question reaches the model, but the answer still needs the document corpus.")
+        self.add(caption)
         if timeline_f < 90:
             self.wait((90 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["problem_setup.llm.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["problem_setup.llm.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 120
+        caption = _caption("A user question reaches the model, but the answer still needs the document corpus.")
+        self.add(caption)
         if timeline_f < 120:
             self.wait((120 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["problem_setup.documents.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["problem_setup.documents.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 150
+        caption = _caption("A user question reaches the model, but the answer still needs the document corpus.")
+        self.add(caption)
         if timeline_f < 150:
             self.wait((150 - timeline_f) / config.frame_rate)
         self.play(
-            FadeOut(objects["problem_setup.documents.box"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["problem_setup.documents.label"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["problem_setup.llm.box"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["problem_setup.llm.label"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["problem_setup.query.box"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["problem_setup.query.label"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["problem_setup.llm.box"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["problem_setup.llm.label"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["problem_setup.documents.box"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["problem_setup.documents.label"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["problem_setup.query.llm.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 180
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 180:
             self.wait((180 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["indexing_path.documents.box"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 186
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 186:
             self.wait((186 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["indexing_path.documents.label"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 192
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 192:
             self.wait((192 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["indexing_path.chunks.box"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 198
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 198:
             self.wait((198 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["indexing_path.chunks.label"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 204
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 204:
             self.wait((204 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["indexing_path.embedder.box"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 210
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 210:
             self.wait((210 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["indexing_path.embedder.label"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 216
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 216:
             self.wait((216 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["indexing_path.vector_db.box"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 222
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 222:
             self.wait((222 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["indexing_path.vector_db.label"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 228
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 228:
             self.wait((228 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["indexing_path.documents.chunks.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 234
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 234:
             self.wait((234 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["indexing_path.chunks.embedder.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 240
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 240:
             self.wait((240 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["indexing_path.embedder.vector_db.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 246
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 250:
             self.wait((250 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["indexing_path.documents.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["indexing_path.documents.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=26 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 276
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 276:
             self.wait((276 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["indexing_path.chunks.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["indexing_path.chunks.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=26 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 302
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 302:
             self.wait((302 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["indexing_path.embedder.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["indexing_path.embedder.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=26 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 328
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 328:
             self.wait((328 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["indexing_path.vector_db.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["indexing_path.vector_db.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=26 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 354
+        caption = _caption("VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.")
+        self.add(caption)
         if timeline_f < 355:
             self.wait((355 - timeline_f) / config.frame_rate)
         self.play(
-            FadeOut(objects["indexing_path.chunks.box"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["indexing_path.chunks.embedder.arrow"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["indexing_path.chunks.label"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["indexing_path.documents.box"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["indexing_path.documents.chunks.arrow"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["indexing_path.documents.label"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["indexing_path.chunks.box"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["indexing_path.chunks.label"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["indexing_path.embedder.box"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["indexing_path.embedder.label"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["indexing_path.embedder.vector_db.arrow"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["indexing_path.vector_db.box"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["indexing_path.vector_db.label"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["indexing_path.documents.chunks.arrow"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["indexing_path.chunks.embedder.arrow"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["indexing_path.embedder.vector_db.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=35 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 390
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 390:
             self.wait((390 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["retrieval_path.query.box"], rate_func=_rate_func("ease_in_out")),
             run_time=7 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 397
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 397:
             self.wait((397 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["retrieval_path.query.label"], rate_func=_rate_func("ease_in_out")),
             run_time=7 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 404
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 404:
             self.wait((404 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["retrieval_path.vector_db.box"], rate_func=_rate_func("ease_in_out")),
             run_time=7 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 411
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 411:
             self.wait((411 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["retrieval_path.vector_db.label"], rate_func=_rate_func("ease_in_out")),
             run_time=7 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 418
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 418:
             self.wait((418 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["retrieval_path.retrieved_context.box"], rate_func=_rate_func("ease_in_out")),
             run_time=7 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 425
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 425:
             self.wait((425 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["retrieval_path.retrieved_context.label"], rate_func=_rate_func("ease_in_out")),
             run_time=7 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 432
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 432:
             self.wait((432 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["retrieval_path.query.vector_db.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=7 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 439
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 439:
             self.wait((439 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["retrieval_path.vector_db.retrieved_context.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=7 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 446
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 450:
             self.wait((450 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["retrieval_path.query.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["retrieval_path.query.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 480
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 480:
             self.wait((480 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["retrieval_path.vector_db.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["retrieval_path.vector_db.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 510
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 510:
             self.wait((510 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["retrieval_path.retrieved_context.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["retrieval_path.retrieved_context.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 540
+        caption = _caption("At query time, the same question probes the vector store and pulls back the nearest context.")
+        self.add(caption)
         if timeline_f < 540:
             self.wait((540 - timeline_f) / config.frame_rate)
         self.play(
             FadeOut(objects["retrieval_path.query.box"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["retrieval_path.query.label"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["retrieval_path.query.vector_db.arrow"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["retrieval_path.retrieved_context.box"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["retrieval_path.retrieved_context.label"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["retrieval_path.vector_db.box"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["retrieval_path.vector_db.label"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["retrieval_path.retrieved_context.box"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["retrieval_path.retrieved_context.label"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["retrieval_path.query.vector_db.arrow"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["retrieval_path.vector_db.retrieved_context.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 570
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 570:
             self.wait((570 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["answer_synthesis.query.box"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 576
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 576:
             self.wait((576 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["answer_synthesis.query.label"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 582
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 582:
             self.wait((582 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["answer_synthesis.retrieved_context.box"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 588
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 588:
             self.wait((588 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["answer_synthesis.retrieved_context.label"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 594
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 594:
             self.wait((594 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["answer_synthesis.llm.box"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 600
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 600:
             self.wait((600 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["answer_synthesis.llm.label"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 606
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 606:
             self.wait((606 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["answer_synthesis.grounded_answer.box"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 612
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 612:
             self.wait((612 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["answer_synthesis.grounded_answer.label"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 618
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 618:
             self.wait((618 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["answer_synthesis.query.retrieved_context.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 624
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 624:
             self.wait((624 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["answer_synthesis.retrieved_context.llm.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 630
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 630:
             self.wait((630 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["answer_synthesis.llm.grounded_answer.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=6 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 636
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 640:
             self.wait((640 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["answer_synthesis.query.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["answer_synthesis.query.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=26 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 666
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 666:
             self.wait((666 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["answer_synthesis.retrieved_context.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["answer_synthesis.retrieved_context.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=26 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 692
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 692:
             self.wait((692 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["answer_synthesis.llm.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["answer_synthesis.llm.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=26 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 718
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 718:
             self.wait((718 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["answer_synthesis.grounded_answer.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["answer_synthesis.grounded_answer.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=26 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 744
+        caption = _caption("The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.")
+        self.add(caption)
         if timeline_f < 745:
             self.wait((745 - timeline_f) / config.frame_rate)
         self.play(
-            FadeOut(objects["answer_synthesis.grounded_answer.box"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["answer_synthesis.grounded_answer.label"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["answer_synthesis.llm.box"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["answer_synthesis.llm.grounded_answer.arrow"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["answer_synthesis.llm.label"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["answer_synthesis.query.box"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["answer_synthesis.query.label"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["answer_synthesis.query.retrieved_context.arrow"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["answer_synthesis.retrieved_context.box"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["answer_synthesis.retrieved_context.label"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["answer_synthesis.llm.box"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["answer_synthesis.llm.label"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["answer_synthesis.grounded_answer.box"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["answer_synthesis.grounded_answer.label"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["answer_synthesis.query.retrieved_context.arrow"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["answer_synthesis.retrieved_context.llm.arrow"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["answer_synthesis.llm.grounded_answer.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=35 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 780
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 780:
             self.wait((780 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["payoff.bare_answer.box"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 790
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 790:
             self.wait((790 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["payoff.bare_answer.label"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 800
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 800:
             self.wait((800 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["payoff.retrieved_context.box"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 810
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 810:
             self.wait((810 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["payoff.retrieved_context.label"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 820
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 820:
             self.wait((820 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["payoff.grounded_answer.box"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 830
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 830:
             self.wait((830 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["payoff.grounded_answer.label"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 840
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 840:
             self.wait((840 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["payoff.bare_answer.retrieved_context.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 850
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 850:
             self.wait((850 - timeline_f) / config.frame_rate)
         self.play(
             Create(objects["payoff.retrieved_context.grounded_answer.arrow"], rate_func=_rate_func("ease_in_out")),
             run_time=10 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 860
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 860:
             self.wait((860 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["payoff.bare_answer.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["payoff.bare_answer.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=40 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 900
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 900:
             self.wait((900 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["payoff.retrieved_context.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["payoff.retrieved_context.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=40 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 940
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 940:
             self.wait((940 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["payoff.grounded_answer.box"], color="#FBBF24", rate_func=_rate_func("linear")),
+            Indicate(objects["payoff.grounded_answer.box"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("linear")),
             run_time=40 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 980
+        caption = _caption("The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.")
+        self.add(caption)
         if timeline_f < 980:
             self.wait((980 - timeline_f) / config.frame_rate)
         self.play(
             FadeOut(objects["payoff.bare_answer.box"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["payoff.bare_answer.label"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["payoff.bare_answer.retrieved_context.arrow"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["payoff.retrieved_context.box"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["payoff.retrieved_context.label"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["payoff.grounded_answer.box"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["payoff.grounded_answer.label"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["payoff.retrieved_context.box"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["payoff.bare_answer.retrieved_context.arrow"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["payoff.retrieved_context.grounded_answer.arrow"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["payoff.retrieved_context.label"], rate_func=_rate_func("ease_in_out")),
             run_time=40 / config.frame_rate,
         )
+        self.remove(caption)
         timeline_f = 1020

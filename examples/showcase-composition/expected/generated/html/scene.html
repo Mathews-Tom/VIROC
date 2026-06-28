@@ -5,7 +5,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>VIROC Scene</title>
-<!-- viroc-adapter-source-version: html-source-v0.1 -->
+<!-- viroc-adapter-source-version: html-source-v0.2 -->
 <style>
 :root {
   color-scheme: dark;
@@ -147,35 +147,35 @@ body {
 <body>
 <main id="scene" role="img" aria-label="VIROC scene" data-fps="30" data-total-frames="540" style="width:1920px;height:1080px">
   <div class="layer" id="object-layer">
-    <div class="object primitive-rect style-panel-data-source" data-object-id="primitives.input_panel.panel" style="left:664px;top:292px;width:252px;height:168px;z-index:0;--color:#E5E7EB"></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="primitives.input_panel.title" style="left:692px;top:472px;width:196px;height:36px;z-index:0;--color:#E5E7EB"><span>Input Panel</span></div>
-    <div class="object primitive-code style-code-card-intermediate" data-object-id="primitives.ir_card.code_card" style="left:1004px;top:292px;width:252px;height:168px;z-index:0;--color:#E5E7EB"><pre><code>Code Card</code></pre></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="primitives.ir_card.title" style="left:1053px;top:472px;width:154px;height:36px;z-index:0;--color:#E5E7EB"><span>Ir Card</span></div>
-    <div class="object primitive-rect style-callout-user" data-object-id="primitives.author_note.callout" style="left:664px;top:572px;width:252px;height:168px;z-index:0;--color:#E5E7EB"></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="primitives.author_note.title" style="left:713px;top:752px;width:154px;height:36px;z-index:0;--color:#E5E7EB"><span>Author Note</span></div>
-    <div class="object primitive-formula style-evidence-storage" data-object-id="primitives.proof_block.evidence" style="left:1004px;top:572px;width:252px;height:168px;z-index:0;--color:#E5E7EB"><div>Evidence</div></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="primitives.proof_block.title" style="left:1039px;top:752px;width:182px;height:36px;z-index:0;--color:#E5E7EB"><span>Proof Block</span></div>
-    <div class="object primitive-rect style-panel-service" data-object-id="fanout.resolver.panel" style="left:664px;top:432px;width:252px;height:168px;z-index:0;--color:#E5E7EB"></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="fanout.resolver.title" style="left:734px;top:612px;width:112px;height:36px;z-index:0;--color:#E5E7EB"><span>Resolver</span></div>
-    <div class="object primitive-code style-code-card-intermediate" data-object-id="fanout.concrete_ir.code_card" style="left:1004px;top:152px;width:252px;height:168px;z-index:0;--color:#E5E7EB"><pre><code>Code Card</code></pre></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="fanout.concrete_ir.title" style="left:1053px;top:332px;width:154px;height:36px;z-index:0;--color:#E5E7EB"><span>Concrete Ir</span></div>
-    <div class="object primitive-rect style-panel-data-source" data-object-id="fanout.review_surface.panel" style="left:1004px;top:432px;width:252px;height:168px;z-index:0;--color:#E5E7EB"></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="fanout.review_surface.title" style="left:1032px;top:612px;width:196px;height:36px;z-index:0;--color:#E5E7EB"><span>Review Surface</span></div>
-    <div class="object primitive-formula style-evidence-storage" data-object-id="fanout.build_manifest.evidence" style="left:1004px;top:712px;width:252px;height:168px;z-index:0;--color:#E5E7EB"><div>Evidence</div></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="fanout.build_manifest.title" style="left:1060px;top:892px;width:140px;height:36px;z-index:0;--color:#E5E7EB"><span>Build Manifest</span></div>
+    <div class="object primitive-rect style-panel-data-source" data-object-id="primitives.input_panel.panel" style="left:664px;top:292px;width:252px;height:168px;z-index:0;--fill-color:#1D4ED8;--stroke-color:#60A5FA"></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="primitives.input_panel.title" style="left:692px;top:472px;width:196px;height:36px;z-index:0;--color:#F8FAFC"><span>Authored input</span></div>
+    <div class="object primitive-code style-code-card-intermediate" data-object-id="primitives.ir_card.code_card" style="left:1004px;top:292px;width:252px;height:168px;z-index:0;--fill-color:#1E293B;--stroke-color:#38BDF8"><pre><code>Code Card</code></pre></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="primitives.ir_card.title" style="left:1053px;top:472px;width:154px;height:36px;z-index:0;--color:#F8FAFC"><span>Semantic IR</span></div>
+    <div class="object primitive-rect style-callout-user" data-object-id="primitives.author_note.callout" style="left:664px;top:572px;width:252px;height:168px;z-index:0;--fill-color:#B45309;--stroke-color:#FBBF24"></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="primitives.author_note.title" style="left:713px;top:752px;width:154px;height:36px;z-index:0;--color:#F8FAFC"><span>Author note</span></div>
+    <div class="object primitive-formula style-evidence-storage" data-object-id="primitives.proof_block.evidence" style="left:1004px;top:572px;width:252px;height:168px;z-index:0;--fill-color:#312E81;--stroke-color:#818CF8"><div>Evidence</div></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="primitives.proof_block.title" style="left:1039px;top:752px;width:182px;height:36px;z-index:0;--color:#F8FAFC"><span>Source hashes</span></div>
+    <div class="object primitive-rect style-panel-service" data-object-id="fanout.resolver.panel" style="left:664px;top:432px;width:252px;height:168px;z-index:0;--fill-color:#0891B2;--stroke-color:#67E8F9"></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="fanout.resolver.title" style="left:734px;top:612px;width:112px;height:36px;z-index:0;--color:#F8FAFC"><span>Resolver</span></div>
+    <div class="object primitive-code style-code-card-intermediate" data-object-id="fanout.concrete_ir.code_card" style="left:1004px;top:152px;width:252px;height:168px;z-index:0;--fill-color:#1E293B;--stroke-color:#38BDF8"><pre><code>Code Card</code></pre></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="fanout.concrete_ir.title" style="left:1053px;top:332px;width:154px;height:36px;z-index:0;--color:#F8FAFC"><span>Concrete IR</span></div>
+    <div class="object primitive-rect style-panel-data-source" data-object-id="fanout.review_surface.panel" style="left:1004px;top:432px;width:252px;height:168px;z-index:0;--fill-color:#1D4ED8;--stroke-color:#60A5FA"></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="fanout.review_surface.title" style="left:1032px;top:612px;width:196px;height:36px;z-index:0;--color:#F8FAFC"><span>Review surface</span></div>
+    <div class="object primitive-formula style-evidence-storage" data-object-id="fanout.build_manifest.evidence" style="left:1004px;top:712px;width:252px;height:168px;z-index:0;--fill-color:#312E81;--stroke-color:#818CF8"><div>Evidence</div></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="fanout.build_manifest.title" style="left:1060px;top:892px;width:140px;height:36px;z-index:0;--color:#F8FAFC"><span>build.json</span></div>
     <div class="object primitive-arrow style-edge-split" data-object-id="fanout.resolver.concrete_ir.link" style="left:916px;top:232px;width:88px;height:8px;z-index:0;--color:#38BDF8"><svg viewBox="0 0 88 8" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="4" x2="76" y2="4" stroke-width="8" /><path d="M 76 0 L 88 4 L 76 8 Z" /></svg></div>
     <div class="object primitive-arrow style-edge-split" data-object-id="fanout.resolver.review_surface.link" style="left:916px;top:512px;width:88px;height:8px;z-index:0;--color:#38BDF8"><svg viewBox="0 0 88 8" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="4" x2="76" y2="4" stroke-width="8" /><path d="M 76 0 L 88 4 L 76 8 Z" /></svg></div>
     <div class="object primitive-arrow style-edge-split" data-object-id="fanout.resolver.build_manifest.link" style="left:916px;top:792px;width:88px;height:8px;z-index:0;--color:#38BDF8"><svg viewBox="0 0 88 8" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="4" x2="76" y2="4" stroke-width="8" /><path d="M 76 0 L 88 4 L 76 8 Z" /></svg></div>
-    <div class="object primitive-rect style-panel-service" data-object-id="comparison.html_path.panel" style="left:650px;top:292px;width:266px;height:168px;z-index:0;--color:#E5E7EB"></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="comparison.html_path.title" style="left:720px;top:472px;width:126px;height:36px;z-index:0;--color:#E5E7EB"><span>Html Path</span></div>
-    <div class="object primitive-rect style-panel-service" data-object-id="comparison.remotion_path.panel" style="left:650px;top:572px;width:266px;height:168px;z-index:0;--color:#E5E7EB"></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="comparison.remotion_path.title" style="left:692px;top:752px;width:182px;height:36px;z-index:0;--color:#E5E7EB"><span>Remotion Path</span></div>
-    <div class="object primitive-code style-code-card-intermediate" data-object-id="comparison.html_source.code_card" style="left:1004px;top:292px;width:266px;height:168px;z-index:0;--color:#E5E7EB"><pre><code>Code Card</code></pre></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="comparison.html_source.title" style="left:1067px;top:472px;width:140px;height:36px;z-index:0;--color:#E5E7EB"><span>Html Source</span></div>
-    <div class="object primitive-code style-code-card-intermediate" data-object-id="comparison.remotion_source.code_card" style="left:1004px;top:572px;width:266px;height:168px;z-index:0;--color:#E5E7EB"><pre><code>Code Card</code></pre></div>
-    <div class="object primitive-text style-showcase-title" data-object-id="comparison.remotion_source.title" style="left:1032px;top:752px;width:210px;height:36px;z-index:0;--color:#E5E7EB"><span>Remotion Source</span></div>
-    <div class="object primitive-arrow style-edge-compare" data-object-id="comparison.compare.0" style="left:916px;top:372px;width:88px;height:8px;z-index:0;--color:#E5E7EB"><svg viewBox="0 0 88 8" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="4" x2="76" y2="4" stroke-width="8" /><path d="M 76 0 L 88 4 L 76 8 Z" /></svg></div>
-    <div class="object primitive-arrow style-edge-compare" data-object-id="comparison.compare.1" style="left:916px;top:652px;width:88px;height:8px;z-index:0;--color:#E5E7EB"><svg viewBox="0 0 88 8" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="4" x2="76" y2="4" stroke-width="8" /><path d="M 76 0 L 88 4 L 76 8 Z" /></svg></div>
+    <div class="object primitive-rect style-panel-service" data-object-id="comparison.html_path.panel" style="left:650px;top:292px;width:266px;height:168px;z-index:0;--fill-color:#0891B2;--stroke-color:#67E8F9"></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="comparison.html_path.title" style="left:720px;top:472px;width:126px;height:36px;z-index:0;--color:#F8FAFC"><span>HTML path</span></div>
+    <div class="object primitive-rect style-panel-service" data-object-id="comparison.remotion_path.panel" style="left:650px;top:572px;width:266px;height:168px;z-index:0;--fill-color:#0891B2;--stroke-color:#67E8F9"></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="comparison.remotion_path.title" style="left:692px;top:752px;width:182px;height:36px;z-index:0;--color:#F8FAFC"><span>Remotion path</span></div>
+    <div class="object primitive-code style-code-card-intermediate" data-object-id="comparison.html_source.code_card" style="left:1004px;top:292px;width:266px;height:168px;z-index:0;--fill-color:#1E293B;--stroke-color:#38BDF8"><pre><code>Code Card</code></pre></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="comparison.html_source.title" style="left:1067px;top:472px;width:140px;height:36px;z-index:0;--color:#F8FAFC"><span>scene.html</span></div>
+    <div class="object primitive-code style-code-card-intermediate" data-object-id="comparison.remotion_source.code_card" style="left:1004px;top:572px;width:266px;height:168px;z-index:0;--fill-color:#1E293B;--stroke-color:#38BDF8"><pre><code>Code Card</code></pre></div>
+    <div class="object primitive-text style-showcase-title" data-object-id="comparison.remotion_source.title" style="left:1032px;top:752px;width:210px;height:36px;z-index:0;--color:#F8FAFC"><span>Composition.tsx</span></div>
+    <div class="object primitive-arrow style-edge-compare" data-object-id="comparison.compare.0" style="left:916px;top:372px;width:88px;height:8px;z-index:0;--color:#E879F9"><svg viewBox="0 0 88 8" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="4" x2="76" y2="4" stroke-width="8" /><path d="M 76 0 L 88 4 L 76 8 Z" /></svg></div>
+    <div class="object primitive-arrow style-edge-compare" data-object-id="comparison.compare.1" style="left:916px;top:652px;width:88px;height:8px;z-index:0;--color:#E879F9"><svg viewBox="0 0 88 8" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="4" x2="76" y2="4" stroke-width="8" /><path d="M 76 0 L 88 4 L 76 8 Z" /></svg></div>
   </div>
   <div class="caption" id="caption" aria-live="off"></div>
 </main>
