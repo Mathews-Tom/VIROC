@@ -89,16 +89,34 @@ def layout(
     frame = safe_frame(resolution)
 
     nodes = [obj for obj in objects if obj.role == "node"]
-    labels_by_owner = {obj.owner: obj for obj in objects if obj.role == "label"}
+    labels_by_owner = {
+        obj.owner: obj
+        for obj in objects
+        if obj.role == "label" and obj.style_ref == "label"
+    }
+    details_by_owner = {
+        obj.owner: obj
+        for obj in objects
+        if obj.role == "label" and obj.style_ref.endswith(".detail")
+    }
     arrows = [obj for obj in objects if obj.role == "arrow"]
 
-    # Size a uniform node-box to fit the widest label; labels then sit within
-    # their own column, guaranteeing no label crosses into a neighbour.
+    # Size a uniform node-box to fit the widest label or detail; both then sit
+    # within their own column, so no text crosses into a neighbour.
     label_widths: dict[str, int] = {}
+    detail_widths: dict[str, int] = {}
     for node in nodes:
         label = labels_by_owner.get(node.id)
         label_widths[node.id] = measure_text(label.text)[0] if label and label.text else 0
-    box_w = max([MIN_BOX_W, *(lw + 2 * PAD_X for lw in label_widths.values())])
+        detail = details_by_owner.get(node.id)
+        detail_widths[node.id] = measure_text(detail.text)[0] if detail and detail.text else 0
+    box_w = max(
+        [
+            MIN_BOX_W,
+            *(width + 2 * PAD_X for width in label_widths.values()),
+            *(width + 2 * PAD_X for width in detail_widths.values()),
+        ]
+    )
     box_h = LINE_H + 2 * PAD_Y
 
     count = len(nodes)
@@ -127,7 +145,7 @@ def layout(
             label_w = label_widths[node.id]
             label_box = Box(
                 x=node_x + (box_w - label_w) // 2,
-                y=row_y + box_h + LABEL_GAP,
+                y=row_y + (box_h - LINE_H) // 2,
                 w=label_w,
                 h=LINE_H,
             )
@@ -139,6 +157,25 @@ def layout(
                     z=label.z,
                     style_ref=label.style_ref,
                     text=label.text,
+                )
+            )
+        detail = details_by_owner.get(node.id)
+        if detail is not None and detail.text:
+            detail_w = detail_widths[node.id]
+            detail_box = Box(
+                x=node_x + (box_w - detail_w) // 2,
+                y=row_y + box_h + LABEL_GAP,
+                w=detail_w,
+                h=LINE_H,
+            )
+            resolved.append(
+                ResolvedObject(
+                    id=detail.id,
+                    primitive=detail.primitive,
+                    box=detail_box,
+                    z=detail.z,
+                    style_ref=detail.style_ref,
+                    text=detail.text,
                 )
             )
 

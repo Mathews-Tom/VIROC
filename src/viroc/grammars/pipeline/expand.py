@@ -57,6 +57,17 @@ def expand(scene: Scene, ir: SemanticIR) -> list[AbstractObject]:
                 owner=box_id,
             )
         )
+        if entity.detail is not None:
+            objects.append(
+                AbstractObject(
+                    id=stable_id(scene.id, node_id, "detail"),
+                    role="label",
+                    primitive="text",
+                    style_ref="pipeline.detail",
+                    text=entity.detail,
+                    owner=box_id,
+                )
+            )
 
     for edge in scene.edges:
         objects.append(

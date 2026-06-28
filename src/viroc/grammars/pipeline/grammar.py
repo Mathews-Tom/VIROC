@@ -26,7 +26,7 @@ class PipelineGrammar:
     """The ``pipeline`` grammar: expansion + row-template layout + flow animation."""
 
     id = "pipeline"
-    version = "1.0.0"
+    version = "1.1.0"
 
     def expand(self, scene: Scene, ir: SemanticIR) -> list[AbstractObject]:
         """Expand ``scene`` into node-boxes, labels, and arrows (phase P5)."""
