@@ -19,8 +19,10 @@ from viroc.adapters.remotion.templates import (
 from viroc.core import BuildArtifact, BuildContext, artifact_from_text, canonical_json
 from viroc.ir import Caption, ConcreteIR, Keyframe, ResolvedObject
 
-_ADAPTER_SOURCE_VERSION = "remotion-source-v0.2"
+_ADAPTER_SOURCE_VERSION = "remotion-source-v0.3"
 _COMPOSITION_ID = "VirocScene"
+_SANS_FONT = 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+_MONO_FONT = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
 
 
 def emit(ir: ConcreteIR, ctx: BuildContext) -> BuildArtifact:
@@ -111,12 +113,20 @@ def _composition_source(ir: ConcreteIR) -> str:
         "type Primitive = \"arrow\" | \"code\" | \"formula\" | \"icon\" | \"rect\" | \"text\";\n"
         "type KeyframeKind = \"draw\" | \"fade_in\" | \"fade_out\" | \"highlight\" | \"move\";\n"
         "type Easing = \"ease_in_out\" | \"linear\" | \"spring\";\n\n"
+        "type TextTypography = {\n"
+        "  color: string;\n"
+        "  fontFamily: string;\n"
+        "  fontSize: number;\n"
+        "  fontWeight: number;\n"
+        "  textAlign: string;\n"
+        "};\n\n"
         "type SceneObject = {\n"
         "  id: string;\n"
         "  primitive: Primitive;\n"
         "  styleRef: string;\n"
         "  style: Record<string, string>;\n"
         "  text: string;\n"
+        "  textStyle: TextTypography | null;\n"
         "  glyph: string;\n"
         "  x: number;\n"
         "  y: number;\n"
@@ -301,9 +311,10 @@ def _composition_source(ir: ConcreteIR) -> str:
         "      </div>\n"
         "    );\n"
         "  }\n"
+        "  const ts = object.textStyle!;\n"
         "  return (\n"
-        "    <div style={{...baseStyle, display: \"grid\", placeItems: \"center\", color: object.style.color ?? \"#E5E7EB\", textAlign: \"center\"}}>\n"
-        "      <span style={{fontSize: 32, fontWeight: 600, letterSpacing: \"-0.02em\", lineHeight: 1.1}}>{object.text}</span>\n"
+        "    <div style={{...baseStyle, display: \"grid\", placeItems: \"center\"}}>\n"
+        "      <span style={{color: ts.color, fontFamily: ts.fontFamily, fontSize: ts.fontSize, fontWeight: ts.fontWeight, letterSpacing: \"-0.02em\", lineHeight: 1.1, textAlign: ts.textAlign as React.CSSProperties[\"textAlign\"], width: \"100%\"}}>{object.text}</span>\n"
         "    </div>\n"
         "  );\n"
         "};\n\n"
@@ -348,15 +359,28 @@ def _style_for(style_ref: str) -> dict[str, str]:
 
 
 def _object_data(obj: ResolvedObject) -> dict[str, Any]:
-    style = _style_for(obj.style_ref)
+    if obj.primitive == "text":
+        ts = _palette.text_style(obj.style_ref)
+        text_style_data: dict[str, Any] | None = {
+            "color": ts.color,
+            "fontFamily": _MONO_FONT if ts.mono else _SANS_FONT,
+            "fontSize": ts.size,
+            "fontWeight": 700 if ts.bold else 400,
+            "textAlign": ts.align,
+        }
+        obj_style: dict[str, str] = {}
+    else:
+        text_style_data = None
+        obj_style = _style_for(obj.style_ref)
     return {
         "glyph": _icon_glyph(obj),
         "h": obj.box.h,
         "id": obj.id,
         "primitive": obj.primitive,
-        "style": dict(sorted(style.items())),
+        "style": dict(sorted(obj_style.items())),
         "styleRef": obj.style_ref,
         "text": display_text(obj),
+        "textStyle": text_style_data,
         "w": obj.box.w,
         "x": obj.box.x,
         "y": obj.box.y,

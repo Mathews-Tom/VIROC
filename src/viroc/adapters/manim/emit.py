@@ -11,7 +11,7 @@ from viroc.adapters.manim.templates import HELPERS, SOURCE_HEADER
 from viroc.core import BuildArtifact, BuildContext, artifact_from_text
 from viroc.ir import Caption, ConcreteIR, Keyframe, ResolvedObject
 
-_ADAPTER_SOURCE_VERSION = "manim-source-v0.2"
+_ADAPTER_SOURCE_VERSION = "manim-source-v0.3"
 _FRAME_HEIGHT = 8.0
 
 DEGRADED_PRIMITIVES: dict[str, str] = {"code": "rect", "formula": "rect"}
@@ -65,7 +65,11 @@ def _object_expression(obj: ResolvedObject) -> str:
         fill, stroke = _palette.box_style(obj.style_ref)
         return f"_rect({geom}, {_string(fill)}, {_string(stroke)})"
     if primitive == "text":
-        return f"_text({_string(display_text(obj))}, {geom}, {_string(_palette.LABEL_COLOR)})"
+        style = _palette.text_style(obj.style_ref)
+        return (
+            f"_text({_string(display_text(obj))}, {geom}, {_string(style.color)}, "
+            f"{style.size}, {style.bold}, {style.mono}, {_string(style.align)})"
+        )
     if primitive == "arrow":
         return f"_arrow({geom}, {_string(_palette.edge_color(obj.style_ref))})"
     raise ValueError(f"Manim emitter cannot lower primitive {obj.primitive!r}")

@@ -10,7 +10,7 @@ from viroc.adapters.html.templates import BASE_CSS, RUNTIME_SCRIPT, SOURCE_HEADE
 from viroc.core import BuildArtifact, BuildContext, artifact_from_text, canonical_json
 from viroc.ir import Caption, ConcreteIR, Keyframe, ResolvedObject
 
-_ADAPTER_SOURCE_VERSION = "html-source-v0.2"
+_ADAPTER_SOURCE_VERSION = "html-source-v0.3"
 
 
 def emit(ir: ConcreteIR, ctx: BuildContext) -> BuildArtifact:
@@ -63,7 +63,26 @@ def _object_element(obj: ResolvedObject) -> str:
     if obj.primitive == "rect":
         body = "</div>\n"
     elif obj.primitive == "text":
-        body = f"<span>{html.escape(display_text(obj))}</span></div>\n"
+        ts = _palette.text_style(obj.style_ref)
+        font_family = (
+            "ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace"
+            if ts.mono
+            else (
+                "Inter,ui-sans-serif,system-ui,-apple-system,"
+                "BlinkMacSystemFont,'Segoe UI',sans-serif"
+            )
+        )
+        weight = 700 if ts.bold else 400
+        text_inline = (
+            f"font-size:{ts.size}px;"
+            f"color:{ts.color};"
+            f"font-weight:{weight};"
+            f"text-align:{ts.align};"
+            f"font-family:{font_family};"
+            "display:block;"
+            "width:100%"
+        )
+        body = f'<span style="{text_inline}">{html.escape(display_text(obj))}</span></div>\n'
     elif obj.primitive == "code":
         body = f"<pre><code>{html.escape(display_text(obj))}</code></pre></div>\n"
     elif obj.primitive == "formula":
