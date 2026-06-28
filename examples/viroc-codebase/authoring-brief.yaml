@@ -1,0 +1,203 @@
+brief_version: '0.1'
+project:
+  id: viroc-codebase
+  title: From a Topic to a Verified Video with VIROC
+  duration_target: 40
+  default_backend: manim
+source:
+  kind: repo
+  title: From a Topic to a Verified Video with VIROC
+  prompt: 'Explain the VIROC codebase itself: the guided concept-to-video flow whose editable intermediate is a typed, renderer-neutral VidIR.'
+  audience: Engineers evaluating VIROC
+  objective: Show a user starting from a concept and reaching a verified, portable video
+entities:
+- id: author
+  label: User
+  type: user
+- id: repo_context
+  label: Repo context
+  type: data_source
+- id: doc_set
+  label: Document set
+  type: data_source
+- id: topic
+  label: Topic brief
+  type: data_source
+- id: planner
+  label: Guided planner
+  type: service
+- id: script
+  label: Script
+  type: intermediate
+- id: scene_plan
+  label: Scene plan
+  type: intermediate
+- id: outline
+  label: Outline
+  type: intermediate
+- id: storyboard
+  label: Editable VidIR
+  type: intermediate
+- id: checks
+  label: VIR diagnostics
+  type: service
+- id: repaired
+  label: Repaired VidIR
+  type: intermediate
+- id: review
+  label: Review surface
+  type: data_source
+- id: scene_cards
+  label: Scene cards
+  type: intermediate
+- id: script_review
+  label: Script review
+  type: intermediate
+- id: concrete_ir
+  label: Concrete IR
+  type: intermediate
+- id: manim_source
+  label: Manim source
+  type: intermediate
+- id: html_source
+  label: HTML source
+  type: intermediate
+- id: remotion_source
+  label: Remotion source
+  type: intermediate
+- id: html_path
+  label: HTML path
+  type: service
+- id: remotion_path
+  label: Remotion path
+  type: service
+- id: source_hashes
+  label: Source hashes
+  type: storage
+- id: build_manifest
+  label: build.json
+  type: storage
+scene_seeds:
+- title: Concept input
+  goal: 'Start from a concept: a repo, a document set, and a topic brief.'
+  narration: 'Start from a concept: a repo, a document set, and a topic brief, not renderer code.'
+  nodes:
+  - repo_context
+  - doc_set
+  - topic
+  - author
+  duration: 5s
+  grammar: showcase
+  edges: []
+  edge_kind: flow
+  id: concept_input
+- title: Script and scene plan
+  goal: The guided planner derives a script, a scene plan, and an outline.
+  narration: The guided planner derives a script, a scene plan, and an outline before any IR exists.
+  nodes:
+  - planner
+  - script
+  - scene_plan
+  - outline
+  duration: 6s
+  grammar: showcase
+  edges:
+  - from: planner
+    to: script
+    kind: split
+  - from: planner
+    to: scene_plan
+    kind: split
+  - from: planner
+    to: outline
+    kind: split
+  edge_kind: flow
+  id: script_and_scene_plan
+- title: Editable VidIR
+  goal: The approved outline becomes editable VidIR the user owns.
+  narration: The approved outline becomes editable VidIR the user and agents refine.
+  nodes:
+  - outline
+  - storyboard
+  - author
+  duration: 5s
+  grammar: showcase
+  edges: []
+  edge_kind: flow
+  id: editable_vidir
+- title: Validate and repair
+  goal: viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.
+  narration: viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.
+  nodes:
+  - storyboard
+  - checks
+  - repaired
+  duration: 6s
+  grammar: showcase
+  edges: []
+  edge_kind: flow
+  id: validate_repair
+- title: Storyboard review
+  goal: The review surface shows scene cards and the script before final render.
+  narration: The review surface shows scene cards and the script as an inspectable artifact before final render.
+  nodes:
+  - review
+  - scene_cards
+  - script_review
+  - author
+  duration: 6s
+  grammar: showcase
+  edges: []
+  edge_kind: flow
+  id: storyboard_review
+- title: Compile fan-out
+  goal: One Concrete IR compiles deterministically to Manim, HTML, and Remotion source.
+  narration: One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.
+  nodes:
+  - concrete_ir
+  - manim_source
+  - html_source
+  - remotion_source
+  duration: 6s
+  grammar: showcase
+  edges:
+  - from: concrete_ir
+    to: manim_source
+    kind: split
+  - from: concrete_ir
+    to: html_source
+    kind: split
+  - from: concrete_ir
+    to: remotion_source
+    kind: split
+  edge_kind: flow
+  id: compile_fanout
+- title: Parity proof
+  goal: Backends are compared and source hashes plus build.json close the reproducibility proof.
+  narration: Backend paths compared side by side; source hashes and build.json close the proof.
+  nodes:
+  - html_path
+  - source_hashes
+  - remotion_path
+  - build_manifest
+  duration: 6s
+  grammar: showcase
+  edges:
+  - from: html_path
+    to: source_hashes
+    kind: compare
+  - from: remotion_path
+    to: build_manifest
+    kind: compare
+  edge_kind: flow
+  id: parity_proof
+context_items:
+- kind: note
+  label: note
+  excerpt: VIROC compiles a typed VidIR to Manim, HTML, and Remotion through a pluggable adapter registry.
+- kind: note
+  label: note
+  excerpt: The guided flow is ingest -> plan -> critique -> compile -> render, with VidIR as the only editable intermediate.
+notes:
+- VIROC compiles a typed VidIR to Manim, HTML, and Remotion through a pluggable adapter registry.
+- The guided flow is ingest -> plan -> critique -> compile -> render, with VidIR as the only editable intermediate.

@@ -1,4 +1,4 @@
-vidir_version: '0.1'
+scene_plan_version: '0.1'
 video:
   id: viroc-codebase
   title: From a Topic to a Verified Video with VIROC
@@ -76,6 +76,8 @@ entities:
   type: storage
 scenes:
 - id: concept_input
+  title: Concept input
+  goal: 'Start from a concept: a repo, a document set, and a topic brief.'
   grammar: showcase
   duration: 5s
   nodes:
@@ -93,9 +95,10 @@ scenes:
   - from: topic
     to: author
     kind: flow
-  beats: []
   narration: 'Start from a concept: a repo, a document set, and a topic brief, not renderer code.'
 - id: script_and_scene_plan
+  title: Script and scene plan
+  goal: The guided planner derives a script, a scene plan, and an outline.
   grammar: showcase
   duration: 6s
   nodes:
@@ -113,9 +116,10 @@ scenes:
   - from: planner
     to: outline
     kind: split
-  beats: []
   narration: The guided planner derives a script, a scene plan, and an outline before any IR exists.
 - id: editable_vidir
+  title: Editable VidIR
+  goal: The approved outline becomes editable VidIR the user owns.
   grammar: showcase
   duration: 5s
   nodes:
@@ -129,9 +133,10 @@ scenes:
   - from: storyboard
     to: author
     kind: flow
-  beats: []
   narration: The approved outline becomes editable VidIR the user and agents refine.
 - id: validate_repair
+  title: Validate and repair
+  goal: viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.
   grammar: showcase
   duration: 6s
   nodes:
@@ -145,9 +150,10 @@ scenes:
   - from: checks
     to: repaired
     kind: flow
-  beats: []
   narration: viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.
 - id: storyboard_review
+  title: Storyboard review
+  goal: The review surface shows scene cards and the script before final render.
   grammar: showcase
   duration: 6s
   nodes:
@@ -165,9 +171,10 @@ scenes:
   - from: script_review
     to: author
     kind: flow
-  beats: []
   narration: The review surface shows scene cards and the script as an inspectable artifact before final render.
 - id: compile_fanout
+  title: Compile fan-out
+  goal: One Concrete IR compiles deterministically to Manim, HTML, and Remotion source.
   grammar: showcase
   duration: 6s
   nodes:
@@ -185,9 +192,10 @@ scenes:
   - from: concrete_ir
     to: remotion_source
     kind: split
-  beats: []
   narration: One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.
 - id: parity_proof
+  title: Parity proof
+  goal: Backends are compared and source hashes plus build.json close the reproducibility proof.
   grammar: showcase
   duration: 6s
   nodes:
@@ -202,33 +210,4 @@ scenes:
   - from: remotion_path
     to: build_manifest
     kind: compare
-  beats: []
   narration: Backend paths compared side by side; source hashes and build.json close the proof.
-validation:
-  required_entities:
-  - author
-  - repo_context
-  - doc_set
-  - topic
-  - planner
-  - script
-  - scene_plan
-  - outline
-  - storyboard
-  - checks
-  - repaired
-  - review
-  - scene_cards
-  - script_review
-  - concrete_ir
-  - manim_source
-  - html_source
-  - remotion_source
-  - html_path
-  - remotion_path
-  - source_hashes
-  - build_manifest
-  checks:
-  - schema
-  - layout
-  - timing
