@@ -41,13 +41,47 @@ def _entrance_kind(primitive: str) -> KeyframeKind:
     return "draw" if primitive == _ARROW else "fade_in"
 
 
+def _entity_of(object_id: str) -> str | None:
+    """Return the entity-id segment of a stable object id (``scene.entity.…``)."""
+    parts = object_id.split(".")
+    return parts[1] if len(parts) >= 2 else None
+
+
+def _highlight_targets(
+    objects: list[ResolvedObject], scene: Scene
+) -> list[ResolvedObject]:
+    """Objects to highlight: each emphasized entity's primary, else every card.
+
+    Authored ``Beat.emphasis`` names entities to focus; the first non-arrow
+    object of each (its primary box or text) is highlighted, in reading order. A
+    scene with no emphasis falls back to the default card sweep.
+    """
+    emphasis = {entity for beat in scene.beats for entity in beat.emphasis}
+    if not emphasis:
+        return [obj for obj in objects if obj.primitive in _CARDS]
+    targets: list[ResolvedObject] = []
+    seen: set[str] = set()
+    for obj in objects:
+        entity = _entity_of(obj.id)
+        if (
+            entity is not None
+            and entity in emphasis
+            and entity not in seen
+            and obj.primitive != _ARROW
+        ):
+            seen.add(entity)
+            targets.append(obj)
+    return targets
+
+
 def animate(objects: list[ResolvedObject], scene: Scene, fps: int) -> list[Keyframe]:
     """Choreograph ``objects`` into entrance/transform/exit keyframes.
 
     Returns the keyframes in a deterministic order: every object's entrance in
-    reading order, then a highlight per card in reading order, then every
-    object's exit in reading order. An empty scene or a non-positive span yields
-    no keyframes.
+    reading order, then a highlight per focus target in reading order (the
+    entities a scene's beats name in ``emphasis``, or every card when none do),
+    then every object's exit in reading order. An empty scene or a non-positive
+    span yields no keyframes.
     """
     span = frames_for_seconds(scene.duration, fps)
     if not objects or span <= 0:
@@ -71,17 +105,18 @@ def animate(objects: list[ResolvedObject], scene: Scene, fps: int) -> list[Keyfr
             )
         )
 
-    # Transform: sweep a highlight across the cards over the middle stretch.
+    # Transform: highlight over the middle stretch. Authored emphasis picks the
+    # entities to focus; otherwise sweep every card in reading order.
     hold_start = enter_win
     hold_end = span - exit_win
-    cards = [obj for obj in objects if obj.primitive in _CARDS]
-    if cards and hold_end > hold_start:
-        hold_step = max((hold_end - hold_start) // len(cards), 1)
-        for index, card in enumerate(cards):
+    targets = _highlight_targets(objects, scene)
+    if targets and hold_end > hold_start:
+        hold_step = max((hold_end - hold_start) // len(targets), 1)
+        for index, target in enumerate(targets):
             start = min(hold_start + index * hold_step, hold_end - 1)
             keyframes.append(
                 Keyframe(
-                    object_id=card.id,
+                    object_id=target.id,
                     kind="highlight",
                     start_f=start,
                     end_f=min(start + hold_step, hold_end),
