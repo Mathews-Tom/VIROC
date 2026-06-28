@@ -1,4 +1,12 @@
-"""Integration coverage for the multi-adapter VIROC codebase showcase."""
+"""Integration coverage for the multi-adapter VIROC codebase flagship showcase.
+
+The flagship walks the guided flow (ingest -> plan -> critique -> compile ->
+render) and demonstrates it with committed, regenerable artifacts: the authoring
+provenance, the critique review surface, top-three deterministic compile output,
+and an env-gated Manim preview. The richer ``showcase`` grammar emits above-floor
+``code``/``formula`` primitives that degrade deterministically to ``rect`` with a
+non-blocking ``VIR5033`` note on Manim and render natively on HTML/Remotion.
+"""
 
 from __future__ import annotations
 
@@ -70,6 +78,20 @@ _PREVIEW_FILES = {
     "captions_entry": "expected/preview/manim/captions.srt",
     "manifest_entry": "expected/preview/manim/build.json",
 }
+_GUIDED_FLOW_ARTIFACTS = (
+    "authoring-request.yaml",
+    "authoring-brief.yaml",
+    "script.md",
+    "scene-plan.yaml",
+    "storyboard.vidir.yaml",
+)
+_REVIEW_ARTIFACTS = (
+    "storyboard.md",
+    "script.md",
+    "scene-cards.json",
+    "captions.md",
+    "review-manifest.json",
+)
 _PROJECT = load_project(_EXAMPLE)
 
 
@@ -97,6 +119,8 @@ def test_viroc_codebase_showcase_check_compile_and_gallery(
 
     assert _GALLERY["project"] == "viroc-codebase"
     assert _GALLERY["tagline"] == "Topic to verified video. Typed IR. Portable renderers."
+    assert _GALLERY["grammar"] == "showcase"
+    assert _GALLERY["storyboard"] == "storyboard.vidir.yaml"
     story_arc = cast(list[dict[str, str]], _GALLERY["story_arc"])
     assert [entry["id"] for entry in story_arc] == _STORY_ARC_IDS
     assert story_arc[1]["claim"] == (
@@ -107,7 +131,6 @@ def test_viroc_codebase_showcase_check_compile_and_gallery(
     for key, value in _PREVIEW_FILES.items():
         assert preview[key] == value
         assert (_EXAMPLE / value).exists()
-
 
     backends = cast(list[dict[str, object]], _GALLERY["backends"])
     assert [entry["id"] for entry in backends] == ["manim", "html", "remotion"]
@@ -125,11 +148,11 @@ def test_viroc_codebase_showcase_check_compile_and_gallery(
         assert capabilities["animations"] == sorted(adapter.capabilities.animations)
         assert _EXPECTED_SOURCE_HASHES[backend] in _README
 
-    assert "Committed generated source now lives under `expected/generated/`" in _README
+    assert "Committed generated source lives under `expected/generated/`" in _README
     assert "`expected/preview/manim/viroc-codebase.mp4`" in _README
     assert (
         "The machine-readable companion for this scene arc, committed source "
-        "roots, and preview paths is `expected/gallery.json`."
+        "roots, guided-flow artifacts, and preview paths is `expected/gallery.json`."
         in _README
     )
 
@@ -231,8 +254,8 @@ def test_manim_compile_degrades_code_and_formula_not_omitted(
 
 
 @pytest.mark.integration
-def test_gallery_degradations_match_adapter_capabilities() -> None:
-    """The gallery's per-backend degradations mirror the adapters' declared policy."""
+def test_gallery_degradations_and_parity_match_adapter_capabilities() -> None:
+    """The gallery's per-backend degradations + parity mirror the adapters' policy."""
     backends = cast(list[dict[str, object]], _GALLERY["backends"])
     for entry in backends:
         adapter = _BACKEND_MODULES[cast(str, entry["id"])]
@@ -241,8 +264,13 @@ def test_gallery_degradations_match_adapter_capabilities() -> None:
     assert by_id["manim"]["degradations"] == {"code": "rect", "formula": "rect"}
     assert by_id["html"]["degradations"] == {}
     assert by_id["remotion"]["degradations"] == {}
+
+    parity = cast(dict[str, list[str]], _GALLERY["parity"])
+    assert parity["floor"] == ["arrow", "rect", "text"]
+    assert parity["above_floor"] == ["code", "formula"]
     # Above-floor primitives are native on the web backends, degraded on Manim.
-    for primitive in ("code", "formula"):
+    for primitive in parity["above_floor"]:
+        assert primitive in dict(manim_adapter.capabilities.degradations)
         assert primitive in html_adapter.capabilities.primitives
         assert primitive in remotion_adapter.capabilities.primitives
         assert primitive not in manim_adapter.capabilities.primitives
@@ -270,3 +298,61 @@ def test_committed_manim_preview_matches_source_and_baseline() -> None:
         assert (_EXAMPLE / "expected" / "preview" / "manim" / name).exists()
     # HTML keeps no committed perceptual baseline: its render is env-gated.
     assert load_expected_render_baseline(_PROJECT, backend="html") is None
+
+
+@pytest.mark.integration
+def test_guided_flow_artifacts_are_regenerable_and_stable(tmp_path: Path) -> None:
+    """ingest + plan reproduce the committed flagship provenance byte-for-byte."""
+    work = tmp_path / "viroc-codebase"
+    shutil.copytree(_EXAMPLE, work)
+    shutil.rmtree(work / "build", ignore_errors=True)
+
+    assert main(["ingest", str(work / "authoring-request.yaml")]) == 0
+    assert main(["plan", str(work)]) == 0
+    for name in _GUIDED_FLOW_ARTIFACTS:
+        assert (work / name).read_bytes() == (_EXAMPLE / name).read_bytes(), name
+
+
+@pytest.mark.integration
+def test_critique_reproduces_committed_review_surface(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """critique writes a deterministic review surface matching expected/review/."""
+    work = tmp_path / "viroc-codebase"
+    shutil.copytree(_EXAMPLE, work)
+    shutil.rmtree(work / "build", ignore_errors=True)
+
+    assert main(["critique", str(work)]) == 0
+    capsys.readouterr()
+    review = work / "build" / "review"
+    committed = _EXAMPLE / "expected" / "review"
+    for name in _REVIEW_ARTIFACTS:
+        assert (review / name).read_bytes() == (committed / name).read_bytes(), name
+
+
+@pytest.mark.integration
+def test_gallery_authoring_block_points_at_committed_provenance() -> None:
+    """The gallery authoring block references the committed guided-flow artifacts."""
+    authoring = cast(dict[str, str], _GALLERY["authoring"])
+    assert authoring["request"] == "authoring-request.yaml"
+    assert authoring["brief"] == "authoring-brief.yaml"
+    assert authoring["script"] == "script.md"
+    assert authoring["scene_plan"] == "scene-plan.yaml"
+    assert authoring["review"] == "expected/review/"
+    for key in ("request", "brief", "script", "scene_plan"):
+        assert (_EXAMPLE / authoring[key]).exists()
+    assert (_EXAMPLE / "expected" / "review").is_dir()
+
+
+@pytest.mark.integration
+def test_readme_carries_guided_flow_and_provenance() -> None:
+    """The README documents the guided flow on the shared template."""
+    for heading in (
+        "## Guided flow",
+        "## Scene arc",
+        "## Top-three parity",
+        "## Inspectable artifacts",
+    ):
+        assert heading in _README
+    assert "viroc ingest examples/viroc-codebase/authoring-request.yaml" in _README
+    assert "| Concept input | `authoring-request.yaml` | hand-authored |" in _README

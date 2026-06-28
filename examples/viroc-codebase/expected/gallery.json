@@ -1,7 +1,15 @@
 {
   "project": "viroc-codebase",
   "tagline": "Topic to verified video. Typed IR. Portable renderers.",
+  "grammar": "showcase",
   "storyboard": "storyboard.vidir.yaml",
+  "authoring": {
+    "request": "authoring-request.yaml",
+    "brief": "authoring-brief.yaml",
+    "script": "script.md",
+    "scene_plan": "scene-plan.yaml",
+    "review": "expected/review/"
+  },
   "story_arc": [
     {
       "id": "concept_input",
@@ -32,9 +40,21 @@
       "claim": "Backends are compared and source hashes plus build.json close the reproducibility proof."
     }
   ],
+  "parity": {
+    "floor": [
+      "arrow",
+      "rect",
+      "text"
+    ],
+    "above_floor": [
+      "code",
+      "formula"
+    ]
+  },
   "backends": [
     {
       "id": "manim",
+      "source_root": "expected/generated/manim",
       "source_entry": "expected/generated/manim/scene.py",
       "source_hash": "sha256:0899d90d30b7d97b23404a4a186202cce300dfc3d614f68b6d7ec5bde1ad398b",
       "render_status": "baseline-committed",
@@ -55,11 +75,11 @@
       "degradations": {
         "code": "rect",
         "formula": "rect"
-      },
-      "source_root": "expected/generated/manim"
+      }
     },
     {
       "id": "html",
+      "source_root": "expected/generated/html",
       "source_entry": "expected/generated/html/scene.html",
       "source_hash": "sha256:6ed01bc515acad379a17d71d4b4f1c1fb1da20311bbe9dbc019c0c0ef0a82991",
       "render_status": "env-gated",
@@ -80,11 +100,11 @@
           "highlight"
         ]
       },
-      "degradations": {},
-      "source_root": "expected/generated/html"
+      "degradations": {}
     },
     {
       "id": "remotion",
+      "source_root": "expected/generated/remotion",
       "source_entry": "expected/generated/remotion/package.json",
       "source_hash": "sha256:fd1432205913e634f68b90360cdac13a99e24354da04640e94843af7f3708250",
       "render_status": "env-gated",
@@ -105,8 +125,7 @@
           "highlight"
         ]
       },
-      "degradations": {},
-      "source_root": "expected/generated/remotion"
+      "degradations": {}
     }
   ],
   "preview": {
