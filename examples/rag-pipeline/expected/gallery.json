@@ -1,0 +1,126 @@
+{
+  "project": "rag-overview",
+  "tagline": "Linear pipeline grammar. Floor-only primitives. Full native parity on all top three.",
+  "grammar": "pipeline",
+  "storyboard": "storyboard.vidir.yaml",
+  "authoring": {
+    "request": "authoring-request.yaml",
+    "brief": "authoring-brief.yaml",
+    "script": "script.md",
+    "scene_plan": "scene-plan.yaml",
+    "review": "expected/review/"
+  },
+  "story_arc": [
+    {
+      "id": "problem_setup",
+      "claim": "A bare model answer still needs the document corpus."
+    },
+    {
+      "id": "indexing_path",
+      "claim": "Documents split into chunks, become embeddings, and land in the vector store."
+    },
+    {
+      "id": "retrieval_path",
+      "claim": "At query time the question probes the vector store for the nearest context."
+    },
+    {
+      "id": "answer_synthesis",
+      "claim": "Retrieved context carries the question into grounded synthesis."
+    },
+    {
+      "id": "payoff",
+      "claim": "Bare prompting falls short; retrieved context produces a grounded answer."
+    }
+  ],
+  "parity": {
+    "floor": [
+      "arrow",
+      "rect",
+      "text"
+    ],
+    "above_floor": []
+  },
+  "backends": [
+    {
+      "id": "manim",
+      "source_root": "expected/generated/manim",
+      "source_entry": "expected/generated/manim/scene.py",
+      "source_hash": "sha256:e9463d24776476d17e1b9c23a7be230f66d4a48f5cb6c739430fbefe4ea56946",
+      "render_status": "baseline-committed",
+      "render_baseline": "expected/manim/render.json",
+      "capabilities": {
+        "primitives": [
+          "arrow",
+          "rect",
+          "text"
+        ],
+        "animations": [
+          "draw",
+          "fade_in",
+          "fade_out",
+          "highlight"
+        ]
+      },
+      "degradations": {
+        "code": "rect",
+        "formula": "rect"
+      }
+    },
+    {
+      "id": "html",
+      "source_root": "expected/generated/html",
+      "source_entry": "expected/generated/html/scene.html",
+      "source_hash": "sha256:9929c0439c063d1a3dab82ef351c680f6ab9edd761bc2f8e73e7a39cde63f6b7",
+      "render_status": "env-gated",
+      "render_baseline": null,
+      "capabilities": {
+        "primitives": [
+          "arrow",
+          "code",
+          "formula",
+          "icon",
+          "rect",
+          "text"
+        ],
+        "animations": [
+          "draw",
+          "fade_in",
+          "fade_out",
+          "highlight"
+        ]
+      },
+      "degradations": {}
+    },
+    {
+      "id": "remotion",
+      "source_root": "expected/generated/remotion",
+      "source_entry": "expected/generated/remotion/package.json",
+      "source_hash": "sha256:1aa5b9bb3c3d5778d72655f20a7483f950356165be239dbc3ef6ff44d8a9b64f",
+      "render_status": "env-gated",
+      "render_baseline": null,
+      "capabilities": {
+        "primitives": [
+          "arrow",
+          "code",
+          "formula",
+          "icon",
+          "rect",
+          "text"
+        ],
+        "animations": [
+          "draw",
+          "fade_in",
+          "fade_out",
+          "highlight"
+        ]
+      },
+      "degradations": {}
+    }
+  ],
+  "preview": {
+    "backend": "manim",
+    "video_entry": "expected/preview/manim/rag-overview.mp4",
+    "captions_entry": "expected/preview/manim/captions.srt",
+    "manifest_entry": "expected/preview/manim/build.json"
+  }
+}
