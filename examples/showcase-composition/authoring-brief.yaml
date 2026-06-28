@@ -1,12 +1,15 @@
-vidir_version: '0.1'
-video:
+brief_version: '0.1'
+project:
   id: showcase-composition
   title: VIROC Showcase Grammar — Composition Primitives
-  fps: 30
-  resolution:
-    width: 1920
-    height: 1080
   duration_target: 18
+  default_backend: static_storyboard
+source:
+  kind: topic
+  title: VIROC Showcase Grammar — Composition Primitives
+  prompt: Demonstrate the showcase grammar's panel, code-card, callout, evidence-block, fan-out, and comparison compositions.
+  audience: VIROC authors exploring richer composition
+  objective: Prove the showcase grammar's non-row compositions and above-floor primitives
 entities:
 - id: input_panel
   label: Authored input
@@ -44,35 +47,30 @@ entities:
 - id: remotion_source
   label: Composition.tsx
   type: intermediate
-scenes:
-- id: primitives
-  grammar: showcase
-  duration: 6s
+scene_seeds:
+- title: Composition primitives
+  goal: Show one of each composition kind in a non-row 2x2 grid.
+  narration: Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.
   nodes:
   - input_panel
   - ir_card
   - author_note
   - proof_block
-  edges:
-  - from: input_panel
-    to: ir_card
-    kind: flow
-  - from: ir_card
-    to: author_note
-    kind: flow
-  - from: author_note
-    to: proof_block
-    kind: flow
-  beats: []
-  narration: Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.
-- id: fanout
-  grammar: showcase
   duration: 6s
+  grammar: showcase
+  edges: []
+  edge_kind: flow
+  id: primitives
+- title: Fan-out
+  goal: Fan one resolver service out to three artifacts.
+  narration: One resolver fans out into Concrete IR, a review surface, and a build manifest.
   nodes:
   - resolver
   - concrete_ir
   - review_surface
   - build_manifest
+  duration: 6s
+  grammar: showcase
   edges:
   - from: resolver
     to: concrete_ir
@@ -83,16 +81,18 @@ scenes:
   - from: resolver
     to: build_manifest
     kind: split
-  beats: []
-  narration: One resolver fans out into Concrete IR, a review surface, and a build manifest.
-- id: comparison
-  grammar: showcase
-  duration: 6s
+  edge_kind: flow
+  id: fanout
+- title: Comparison
+  goal: Place two portable backend paths side by side.
+  narration: 'Two portable backend paths compared side by side: HTML versus Remotion source.'
   nodes:
   - html_path
   - remotion_path
   - html_source
   - remotion_source
+  duration: 6s
+  grammar: showcase
   edges:
   - from: html_path
     to: html_source
@@ -100,23 +100,7 @@ scenes:
   - from: remotion_path
     to: remotion_source
     kind: compare
-  beats: []
-  narration: 'Two portable backend paths compared side by side: HTML versus Remotion source.'
-validation:
-  required_entities:
-  - input_panel
-  - ir_card
-  - author_note
-  - proof_block
-  - resolver
-  - concrete_ir
-  - review_surface
-  - build_manifest
-  - html_path
-  - remotion_path
-  - html_source
-  - remotion_source
-  checks:
-  - schema
-  - layout
-  - timing
+  edge_kind: flow
+  id: comparison
+context_items: []
+notes: []
