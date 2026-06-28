@@ -1,0 +1,141 @@
+{
+  "project": "showcase-composition",
+  "tagline": "Showcase grammar. Non-row composition. Above-floor primitives with explicit Manim degradation.",
+  "grammar": "showcase",
+  "storyboard": "storyboard.vidir.yaml",
+  "authoring": {
+    "request": "authoring-request.yaml",
+    "brief": "authoring-brief.yaml",
+    "script": "script.md",
+    "scene_plan": "scene-plan.yaml",
+    "review": "expected/review/"
+  },
+  "story_arc": [
+    {
+      "id": "primitives",
+      "claim": "One of each composition kind in a non-row 2x2 grid: panel, code card, callout, evidence block."
+    },
+    {
+      "id": "fanout",
+      "claim": "One resolver fans out into Concrete IR, a review surface, and a build manifest."
+    },
+    {
+      "id": "comparison",
+      "claim": "Two portable backend paths compared side by side: HTML versus Remotion source."
+    }
+  ],
+  "parity": {
+    "floor": [
+      "arrow",
+      "rect",
+      "text"
+    ],
+    "above_floor": [
+      "code",
+      "formula"
+    ]
+  },
+  "backends": [
+    {
+      "id": "manim",
+      "source_root": "expected/generated/manim",
+      "source_entry": "expected/generated/manim/scene.py",
+      "source_hash": "sha256:51db8dad88f912bbe876db82d0d8b04cb3fd399cd6d728f3f82fbb2b8dc58259",
+      "render_status": "env-gated",
+      "render_baseline": null,
+      "capabilities": {
+        "primitives": [
+          "arrow",
+          "rect",
+          "text"
+        ],
+        "animations": [
+          "draw",
+          "fade_in",
+          "fade_out",
+          "highlight"
+        ]
+      },
+      "degradations": {
+        "code": "rect",
+        "formula": "rect"
+      }
+    },
+    {
+      "id": "html",
+      "source_root": "expected/generated/html",
+      "source_entry": "expected/generated/html/scene.html",
+      "source_hash": "sha256:0ca3acc173f0fa5cdcf696e6a6954bd6c9ad00ba9a928afcd49f861315d1e4ab",
+      "render_status": "env-gated",
+      "render_baseline": null,
+      "capabilities": {
+        "primitives": [
+          "arrow",
+          "code",
+          "formula",
+          "icon",
+          "rect",
+          "text"
+        ],
+        "animations": [
+          "draw",
+          "fade_in",
+          "fade_out",
+          "highlight"
+        ]
+      },
+      "degradations": {}
+    },
+    {
+      "id": "remotion",
+      "source_root": "expected/generated/remotion",
+      "source_entry": "expected/generated/remotion/package.json",
+      "source_hash": "sha256:57fef780de372ff521a6342052d1acd331abf3580a168467b9573f6bd8c65b01",
+      "render_status": "env-gated",
+      "render_baseline": null,
+      "capabilities": {
+        "primitives": [
+          "arrow",
+          "code",
+          "formula",
+          "icon",
+          "rect",
+          "text"
+        ],
+        "animations": [
+          "draw",
+          "fade_in",
+          "fade_out",
+          "highlight"
+        ]
+      },
+      "degradations": {}
+    },
+    {
+      "id": "static_storyboard",
+      "source_root": "expected/generated/static_storyboard",
+      "source_entry": "expected/generated/static_storyboard/storyboard.md",
+      "source_hash": "sha256:1e7704642f264d78787c4fa841edd49dbe2143fe9f9415ad018b1f22ba4d4d82",
+      "render_status": "env-gated",
+      "render_baseline": null,
+      "capabilities": {
+        "primitives": [
+          "arrow",
+          "code",
+          "formula",
+          "icon",
+          "rect",
+          "text"
+        ],
+        "animations": [
+          "draw",
+          "fade_in",
+          "fade_out",
+          "highlight"
+        ]
+      },
+      "degradations": {}
+    }
+  ],
+  "preview": null
+}
