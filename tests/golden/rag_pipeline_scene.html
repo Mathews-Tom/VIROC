@@ -5,7 +5,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>VIROC Scene</title>
-<!-- viroc-adapter-source-version: html-source-v0.1 -->
+<!-- viroc-adapter-source-version: html-source-v0.2 -->
 <style>
 :root {
   color-scheme: dark;
@@ -148,13 +148,13 @@ body {
 <main id="scene" role="img" aria-label="VIROC scene" data-fps="30" data-total-frames="1050" style="width:1920px;height:1080px">
   <div class="layer" id="object-layer">
     <div class="object primitive-rect style-node-data-source" data-object-id="pipeline.documents.box" style="left:264px;top:482px;width:258px;height:68px;z-index:0;--fill-color:#1D4ED8;--stroke-color:#60A5FA"></div>
-    <div class="object primitive-text style-label" data-object-id="pipeline.documents.label" style="left:330px;top:562px;width:126px;height:36px;z-index:0;--color:#E5E7EB"><span>Documents</span></div>
+    <div class="object primitive-text style-label" data-object-id="pipeline.documents.label" style="left:330px;top:562px;width:126px;height:36px;z-index:0;--color:#F8FAFC"><span>Documents</span></div>
     <div class="object primitive-rect style-node-intermediate" data-object-id="pipeline.chunks.box" style="left:642px;top:482px;width:258px;height:68px;z-index:0;--fill-color:#7C3AED;--stroke-color:#C4B5FD"></div>
-    <div class="object primitive-text style-label" data-object-id="pipeline.chunks.label" style="left:729px;top:562px;width:84px;height:36px;z-index:0;--color:#E5E7EB"><span>Chunks</span></div>
+    <div class="object primitive-text style-label" data-object-id="pipeline.chunks.label" style="left:729px;top:562px;width:84px;height:36px;z-index:0;--color:#F8FAFC"><span>Chunks</span></div>
     <div class="object primitive-rect style-node-model" data-object-id="pipeline.embedder.box" style="left:1020px;top:482px;width:258px;height:68px;z-index:0;--fill-color:#BE123C;--stroke-color:#FDA4AF"></div>
-    <div class="object primitive-text style-label" data-object-id="pipeline.embedder.label" style="left:1044px;top:562px;width:210px;height:36px;z-index:0;--color:#E5E7EB"><span>Embedder</span></div>
+    <div class="object primitive-text style-label" data-object-id="pipeline.embedder.label" style="left:1044px;top:562px;width:210px;height:36px;z-index:0;--color:#F8FAFC"><span>Embedding Model</span></div>
     <div class="object primitive-rect style-node-storage" data-object-id="pipeline.vector_db.box" style="left:1398px;top:482px;width:258px;height:68px;z-index:0;--fill-color:#047857;--stroke-color:#6EE7B7"></div>
-    <div class="object primitive-text style-label" data-object-id="pipeline.vector_db.label" style="left:1464px;top:562px;width:126px;height:36px;z-index:0;--color:#E5E7EB"><span>Vector Db</span></div>
+    <div class="object primitive-text style-label" data-object-id="pipeline.vector_db.label" style="left:1464px;top:562px;width:126px;height:36px;z-index:0;--color:#F8FAFC"><span>Vector DB</span></div>
     <div class="object primitive-arrow style-edge-split" data-object-id="pipeline.documents.chunks.arrow" style="left:522px;top:512px;width:120px;height:8px;z-index:0;--color:#38BDF8"><svg viewBox="0 0 120 8" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="4" x2="108" y2="4" stroke-width="8" /><path d="M 108 0 L 120 4 L 108 8 Z" /></svg></div>
     <div class="object primitive-arrow style-edge-transform" data-object-id="pipeline.chunks.embedder.arrow" style="left:900px;top:512px;width:120px;height:8px;z-index:0;--color:#A78BFA"><svg viewBox="0 0 120 8" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="4" x2="108" y2="4" stroke-width="8" /><path d="M 108 0 L 120 4 L 108 8 Z" /></svg></div>
     <div class="object primitive-arrow style-edge-store" data-object-id="pipeline.embedder.vector_db.arrow" style="left:1278px;top:512px;width:120px;height:8px;z-index:0;--color:#22C55E"><svg viewBox="0 0 120 8" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="4" x2="108" y2="4" stroke-width="8" /><path d="M 108 0 L 120 4 L 108 8 Z" /></svg></div>
