@@ -1,4 +1,4 @@
-vidir_version: '0.1'
+scene_plan_version: '0.1'
 video:
   id: showcase-composition
   title: VIROC Showcase Grammar — Composition Primitives
@@ -46,6 +46,8 @@ entities:
   type: intermediate
 scenes:
 - id: primitives
+  title: Composition primitives
+  goal: Show one of each composition kind in a non-row 2x2 grid.
   grammar: showcase
   duration: 6s
   nodes:
@@ -63,9 +65,10 @@ scenes:
   - from: author_note
     to: proof_block
     kind: flow
-  beats: []
   narration: Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.
 - id: fanout
+  title: Fan-out
+  goal: Fan one resolver service out to three artifacts.
   grammar: showcase
   duration: 6s
   nodes:
@@ -83,9 +86,10 @@ scenes:
   - from: resolver
     to: build_manifest
     kind: split
-  beats: []
   narration: One resolver fans out into Concrete IR, a review surface, and a build manifest.
 - id: comparison
+  title: Comparison
+  goal: Place two portable backend paths side by side.
   grammar: showcase
   duration: 6s
   nodes:
@@ -100,23 +104,4 @@ scenes:
   - from: remotion_path
     to: remotion_source
     kind: compare
-  beats: []
   narration: 'Two portable backend paths compared side by side: HTML versus Remotion source.'
-validation:
-  required_entities:
-  - input_panel
-  - ir_card
-  - author_note
-  - proof_block
-  - resolver
-  - concrete_ir
-  - review_surface
-  - build_manifest
-  - html_path
-  - remotion_path
-  - html_source
-  - remotion_source
-  checks:
-  - schema
-  - layout
-  - timing
