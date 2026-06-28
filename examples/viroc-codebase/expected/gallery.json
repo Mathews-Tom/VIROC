@@ -12,6 +12,10 @@
   },
   "story_arc": [
     {
+      "id": "title_card",
+      "claim": "Open on the product promise."
+    },
+    {
       "id": "concept_input",
       "claim": "Start from a concept: a repo, a document set, and a topic brief."
     },
@@ -38,6 +42,10 @@
     {
       "id": "parity_proof",
       "claim": "Backends are compared and source hashes plus build.json close the reproducibility proof."
+    },
+    {
+      "id": "closing",
+      "claim": "Close on the guarantees."
     }
   ],
   "parity": {
@@ -56,7 +64,7 @@
       "id": "manim",
       "source_root": "expected/generated/manim",
       "source_entry": "expected/generated/manim/scene.py",
-      "source_hash": "sha256:8ffe9c0ddeddf9740db24ead05f213ebea7bc61265655a635a87b97daf89511f",
+      "source_hash": "sha256:2f73ca5b1e4894c4d489c37ba12154e8e0c04b3f320d8958700ef6108dc07f3c",
       "render_status": "baseline-committed",
       "render_baseline": "expected/manim/render.json",
       "capabilities": {
@@ -81,7 +89,7 @@
       "id": "html",
       "source_root": "expected/generated/html",
       "source_entry": "expected/generated/html/scene.html",
-      "source_hash": "sha256:8af1ecb0753e52a80334faa540fbfd50fbeb34fc63ff6db899ef87f6b3e7e0e1",
+      "source_hash": "sha256:76ccc1c7f6a1337722ad0981f74e28017185ada2d38a7ea762d370b80471202b",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {
@@ -106,7 +114,7 @@
       "id": "remotion",
       "source_root": "expected/generated/remotion",
       "source_entry": "expected/generated/remotion/package.json",
-      "source_hash": "sha256:edc8bf7fb8fb2fd4b3c249597172efc7727092f2a824ddd6fc14e968dd47bb53",
+      "source_hash": "sha256:3671c07f06b134441fc0dd43d2dc97f74b3a6a191cb05c33a09f7d0a8d90d8e0",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {

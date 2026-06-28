@@ -1,27 +1,35 @@
 1
-00:00:00,000 --> 00:00:05,000
-Start from a concept: a repo, a document set, and a topic brief, not renderer code.
+00:00:00,000 --> 00:00:04,000
+From a topic to a verified, portable video.
 
 2
-00:00:05,000 --> 00:00:11,000
-The guided planner derives a script, a scene plan, and an outline before any IR exists.
+00:00:04,000 --> 00:00:09,000
+Start from a concept: a repo, a document set, and a topic brief, not renderer code.
 
 3
-00:00:11,000 --> 00:00:16,000
-The approved outline becomes editable VidIR the user and agents refine.
+00:00:09,000 --> 00:00:15,000
+The guided planner derives a script, a scene plan, and an outline before any IR exists.
 
 4
-00:00:16,000 --> 00:00:22,000
-viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.
+00:00:15,000 --> 00:00:20,000
+The approved outline becomes editable VidIR the user and agents refine.
 
 5
-00:00:22,000 --> 00:00:28,000
-The review surface shows scene cards and the script as an inspectable artifact before final render.
+00:00:20,000 --> 00:00:26,000
+viroc check surfaces typed VIR diagnostics so the storyboard is repaired before render.
 
 6
-00:00:28,000 --> 00:00:34,000
-One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.
+00:00:26,000 --> 00:00:32,000
+The review surface shows scene cards and the script as an inspectable artifact before final render.
 
 7
-00:00:34,000 --> 00:00:40,000
+00:00:32,000 --> 00:00:38,000
+One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.
+
+8
+00:00:38,000 --> 00:00:44,000
 Backend paths compared side by side; source hashes and build.json close the proof.
+
+9
+00:00:44,000 --> 00:00:48,000
+Reviewable, testable, reproducible — VidIR is the source of truth.

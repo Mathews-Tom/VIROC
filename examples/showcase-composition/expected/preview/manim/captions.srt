@@ -1,11 +1,15 @@
 1
-00:00:00,000 --> 00:00:06,000
-Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.
+00:00:00,000 --> 00:00:04,000
+The showcase grammar composes content, not just boxes.
 
 2
-00:00:06,000 --> 00:00:12,000
-One resolver fans out into Concrete IR, a review surface, and a build manifest.
+00:00:04,000 --> 00:00:10,000
+Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.
 
 3
-00:00:12,000 --> 00:00:18,000
+00:00:10,000 --> 00:00:16,000
+One resolver fans out into Concrete IR, a review surface, and a build manifest.
+
+4
+00:00:16,000 --> 00:00:22,000
 Two portable backend paths compared side by side: HTML versus Remotion source.

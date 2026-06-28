@@ -12,16 +12,20 @@
   },
   "story_arc": [
     {
+      "id": "title_card",
+      "claim": "Open on the grammar's promise."
+    },
+    {
       "id": "primitives",
-      "claim": "One of each composition kind in a non-row 2x2 grid: panel, code card, callout, evidence block."
+      "claim": "Show one of each composition kind in a non-row 2x2 grid."
     },
     {
       "id": "fanout",
-      "claim": "One resolver fans out into Concrete IR, a review surface, and a build manifest."
+      "claim": "Fan one resolver service out to three artifacts."
     },
     {
       "id": "comparison",
-      "claim": "Two portable backend paths compared side by side: HTML versus Remotion source."
+      "claim": "Place two portable backend paths side by side."
     }
   ],
   "parity": {
@@ -40,7 +44,7 @@
       "id": "manim",
       "source_root": "expected/generated/manim",
       "source_entry": "expected/generated/manim/scene.py",
-      "source_hash": "sha256:efd0d36e5771862aa945a50a2a81999fc71d2b1586d860dd00da06afab116ae2",
+      "source_hash": "sha256:1fa958f909aa122c3df4f88224c67e4d41ac5087aae2fb5079aba62eae16c500",
       "render_status": "baseline-committed",
       "render_baseline": "expected/manim/render.json",
       "capabilities": {
@@ -65,7 +69,7 @@
       "id": "html",
       "source_root": "expected/generated/html",
       "source_entry": "expected/generated/html/scene.html",
-      "source_hash": "sha256:0f1330cb57bf9e41ed345ee283439a12bf61ba3ab59dcf934beda00151a3aa28",
+      "source_hash": "sha256:c0c9241ff70c0edd44eb3dfa405da0bbd2e81e7af17b18cf0bce5baf5086d58e",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {
@@ -90,7 +94,7 @@
       "id": "remotion",
       "source_root": "expected/generated/remotion",
       "source_entry": "expected/generated/remotion/package.json",
-      "source_hash": "sha256:998c6233bac1b2ca42fb1505e597bb0aed03b92303ebd206c0fd31c4e3b5b018",
+      "source_hash": "sha256:bc8005f460c08ba1f16304634097cbe3caaab83f4b02e9b3c2e9814df596999f",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {
@@ -115,7 +119,7 @@
       "id": "static_storyboard",
       "source_root": "expected/generated/static_storyboard",
       "source_entry": "expected/generated/static_storyboard/storyboard.md",
-      "source_hash": "sha256:81859157b5ed1f5bf366800ce47cd74799a98377e2fe78f25a3771bba547afb7",
+      "source_hash": "sha256:356fefdc66160093ecaa4b037c32e781d2d5125c271913d1d120260d3dc35c0f",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {

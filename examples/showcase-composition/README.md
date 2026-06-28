@@ -23,6 +23,7 @@ viroc render   examples/showcase-composition --backend static_storyboard
 
 | Scene | Template | Claim |
 |---|---|---|
+| `title_card` | statement | The showcase grammar composes content, not just boxes — a title card and a centered claim, no boxes. |
 | `primitives` | grid | One of each composition kind in a non-row 2x2 grid: a panel (`data_source`), a code card (`intermediate` → `code`), a callout (`user`), and an evidence block (`storage` → `formula`). |
 | `fanout` | fan-out | One resolver service fans out into Concrete IR, a review surface, and a build manifest. |
 | `comparison` | comparison | Two portable backend paths compared side by side: HTML versus Remotion source. |
@@ -39,10 +40,10 @@ Committed generated source lives under `expected/generated/`, so the example can
 
 | Backend | Committed source root | Entry file | Source hash | Render reference |
 |---|---|---|---|---|
-| `manim` | `expected/generated/manim/` | `expected/generated/manim/scene.py` | `sha256:efd0d36e5771862aa945a50a2a81999fc71d2b1586d860dd00da06afab116ae2` | preview video at `expected/preview/manim/showcase-composition.mp4`; perceptual baseline at `expected/manim/render.json`; `code`/`formula` degraded to `rect` with `VIR5033` |
-| `html` | `expected/generated/html/` | `expected/generated/html/scene.html` | `sha256:0f1330cb57bf9e41ed345ee283439a12bf61ba3ab59dcf934beda00151a3aa28` | env-gated render; full `code`/`formula` fidelity |
-| `remotion` | `expected/generated/remotion/` | `expected/generated/remotion/package.json` | `sha256:998c6233bac1b2ca42fb1505e597bb0aed03b92303ebd206c0fd31c4e3b5b018` | env-gated render; full `code`/`formula` fidelity |
-| `static_storyboard` | `expected/generated/static_storyboard/` | `expected/generated/static_storyboard/storyboard.md` | `sha256:81859157b5ed1f5bf366800ce47cd74799a98377e2fe78f25a3771bba547afb7` | review surface (Markdown scene cards + script) |
+| `manim` | `expected/generated/manim/` | `expected/generated/manim/scene.py` | `sha256:1fa958f909aa122c3df4f88224c67e4d41ac5087aae2fb5079aba62eae16c500` | preview video at `expected/preview/manim/showcase-composition.mp4`; perceptual baseline at `expected/manim/render.json`; `code`/`formula` degraded to `rect` with `VIR5033` |
+| `html` | `expected/generated/html/` | `expected/generated/html/scene.html` | `sha256:c0c9241ff70c0edd44eb3dfa405da0bbd2e81e7af17b18cf0bce5baf5086d58e` | env-gated render; full `code`/`formula` fidelity |
+| `remotion` | `expected/generated/remotion/` | `expected/generated/remotion/package.json` | `sha256:bc8005f460c08ba1f16304634097cbe3caaab83f4b02e9b3c2e9814df596999f` | env-gated render; full `code`/`formula` fidelity |
+| `static_storyboard` | `expected/generated/static_storyboard/` | `expected/generated/static_storyboard/storyboard.md` | `sha256:356fefdc66160093ecaa4b037c32e781d2d5125c271913d1d120260d3dc35c0f` | review surface (Markdown scene cards + script) |
 
 Guided-flow provenance, all committed and regenerable:
 

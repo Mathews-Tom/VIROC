@@ -11,30 +11,48 @@ entities:
 - id: query
   label: User question
   type: data_source
+  detail: asked at runtime
+  body: []
 - id: documents
   label: Documents
   type: data_source
+  detail: the source corpus
+  body: []
 - id: chunks
   label: Chunks
   type: intermediate
+  detail: split for retrieval
+  body: []
 - id: embedder
   label: Embedding model
   type: model
+  detail: text to vectors
+  body: []
 - id: vector_db
   label: Vector store
   type: storage
+  detail: indexed embeddings
+  body: []
 - id: retrieved_context
   label: Retrieved context
   type: intermediate
+  detail: top-k neighbours
+  body: []
 - id: llm
   label: LLM
   type: model
+  detail: the generator
+  body: []
 - id: bare_answer
   label: Bare prompt answer
   type: data_source
+  detail: no grounding
+  body: []
 - id: grounded_answer
   label: Grounded answer
   type: data_source
+  detail: cites the corpus
+  body: []
 scenes:
 - id: problem_setup
   title: The grounding gap
@@ -50,6 +68,7 @@ scenes:
     to: llm
     kind: flow
   narration: A user question reaches the model, but the answer still needs the document corpus.
+  emphasis: []
 - id: indexing_path
   title: Index the corpus
   goal: Stage the offline indexing path from documents to a vector store.
@@ -71,6 +90,7 @@ scenes:
     to: vector_db
     kind: store
   narration: 'VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.'
+  emphasis: []
 - id: retrieval_path
   title: Retrieve at query time
   goal: Probe the vector store with the question and pull back the nearest context.
@@ -88,6 +108,7 @@ scenes:
     to: retrieved_context
     kind: flow
   narration: At query time, the same question probes the vector store and pulls back the nearest context.
+  emphasis: []
 - id: answer_synthesis
   title: Synthesize a grounded answer
   goal: Carry the question and retrieved context into the model for synthesis.
@@ -109,6 +130,7 @@ scenes:
     to: grounded_answer
     kind: transform
   narration: The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.
+  emphasis: []
 - id: payoff
   title: Bare versus grounded
   goal: Contrast the bare-prompt answer with the grounded result.
@@ -126,3 +148,4 @@ scenes:
     to: grounded_answer
     kind: merge
   narration: 'The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.'
+  emphasis: []

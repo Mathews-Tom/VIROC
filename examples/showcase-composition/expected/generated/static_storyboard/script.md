@@ -12,3 +12,7 @@
 
 - Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.
 
+## title_card
+
+- The showcase grammar composes content, not just boxes.
+

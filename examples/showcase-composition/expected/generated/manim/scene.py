@@ -11,6 +11,8 @@
 # pyright: reportUntypedBaseClass=false
 from manim import (
     BOLD,
+    NORMAL,
+    RIGHT,
     Arrow,
     Create,
     FadeIn,
@@ -24,7 +26,7 @@ from manim import (
     smooth,
 )
 
-# viroc-adapter-source-version: manim-source-v0.2
+# viroc-adapter-source-version: manim-source-v0.3
 config.pixel_width = 1920
 config.pixel_height = 1080
 config.frame_width = 14.222222222222
@@ -36,6 +38,8 @@ _FONT = "Helvetica"
 _FONT_SIZE = 34
 _CAPTION_SIZE = 30
 _CAPTION_COLOR = "#E2E8F0"
+_MONO_FONT = "Menlo"
+_INNER_PAD = 28
 
 
 def _x(value: float) -> float:
@@ -76,15 +80,22 @@ def _rect(x: float, y: float, w: float, h: float, fill: str, stroke: str) -> Rou
     ).move_to(_center(x, y, w, h))
 
 
-def _text(text: str, x: float, y: float, w: float, h: float, color: str) -> Text:
-    label = Text(text, font=_FONT, font_size=_FONT_SIZE, color=color, weight=BOLD)
-    max_w = _width(w) * 0.86
-    max_h = _height(h) * 0.72
+def _text(
+    text: str, x: float, y: float, w: float, h: float,
+    color: str, size: float, bold: bool, mono: bool, align: str,
+) -> Text:
+    label = Text(
+        text, font=_MONO_FONT if mono else _FONT, color=color,
+        weight=BOLD if bold else NORMAL,
+    )
+    label.scale_to_fit_height(_height(size))
+    max_w = _width(w) * 0.94
     if label.width > max_w:
         label.scale_to_fit_width(max_w)
-    if label.height > max_h:
-        label.scale_to_fit_height(max_h)
-    return label.move_to(_center(x, y, w, h))
+    label.move_to(_center(x, y, w, h))
+    if align == "left":
+        label.shift(RIGHT * (label.width / 2 - _width(w) / 2 + _width(_INNER_PAD)))
+    return label
 
 
 def _arrow(x: float, y: float, w: float, h: float, color: str) -> Arrow:
@@ -110,498 +121,771 @@ class VirocScene(Scene):
     def construct(self) -> None:
         self.camera.background_color = _BACKGROUND
         objects = {}
-        objects["primitives.input_panel.panel"] = _rect(664, 292, 252, 168, "#1D4ED8", "#60A5FA")
-        objects["primitives.input_panel.title"] = _text("Authored input", 692, 472, 196, 36, "#F8FAFC")
-        objects["primitives.ir_card.code_card"] = _rect(1004, 292, 252, 168, "#1E293B", "#38BDF8")
-        objects["primitives.ir_card.title"] = _text("Semantic IR", 1053, 472, 154, 36, "#F8FAFC")
-        objects["primitives.author_note.callout"] = _rect(664, 572, 252, 168, "#B45309", "#FBBF24")
-        objects["primitives.author_note.title"] = _text("Author note", 713, 752, 154, 36, "#F8FAFC")
-        objects["primitives.proof_block.evidence"] = _rect(1004, 572, 252, 168, "#312E81", "#818CF8")
-        objects["primitives.proof_block.title"] = _text("Source hashes", 1039, 752, 182, 36, "#F8FAFC")
-        objects["fanout.resolver.panel"] = _rect(664, 432, 252, 168, "#0891B2", "#67E8F9")
-        objects["fanout.resolver.title"] = _text("Resolver", 734, 612, 112, 36, "#F8FAFC")
-        objects["fanout.concrete_ir.code_card"] = _rect(1004, 152, 252, 168, "#1E293B", "#38BDF8")
-        objects["fanout.concrete_ir.title"] = _text("Concrete IR", 1053, 332, 154, 36, "#F8FAFC")
-        objects["fanout.review_surface.panel"] = _rect(1004, 432, 252, 168, "#1D4ED8", "#60A5FA")
-        objects["fanout.review_surface.title"] = _text("Review surface", 1032, 612, 196, 36, "#F8FAFC")
-        objects["fanout.build_manifest.evidence"] = _rect(1004, 712, 252, 168, "#312E81", "#818CF8")
-        objects["fanout.build_manifest.title"] = _text("build.json", 1060, 892, 140, 36, "#F8FAFC")
+        objects["title_card.brand_title.heading"] = _text("Showcase grammar", 283, 394, 1354, 132, "#F8FAFC", 76, True, False, "center")
+        objects["title_card.brand_claim.statement"] = _text("Panels, code cards, callouts, evidence — composed, not rowed.", 283, 582, 1354, 104, "#F8FAFC", 52, True, False, "center")
+        objects["primitives.input_panel.panel"] = _rect(608, 292, 308, 168, "#1D4ED8", "#60A5FA")
+        objects["primitives.input_panel.title"] = _text("Authored input", 664, 314, 196, 36, "#F8FAFC", 40, True, False, "center")
+        objects["primitives.input_panel.detail"] = _text("viroc.yaml + vidir", 636, 472, 252, 36, "#E2E8F0", 26, False, False, "center")
+        objects["primitives.ir_card.code_card"] = _rect(1004, 292, 308, 168, "#1E293B", "#38BDF8")
+        objects["primitives.ir_card.title"] = _text("Semantic IR", 1081, 314, 154, 36, "#F8FAFC", 40, True, False, "center")
+        objects["primitives.ir_card.body.0"] = _text("scenes: [...]", 1032, 360, 182, 32, "#7DD3FC", 28, False, True, "left")
+        objects["primitives.ir_card.body.1"] = _text("entities: [...]", 1032, 392, 210, 32, "#7DD3FC", 28, False, True, "left")
+        objects["primitives.ir_card.detail"] = _text("the editable IR", 1053, 472, 210, 36, "#E2E8F0", 26, False, False, "center")
+        objects["primitives.author_note.callout"] = _rect(608, 572, 308, 168, "#B45309", "#FBBF24")
+        objects["primitives.author_note.title"] = _text("Author note", 685, 594, 154, 36, "#F8FAFC", 40, True, False, "center")
+        objects["primitives.author_note.detail"] = _text("human in the loop", 643, 752, 238, 36, "#E2E8F0", 26, False, False, "center")
+        objects["primitives.proof_block.evidence"] = _rect(1004, 572, 308, 168, "#312E81", "#818CF8")
+        objects["primitives.proof_block.title"] = _text("Source hashes", 1067, 594, 182, 36, "#F8FAFC", 40, True, False, "center")
+        objects["primitives.proof_block.body.0"] = _text("manim    sha256", 1032, 640, 210, 32, "#7DD3FC", 28, False, True, "left")
+        objects["primitives.proof_block.body.1"] = _text("html     sha256", 1032, 672, 210, 32, "#7DD3FC", 28, False, True, "left")
+        objects["primitives.proof_block.body.2"] = _text("remotion sha256", 1032, 704, 210, 32, "#7DD3FC", 28, False, True, "left")
+        objects["primitives.proof_block.detail"] = _text("byte-stable", 1081, 752, 154, 36, "#E2E8F0", 26, False, False, "center")
+        objects["fanout.resolver.panel"] = _rect(622, 432, 294, 168, "#0891B2", "#67E8F9")
+        objects["fanout.resolver.title"] = _text("Resolver", 713, 454, 112, 36, "#F8FAFC", 40, True, False, "center")
+        objects["fanout.resolver.detail"] = _text("layout + time", 678, 612, 182, 36, "#E2E8F0", 26, False, False, "center")
+        objects["fanout.concrete_ir.code_card"] = _rect(1004, 152, 294, 168, "#1E293B", "#38BDF8")
+        objects["fanout.concrete_ir.title"] = _text("Concrete IR", 1074, 174, 154, 36, "#F8FAFC", 40, True, False, "center")
+        objects["fanout.concrete_ir.body.0"] = _text("objects + boxes", 1032, 220, 210, 32, "#7DD3FC", 28, False, True, "left")
+        objects["fanout.concrete_ir.body.1"] = _text("keyframes", 1032, 252, 126, 32, "#7DD3FC", 28, False, True, "left")
+        objects["fanout.concrete_ir.detail"] = _text("resolved + placed", 1032, 332, 238, 36, "#E2E8F0", 26, False, False, "center")
+        objects["fanout.review_surface.panel"] = _rect(1004, 432, 294, 168, "#1D4ED8", "#60A5FA")
+        objects["fanout.review_surface.title"] = _text("Review surface", 1053, 454, 196, 36, "#F8FAFC", 40, True, False, "center")
+        objects["fanout.review_surface.detail"] = _text("before render", 1060, 612, 182, 36, "#E2E8F0", 26, False, False, "center")
+        objects["fanout.build_manifest.evidence"] = _rect(1004, 712, 294, 168, "#312E81", "#818CF8")
+        objects["fanout.build_manifest.title"] = _text("build.json", 1081, 734, 140, 36, "#F8FAFC", 40, True, False, "center")
+        objects["fanout.build_manifest.body.0"] = _text("renderer + phash", 1032, 780, 224, 32, "#7DD3FC", 28, False, True, "left")
+        objects["fanout.build_manifest.body.1"] = _text("source_hash", 1032, 812, 154, 32, "#7DD3FC", 28, False, True, "left")
+        objects["fanout.build_manifest.detail"] = _text("reproducibility", 1046, 892, 210, 36, "#E2E8F0", 26, False, False, "center")
         objects["fanout.resolver.concrete_ir.link"] = _arrow(916, 232, 88, 8, "#38BDF8")
         objects["fanout.resolver.review_surface.link"] = _arrow(916, 512, 88, 8, "#38BDF8")
         objects["fanout.resolver.build_manifest.link"] = _arrow(916, 792, 88, 8, "#38BDF8")
-        objects["comparison.html_path.panel"] = _rect(650, 292, 266, 168, "#0891B2", "#67E8F9")
-        objects["comparison.html_path.title"] = _text("HTML path", 720, 472, 126, 36, "#F8FAFC")
-        objects["comparison.remotion_path.panel"] = _rect(650, 572, 266, 168, "#0891B2", "#67E8F9")
-        objects["comparison.remotion_path.title"] = _text("Remotion path", 692, 752, 182, 36, "#F8FAFC")
-        objects["comparison.html_source.code_card"] = _rect(1004, 292, 266, 168, "#1E293B", "#38BDF8")
-        objects["comparison.html_source.title"] = _text("scene.html", 1067, 472, 140, 36, "#F8FAFC")
-        objects["comparison.remotion_source.code_card"] = _rect(1004, 572, 266, 168, "#1E293B", "#38BDF8")
-        objects["comparison.remotion_source.title"] = _text("Composition.tsx", 1032, 752, 210, 36, "#F8FAFC")
+        objects["comparison.html_path.panel"] = _rect(622, 292, 294, 168, "#0891B2", "#67E8F9")
+        objects["comparison.html_path.title"] = _text("HTML path", 706, 314, 126, 36, "#F8FAFC", 40, True, False, "center")
+        objects["comparison.html_path.detail"] = _text("browser render", 671, 472, 196, 36, "#E2E8F0", 26, False, False, "center")
+        objects["comparison.remotion_path.panel"] = _rect(622, 572, 294, 168, "#0891B2", "#67E8F9")
+        objects["comparison.remotion_path.title"] = _text("Remotion path", 678, 594, 182, 36, "#F8FAFC", 40, True, False, "center")
+        objects["comparison.remotion_path.detail"] = _text("react render", 685, 752, 168, 36, "#E2E8F0", 26, False, False, "center")
+        objects["comparison.html_source.code_card"] = _rect(1004, 292, 294, 168, "#1E293B", "#38BDF8")
+        objects["comparison.html_source.title"] = _text("scene.html", 1081, 314, 140, 36, "#F8FAFC", 40, True, False, "center")
+        objects["comparison.html_source.body.0"] = _text("positioned divs", 1032, 360, 210, 32, "#7DD3FC", 28, False, True, "left")
+        objects["comparison.html_source.body.1"] = _text("inline styles", 1032, 392, 182, 32, "#7DD3FC", 28, False, True, "left")
+        objects["comparison.html_source.detail"] = _text("self-contained", 1053, 472, 196, 36, "#E2E8F0", 26, False, False, "center")
+        objects["comparison.remotion_source.code_card"] = _rect(1004, 572, 294, 168, "#1E293B", "#38BDF8")
+        objects["comparison.remotion_source.title"] = _text("Composition.tsx", 1046, 594, 210, 36, "#F8FAFC", 40, True, False, "center")
+        objects["comparison.remotion_source.body.0"] = _text("<AbsoluteFill>", 1032, 640, 196, 32, "#7DD3FC", 28, False, True, "left")
+        objects["comparison.remotion_source.body.1"] = _text("<Sequence>", 1032, 672, 140, 32, "#7DD3FC", 28, False, True, "left")
+        objects["comparison.remotion_source.detail"] = _text("generated project", 1032, 752, 238, 36, "#E2E8F0", 26, False, False, "center")
         objects["comparison.compare.0"] = _arrow(916, 372, 88, 8, "#E879F9")
         objects["comparison.compare.1"] = _arrow(916, 652, 88, 8, "#E879F9")
 
         timeline_f = 0
+        caption = _caption("The showcase grammar composes content, not just boxes.")
+        self.add(caption)
+        self.play(
+            FadeIn(objects["title_card.brand_title.heading"], rate_func=_rate_func("ease_in_out")),
+            run_time=40 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 40
+        caption = _caption("The showcase grammar composes content, not just boxes.")
+        self.add(caption)
+        if timeline_f < 20:
+            self.wait((20 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["title_card.brand_claim.statement"], rate_func=_rate_func("ease_in_out")),
+            run_time=20 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 40
+        caption = _caption("The showcase grammar composes content, not just boxes.")
+        self.add(caption)
+        if timeline_f < 100:
+            self.wait((100 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeOut(objects["title_card.brand_title.heading"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["title_card.brand_claim.statement"], rate_func=_rate_func("ease_in_out")),
+            run_time=20 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 120
         caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
         self.add(caption)
+        if timeline_f < 120:
+            self.wait((120 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["primitives.input_panel.panel"], rate_func=_rate_func("ease_in_out")),
             run_time=60 / config.frame_rate,
         )
         self.remove(caption)
-        timeline_f = 60
+        timeline_f = 180
         caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
         self.add(caption)
-        if timeline_f < 7:
-            self.wait((7 - timeline_f) / config.frame_rate)
+        if timeline_f < 123:
+            self.wait((123 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["primitives.input_panel.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=53 / config.frame_rate,
+            run_time=57 / config.frame_rate,
         )
         self.remove(caption)
-        timeline_f = 60
-        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
-        self.add(caption)
-        if timeline_f < 14:
-            self.wait((14 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["primitives.ir_card.code_card"], rate_func=_rate_func("ease_in_out")),
-            run_time=46 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 60
-        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
-        self.add(caption)
-        if timeline_f < 21:
-            self.wait((21 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["primitives.ir_card.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=39 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 60
-        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
-        self.add(caption)
-        if timeline_f < 28:
-            self.wait((28 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["primitives.author_note.callout"], rate_func=_rate_func("ease_in_out")),
-            run_time=32 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 60
-        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
-        self.add(caption)
-        if timeline_f < 35:
-            self.wait((35 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["primitives.author_note.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=25 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 60
-        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
-        self.add(caption)
-        if timeline_f < 42:
-            self.wait((42 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["primitives.proof_block.evidence"], rate_func=_rate_func("ease_in_out")),
-            run_time=18 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 60
-        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
-        self.add(caption)
-        if timeline_f < 49:
-            self.wait((49 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["primitives.proof_block.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=11 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 60
-        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
-        self.add(caption)
-        if timeline_f < 60:
-            self.wait((60 - timeline_f) / config.frame_rate)
-        self.play(
-            Indicate(objects["primitives.input_panel.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 82
-        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
-        self.add(caption)
-        if timeline_f < 82:
-            self.wait((82 - timeline_f) / config.frame_rate)
-        self.play(
-            Indicate(objects["primitives.ir_card.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 104
-        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
-        self.add(caption)
-        if timeline_f < 104:
-            self.wait((104 - timeline_f) / config.frame_rate)
-        self.play(
-            Indicate(objects["primitives.author_note.callout"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 126
+        timeline_f = 180
         caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
         self.add(caption)
         if timeline_f < 126:
             self.wait((126 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["primitives.proof_block.evidence"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
+            FadeIn(objects["primitives.input_panel.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=54 / config.frame_rate,
         )
         self.remove(caption)
-        timeline_f = 148
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 129:
+            self.wait((129 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.ir_card.code_card"], rate_func=_rate_func("ease_in_out")),
+            run_time=51 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 132:
+            self.wait((132 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.ir_card.title"], rate_func=_rate_func("ease_in_out")),
+            run_time=48 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 135:
+            self.wait((135 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.ir_card.body.0"], rate_func=_rate_func("ease_in_out")),
+            run_time=45 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 138:
+            self.wait((138 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.ir_card.body.1"], rate_func=_rate_func("ease_in_out")),
+            run_time=42 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 141:
+            self.wait((141 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.ir_card.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=39 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 144:
+            self.wait((144 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.author_note.callout"], rate_func=_rate_func("ease_in_out")),
+            run_time=36 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 147:
+            self.wait((147 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.author_note.title"], rate_func=_rate_func("ease_in_out")),
+            run_time=33 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
         caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
         self.add(caption)
         if timeline_f < 150:
             self.wait((150 - timeline_f) / config.frame_rate)
         self.play(
-            FadeOut(objects["primitives.input_panel.panel"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["primitives.input_panel.title"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["primitives.ir_card.code_card"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["primitives.ir_card.title"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["primitives.author_note.callout"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["primitives.author_note.title"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["primitives.proof_block.evidence"], rate_func=_rate_func("ease_in_out")),
-            FadeOut(objects["primitives.proof_block.title"], rate_func=_rate_func("ease_in_out")),
+            FadeIn(objects["primitives.author_note.detail"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
         self.remove(caption)
         timeline_f = 180
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 153:
+            self.wait((153 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.proof_block.evidence"], rate_func=_rate_func("ease_in_out")),
+            run_time=27 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 156:
+            self.wait((156 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.proof_block.title"], rate_func=_rate_func("ease_in_out")),
+            run_time=24 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 159:
+            self.wait((159 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.proof_block.body.0"], rate_func=_rate_func("ease_in_out")),
+            run_time=21 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 162:
+            self.wait((162 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.proof_block.body.1"], rate_func=_rate_func("ease_in_out")),
+            run_time=18 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 165:
+            self.wait((165 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.proof_block.body.2"], rate_func=_rate_func("ease_in_out")),
+            run_time=15 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 168:
+            self.wait((168 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["primitives.proof_block.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=12 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 180
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
         self.add(caption)
         if timeline_f < 180:
             self.wait((180 - timeline_f) / config.frame_rate)
+        self.play(
+            Indicate(objects["primitives.ir_card.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
+            run_time=90 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 270
+        caption = _caption("Showcase composes panels, code cards, callouts, and evidence blocks in a non-row grid.")
+        self.add(caption)
+        if timeline_f < 270:
+            self.wait((270 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeOut(objects["primitives.input_panel.panel"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.input_panel.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.input_panel.detail"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.ir_card.code_card"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.ir_card.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.ir_card.body.0"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.ir_card.body.1"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.ir_card.detail"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.author_note.callout"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.author_note.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.author_note.detail"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.proof_block.evidence"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.proof_block.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.proof_block.body.0"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.proof_block.body.1"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.proof_block.body.2"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["primitives.proof_block.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=30 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 300
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 300:
+            self.wait((300 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["fanout.resolver.panel"], rate_func=_rate_func("ease_in_out")),
             run_time=60 / config.frame_rate,
         )
         self.remove(caption)
-        timeline_f = 240
+        timeline_f = 360
         caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
         self.add(caption)
-        if timeline_f < 185:
-            self.wait((185 - timeline_f) / config.frame_rate)
+        if timeline_f < 303:
+            self.wait((303 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["fanout.resolver.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=55 / config.frame_rate,
+            run_time=57 / config.frame_rate,
         )
         self.remove(caption)
-        timeline_f = 240
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 190:
-            self.wait((190 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["fanout.concrete_ir.code_card"], rate_func=_rate_func("ease_in_out")),
-            run_time=50 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 240
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 195:
-            self.wait((195 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["fanout.concrete_ir.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=45 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 240
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 200:
-            self.wait((200 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["fanout.review_surface.panel"], rate_func=_rate_func("ease_in_out")),
-            run_time=40 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 240
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 205:
-            self.wait((205 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["fanout.review_surface.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=35 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 240
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 210:
-            self.wait((210 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["fanout.build_manifest.evidence"], rate_func=_rate_func("ease_in_out")),
-            run_time=30 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 240
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 215:
-            self.wait((215 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["fanout.build_manifest.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=25 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 240
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 220:
-            self.wait((220 - timeline_f) / config.frame_rate)
-        self.play(
-            Create(objects["fanout.resolver.concrete_ir.link"], rate_func=_rate_func("ease_in_out")),
-            run_time=20 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 240
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 225:
-            self.wait((225 - timeline_f) / config.frame_rate)
-        self.play(
-            Create(objects["fanout.resolver.review_surface.link"], rate_func=_rate_func("ease_in_out")),
-            run_time=15 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 240
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 230:
-            self.wait((230 - timeline_f) / config.frame_rate)
-        self.play(
-            Create(objects["fanout.resolver.build_manifest.link"], rate_func=_rate_func("ease_in_out")),
-            run_time=10 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 240
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 240:
-            self.wait((240 - timeline_f) / config.frame_rate)
-        self.play(
-            Indicate(objects["fanout.resolver.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 262
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 262:
-            self.wait((262 - timeline_f) / config.frame_rate)
-        self.play(
-            Indicate(objects["fanout.concrete_ir.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 284
-        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
-        self.add(caption)
-        if timeline_f < 284:
-            self.wait((284 - timeline_f) / config.frame_rate)
-        self.play(
-            Indicate(objects["fanout.review_surface.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 306
+        timeline_f = 360
         caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
         self.add(caption)
         if timeline_f < 306:
             self.wait((306 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["fanout.build_manifest.evidence"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
+            FadeIn(objects["fanout.resolver.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=54 / config.frame_rate,
         )
         self.remove(caption)
-        timeline_f = 328
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 309:
+            self.wait((309 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.concrete_ir.code_card"], rate_func=_rate_func("ease_in_out")),
+            run_time=51 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 312:
+            self.wait((312 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.concrete_ir.title"], rate_func=_rate_func("ease_in_out")),
+            run_time=48 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 315:
+            self.wait((315 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.concrete_ir.body.0"], rate_func=_rate_func("ease_in_out")),
+            run_time=45 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 318:
+            self.wait((318 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.concrete_ir.body.1"], rate_func=_rate_func("ease_in_out")),
+            run_time=42 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 321:
+            self.wait((321 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.concrete_ir.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=39 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 324:
+            self.wait((324 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.review_surface.panel"], rate_func=_rate_func("ease_in_out")),
+            run_time=36 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 327:
+            self.wait((327 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.review_surface.title"], rate_func=_rate_func("ease_in_out")),
+            run_time=33 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
         caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
         self.add(caption)
         if timeline_f < 330:
             self.wait((330 - timeline_f) / config.frame_rate)
         self.play(
+            FadeIn(objects["fanout.review_surface.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=30 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 333:
+            self.wait((333 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.build_manifest.evidence"], rate_func=_rate_func("ease_in_out")),
+            run_time=27 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 336:
+            self.wait((336 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.build_manifest.title"], rate_func=_rate_func("ease_in_out")),
+            run_time=24 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 339:
+            self.wait((339 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.build_manifest.body.0"], rate_func=_rate_func("ease_in_out")),
+            run_time=21 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 342:
+            self.wait((342 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.build_manifest.body.1"], rate_func=_rate_func("ease_in_out")),
+            run_time=18 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 345:
+            self.wait((345 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["fanout.build_manifest.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=15 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 348:
+            self.wait((348 - timeline_f) / config.frame_rate)
+        self.play(
+            Create(objects["fanout.resolver.concrete_ir.link"], rate_func=_rate_func("ease_in_out")),
+            run_time=12 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 351:
+            self.wait((351 - timeline_f) / config.frame_rate)
+        self.play(
+            Create(objects["fanout.resolver.review_surface.link"], rate_func=_rate_func("ease_in_out")),
+            run_time=9 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 354:
+            self.wait((354 - timeline_f) / config.frame_rate)
+        self.play(
+            Create(objects["fanout.resolver.build_manifest.link"], rate_func=_rate_func("ease_in_out")),
+            run_time=6 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 360
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 360:
+            self.wait((360 - timeline_f) / config.frame_rate)
+        self.play(
+            Indicate(objects["fanout.concrete_ir.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
+            run_time=90 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 450
+        caption = _caption("One resolver fans out into Concrete IR, a review surface, and a build manifest.")
+        self.add(caption)
+        if timeline_f < 450:
+            self.wait((450 - timeline_f) / config.frame_rate)
+        self.play(
             FadeOut(objects["fanout.resolver.panel"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["fanout.resolver.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["fanout.resolver.detail"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["fanout.concrete_ir.code_card"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["fanout.concrete_ir.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["fanout.concrete_ir.body.0"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["fanout.concrete_ir.body.1"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["fanout.concrete_ir.detail"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["fanout.review_surface.panel"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["fanout.review_surface.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["fanout.review_surface.detail"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["fanout.build_manifest.evidence"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["fanout.build_manifest.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["fanout.build_manifest.body.0"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["fanout.build_manifest.body.1"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["fanout.build_manifest.detail"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["fanout.resolver.concrete_ir.link"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["fanout.resolver.review_surface.link"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["fanout.resolver.build_manifest.link"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
         self.remove(caption)
-        timeline_f = 360
+        timeline_f = 480
         caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
         self.add(caption)
-        if timeline_f < 360:
-            self.wait((360 - timeline_f) / config.frame_rate)
+        if timeline_f < 480:
+            self.wait((480 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["comparison.html_path.panel"], rate_func=_rate_func("ease_in_out")),
             run_time=60 / config.frame_rate,
         )
         self.remove(caption)
-        timeline_f = 420
+        timeline_f = 540
         caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
         self.add(caption)
-        if timeline_f < 366:
-            self.wait((366 - timeline_f) / config.frame_rate)
+        if timeline_f < 483:
+            self.wait((483 - timeline_f) / config.frame_rate)
         self.play(
             FadeIn(objects["comparison.html_path.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=54 / config.frame_rate,
+            run_time=57 / config.frame_rate,
         )
         self.remove(caption)
-        timeline_f = 420
-        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
-        self.add(caption)
-        if timeline_f < 372:
-            self.wait((372 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["comparison.remotion_path.panel"], rate_func=_rate_func("ease_in_out")),
-            run_time=48 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 420
-        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
-        self.add(caption)
-        if timeline_f < 378:
-            self.wait((378 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["comparison.remotion_path.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=42 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 420
-        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
-        self.add(caption)
-        if timeline_f < 384:
-            self.wait((384 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["comparison.html_source.code_card"], rate_func=_rate_func("ease_in_out")),
-            run_time=36 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 420
-        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
-        self.add(caption)
-        if timeline_f < 390:
-            self.wait((390 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["comparison.html_source.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=30 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 420
-        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
-        self.add(caption)
-        if timeline_f < 396:
-            self.wait((396 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["comparison.remotion_source.code_card"], rate_func=_rate_func("ease_in_out")),
-            run_time=24 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 420
-        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
-        self.add(caption)
-        if timeline_f < 402:
-            self.wait((402 - timeline_f) / config.frame_rate)
-        self.play(
-            FadeIn(objects["comparison.remotion_source.title"], rate_func=_rate_func("ease_in_out")),
-            run_time=18 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 420
-        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
-        self.add(caption)
-        if timeline_f < 408:
-            self.wait((408 - timeline_f) / config.frame_rate)
-        self.play(
-            Create(objects["comparison.compare.0"], rate_func=_rate_func("ease_in_out")),
-            run_time=12 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 420
-        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
-        self.add(caption)
-        if timeline_f < 414:
-            self.wait((414 - timeline_f) / config.frame_rate)
-        self.play(
-            Create(objects["comparison.compare.1"], rate_func=_rate_func("ease_in_out")),
-            run_time=6 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 420
-        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
-        self.add(caption)
-        if timeline_f < 420:
-            self.wait((420 - timeline_f) / config.frame_rate)
-        self.play(
-            Indicate(objects["comparison.html_path.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 442
-        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
-        self.add(caption)
-        if timeline_f < 442:
-            self.wait((442 - timeline_f) / config.frame_rate)
-        self.play(
-            Indicate(objects["comparison.remotion_path.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 464
-        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
-        self.add(caption)
-        if timeline_f < 464:
-            self.wait((464 - timeline_f) / config.frame_rate)
-        self.play(
-            Indicate(objects["comparison.html_source.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
-        )
-        self.remove(caption)
-        timeline_f = 486
+        timeline_f = 540
         caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
         self.add(caption)
         if timeline_f < 486:
             self.wait((486 - timeline_f) / config.frame_rate)
         self.play(
-            Indicate(objects["comparison.remotion_source.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
-            run_time=22 / config.frame_rate,
+            FadeIn(objects["comparison.html_path.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=54 / config.frame_rate,
         )
         self.remove(caption)
-        timeline_f = 508
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 489:
+            self.wait((489 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.remotion_path.panel"], rate_func=_rate_func("ease_in_out")),
+            run_time=51 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 492:
+            self.wait((492 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.remotion_path.title"], rate_func=_rate_func("ease_in_out")),
+            run_time=48 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 495:
+            self.wait((495 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.remotion_path.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=45 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 498:
+            self.wait((498 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.html_source.code_card"], rate_func=_rate_func("ease_in_out")),
+            run_time=42 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 501:
+            self.wait((501 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.html_source.title"], rate_func=_rate_func("ease_in_out")),
+            run_time=39 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 504:
+            self.wait((504 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.html_source.body.0"], rate_func=_rate_func("ease_in_out")),
+            run_time=36 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 507:
+            self.wait((507 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.html_source.body.1"], rate_func=_rate_func("ease_in_out")),
+            run_time=33 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
         caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
         self.add(caption)
         if timeline_f < 510:
             self.wait((510 - timeline_f) / config.frame_rate)
         self.play(
+            FadeIn(objects["comparison.html_source.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=30 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 513:
+            self.wait((513 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.remotion_source.code_card"], rate_func=_rate_func("ease_in_out")),
+            run_time=27 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 516:
+            self.wait((516 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.remotion_source.title"], rate_func=_rate_func("ease_in_out")),
+            run_time=24 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 519:
+            self.wait((519 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.remotion_source.body.0"], rate_func=_rate_func("ease_in_out")),
+            run_time=21 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 522:
+            self.wait((522 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.remotion_source.body.1"], rate_func=_rate_func("ease_in_out")),
+            run_time=18 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 525:
+            self.wait((525 - timeline_f) / config.frame_rate)
+        self.play(
+            FadeIn(objects["comparison.remotion_source.detail"], rate_func=_rate_func("ease_in_out")),
+            run_time=15 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 528:
+            self.wait((528 - timeline_f) / config.frame_rate)
+        self.play(
+            Create(objects["comparison.compare.0"], rate_func=_rate_func("ease_in_out")),
+            run_time=12 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 531:
+            self.wait((531 - timeline_f) / config.frame_rate)
+        self.play(
+            Create(objects["comparison.compare.1"], rate_func=_rate_func("ease_in_out")),
+            run_time=9 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 540
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 540:
+            self.wait((540 - timeline_f) / config.frame_rate)
+        self.play(
+            Indicate(objects["comparison.html_path.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
+            run_time=22 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 562
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 562:
+            self.wait((562 - timeline_f) / config.frame_rate)
+        self.play(
+            Indicate(objects["comparison.remotion_path.panel"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
+            run_time=22 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 584
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 584:
+            self.wait((584 - timeline_f) / config.frame_rate)
+        self.play(
+            Indicate(objects["comparison.html_source.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
+            run_time=22 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 606
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 606:
+            self.wait((606 - timeline_f) / config.frame_rate)
+        self.play(
+            Indicate(objects["comparison.remotion_source.code_card"], color="#FDE68A", scale_factor=1.06, rate_func=_rate_func("ease_in_out")),
+            run_time=22 / config.frame_rate,
+        )
+        self.remove(caption)
+        timeline_f = 628
+        caption = _caption("Two portable backend paths compared side by side: HTML versus Remotion source.")
+        self.add(caption)
+        if timeline_f < 630:
+            self.wait((630 - timeline_f) / config.frame_rate)
+        self.play(
             FadeOut(objects["comparison.html_path.panel"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["comparison.html_path.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["comparison.html_path.detail"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["comparison.remotion_path.panel"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["comparison.remotion_path.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["comparison.remotion_path.detail"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["comparison.html_source.code_card"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["comparison.html_source.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["comparison.html_source.body.0"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["comparison.html_source.body.1"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["comparison.html_source.detail"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["comparison.remotion_source.code_card"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["comparison.remotion_source.title"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["comparison.remotion_source.body.0"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["comparison.remotion_source.body.1"], rate_func=_rate_func("ease_in_out")),
+            FadeOut(objects["comparison.remotion_source.detail"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["comparison.compare.0"], rate_func=_rate_func("ease_in_out")),
             FadeOut(objects["comparison.compare.1"], rate_func=_rate_func("ease_in_out")),
             run_time=30 / config.frame_rate,
         )
         self.remove(caption)
-        timeline_f = 540
+        timeline_f = 660

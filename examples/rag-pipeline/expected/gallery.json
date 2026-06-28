@@ -13,23 +13,23 @@
   "story_arc": [
     {
       "id": "problem_setup",
-      "claim": "A bare model answer still needs the document corpus."
+      "claim": "Set up the problem: a bare model answer still needs the document corpus."
     },
     {
       "id": "indexing_path",
-      "claim": "Documents split into chunks, become embeddings, and land in the vector store."
+      "claim": "Stage the offline indexing path from documents to a vector store."
     },
     {
       "id": "retrieval_path",
-      "claim": "At query time the question probes the vector store for the nearest context."
+      "claim": "Probe the vector store with the question and pull back the nearest context."
     },
     {
       "id": "answer_synthesis",
-      "claim": "Retrieved context carries the question into grounded synthesis."
+      "claim": "Carry the question and retrieved context into the model for synthesis."
     },
     {
       "id": "payoff",
-      "claim": "Bare prompting falls short; retrieved context produces a grounded answer."
+      "claim": "Contrast the bare-prompt answer with the grounded result."
     }
   ],
   "parity": {
@@ -45,7 +45,7 @@
       "id": "manim",
       "source_root": "expected/generated/manim",
       "source_entry": "expected/generated/manim/scene.py",
-      "source_hash": "sha256:6be1007dea16a3162288fbb38eef759276637fbbcd8c8b200eacb0646959eb0c",
+      "source_hash": "sha256:d0c667655efb218ce9078b22d301f989873ae9e152b8de77c4b7b02e0a678add",
       "render_status": "baseline-committed",
       "render_baseline": "expected/manim/render.json",
       "capabilities": {
@@ -70,7 +70,7 @@
       "id": "html",
       "source_root": "expected/generated/html",
       "source_entry": "expected/generated/html/scene.html",
-      "source_hash": "sha256:7b09d44ebd5824d45316f8a28d7b4c2d3f14a5f51469f2f782ec851a6d93068c",
+      "source_hash": "sha256:b9d8d092fb9de61606a758902627a4e414fd21566a6afeb72253280f30edeade",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {
@@ -95,7 +95,7 @@
       "id": "remotion",
       "source_root": "expected/generated/remotion",
       "source_entry": "expected/generated/remotion/package.json",
-      "source_hash": "sha256:ee3c919d86964cb7b8c5d4c292c9b778d571bae412d4090643acd58d45878733",
+      "source_hash": "sha256:787ae9e9416c27105260d650560f620d7b31bc0c61c0186fc9de2013747b2515",
       "render_status": "env-gated",
       "render_baseline": null,
       "capabilities": {

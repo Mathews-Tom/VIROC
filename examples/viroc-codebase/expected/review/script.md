@@ -1,5 +1,9 @@
 # Script review
 
+## closing
+
+- Reviewable, testable, reproducible — VidIR is the source of truth.
+
 ## compile_fanout
 
 - One resolved Concrete IR compiles deterministically to Manim, HTML, and Remotion source.
@@ -23,6 +27,10 @@
 ## storyboard_review
 
 - The review surface shows scene cards and the script as an inspectable artifact before final render.
+
+## title_card
+
+- From a topic to a verified, portable video.
 
 ## validate_repair
 
