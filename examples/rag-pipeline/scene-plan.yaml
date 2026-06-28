@@ -1,4 +1,4 @@
-vidir_version: '0.1'
+scene_plan_version: '0.1'
 video:
   id: rag-overview
   title: How Retrieval-Augmented Generation Works
@@ -37,6 +37,8 @@ entities:
   type: data_source
 scenes:
 - id: problem_setup
+  title: The grounding gap
+  goal: 'Set up the problem: a bare model answer still needs the document corpus.'
   grammar: pipeline
   duration: 6s
   nodes:
@@ -47,9 +49,10 @@ scenes:
   - from: query
     to: llm
     kind: flow
-  beats: []
   narration: A user question reaches the model, but the answer still needs the document corpus.
 - id: indexing_path
+  title: Index the corpus
+  goal: Stage the offline indexing path from documents to a vector store.
   grammar: pipeline
   duration: 7s
   nodes:
@@ -67,9 +70,10 @@ scenes:
   - from: embedder
     to: vector_db
     kind: store
-  beats: []
   narration: 'VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.'
 - id: retrieval_path
+  title: Retrieve at query time
+  goal: Probe the vector store with the question and pull back the nearest context.
   grammar: pipeline
   duration: 6s
   nodes:
@@ -83,9 +87,10 @@ scenes:
   - from: vector_db
     to: retrieved_context
     kind: flow
-  beats: []
   narration: At query time, the same question probes the vector store and pulls back the nearest context.
 - id: answer_synthesis
+  title: Synthesize a grounded answer
+  goal: Carry the question and retrieved context into the model for synthesis.
   grammar: pipeline
   duration: 7s
   nodes:
@@ -103,9 +108,10 @@ scenes:
   - from: llm
     to: grounded_answer
     kind: transform
-  beats: []
   narration: The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.
 - id: payoff
+  title: Bare versus grounded
+  goal: Contrast the bare-prompt answer with the grounded result.
   grammar: pipeline
   duration: 8s
   nodes:
@@ -119,20 +125,4 @@ scenes:
   - from: retrieved_context
     to: grounded_answer
     kind: merge
-  beats: []
   narration: 'The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.'
-validation:
-  required_entities:
-  - query
-  - documents
-  - chunks
-  - embedder
-  - vector_db
-  - retrieved_context
-  - llm
-  - bare_answer
-  - grounded_answer
-  checks:
-  - schema
-  - layout
-  - timing
