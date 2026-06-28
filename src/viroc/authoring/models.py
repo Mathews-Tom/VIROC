@@ -77,6 +77,7 @@ class SceneSeed(_Model):
     grammar: str = "pipeline"
     edges: list[Edge] = []
     edge_kind: EdgeKind = "flow"
+    emphasis: list[str] = []
     id: str | None = None
 
 
@@ -153,6 +154,7 @@ class PlannedScene(_Model):
     nodes: list[str] = []
     edges: list[Edge] = []
     narration: str
+    emphasis: list[str] = []
 
 
 class ScenePlan(_Model):
