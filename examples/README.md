@@ -25,8 +25,8 @@ Every committed `source.sha256` is reproduced by a fresh deterministic `viroc co
 
 | Example | `manim` | `html` | `remotion` | `static_storyboard` |
 |---|---|---|---|---|
-| `rag-pipeline` | `e9463d2` | `9929c04` | `1aa5b9b` | — |
-| `showcase-composition` | `51db8da` | `0ca3acc` | `57fef78` | `1e77046` |
-| `viroc-codebase` | `0899d90` | `6ed01bc` | `fd14322` | — |
+| `rag-pipeline` | `6be1007` | `7b09d44` | `ee3c919` | — |
+| `showcase-composition` | `efd0d36` | `0f1330c` | `998c623` | `8185915` |
+| `viroc-codebase` | `8ffe9c0` | `8af1ecb` | `edc8bf7` | — |
 
 Hashes are abbreviated; the full `sha256:` values live in each example's `expected/<backend>/source.sha256` and `expected/gallery.json`. On Manim, `showcase-composition` and `viroc-codebase` emit `VIR5033` degradation notes for `code`/`formula` and still exit 0; `rag-pipeline` is floor-only and emits none.

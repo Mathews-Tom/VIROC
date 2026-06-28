@@ -38,9 +38,9 @@ Committed generated source lives under `expected/generated/`, so the example can
 
 | Backend | Committed source root | Entry file | Source hash | Render reference |
 |---|---|---|---|---|
-| `manim` | `expected/generated/manim/` | `expected/generated/manim/scene.py` | `sha256:e9463d24776476d17e1b9c23a7be230f66d4a48f5cb6c739430fbefe4ea56946` | preview video at `expected/preview/manim/rag-overview.mp4`; perceptual baseline at `expected/manim/render.json` |
-| `html` | `expected/generated/html/` | `expected/generated/html/scene.html` | `sha256:9929c0439c063d1a3dab82ef351c680f6ab9edd761bc2f8e73e7a39cde63f6b7` | env-gated render; skip when no browser is available |
-| `remotion` | `expected/generated/remotion/` | `expected/generated/remotion/package.json` | `sha256:1aa5b9bb3c3d5778d72655f20a7483f950356165be239dbc3ef6ff44d8a9b64f` | env-gated render; skip when the Remotion CLI probe fails |
+| `manim` | `expected/generated/manim/` | `expected/generated/manim/scene.py` | `sha256:6be1007dea16a3162288fbb38eef759276637fbbcd8c8b200eacb0646959eb0c` | preview video at `expected/preview/manim/rag-overview.mp4`; perceptual baseline at `expected/manim/render.json` |
+| `html` | `expected/generated/html/` | `expected/generated/html/scene.html` | `sha256:7b09d44ebd5824d45316f8a28d7b4c2d3f14a5f51469f2f782ec851a6d93068c` | env-gated render; skip when no browser is available |
+| `remotion` | `expected/generated/remotion/` | `expected/generated/remotion/package.json` | `sha256:ee3c919d86964cb7b8c5d4c292c9b778d571bae412d4090643acd58d45878733` | env-gated render; skip when the Remotion CLI probe fails |
 
 Guided-flow provenance, all committed and regenerable:
 

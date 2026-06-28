@@ -40,9 +40,9 @@ Committed generated source lives under `expected/generated/`, so the example can
 
 | Backend | Committed source root | Entry file | Source hash | Render reference |
 |---|---|---|---|---|
-| `manim` | `expected/generated/manim/` | `expected/generated/manim/scene.py` | `sha256:0899d90d30b7d97b23404a4a186202cce300dfc3d614f68b6d7ec5bde1ad398b` | preview video at `expected/preview/manim/viroc-codebase.mp4`; perceptual baseline at `expected/manim/render.json` (code/formula degraded to rect) |
-| `html` | `expected/generated/html/` | `expected/generated/html/scene.html` | `sha256:6ed01bc515acad379a17d71d4b4f1c1fb1da20311bbe9dbc019c0c0ef0a82991` | env-gated render; skip when no browser is available (full code/formula fidelity) |
-| `remotion` | `expected/generated/remotion/` | `expected/generated/remotion/package.json` | `sha256:fd1432205913e634f68b90360cdac13a99e24354da04640e94843af7f3708250` | env-gated render; skip when the Remotion CLI probe fails (full code/formula fidelity) |
+| `manim` | `expected/generated/manim/` | `expected/generated/manim/scene.py` | `sha256:8ffe9c0ddeddf9740db24ead05f213ebea7bc61265655a635a87b97daf89511f` | preview video at `expected/preview/manim/viroc-codebase.mp4`; perceptual baseline at `expected/manim/render.json` (code/formula degraded to rect) |
+| `html` | `expected/generated/html/` | `expected/generated/html/scene.html` | `sha256:8af1ecb0753e52a80334faa540fbfd50fbeb34fc63ff6db899ef87f6b3e7e0e1` | env-gated render; skip when no browser is available (full code/formula fidelity) |
+| `remotion` | `expected/generated/remotion/` | `expected/generated/remotion/package.json` | `sha256:edc8bf7fb8fb2fd4b3c249597172efc7727092f2a824ddd6fc14e968dd47bb53` | env-gated render; skip when the Remotion CLI probe fails (full code/formula fidelity) |
 
 Guided-flow provenance, all committed and regenerable:
 
