@@ -1,0 +1,132 @@
+request_version: '0.1'
+project:
+  path: .
+  id: rag-overview
+  title: How Retrieval-Augmented Generation Works
+  duration_target: 34
+  default_backend: manim
+source:
+  kind: topic
+  title: How Retrieval-Augmented Generation Works
+  prompt: Explain how retrieval-augmented generation grounds a language model in a document corpus, from indexing through grounded answer synthesis.
+  audience: Engineers new to retrieval-augmented generation
+  objective: Show why grounding a model in retrieved context beats bare prompting
+entities:
+- id: query
+  label: User question
+  type: data_source
+- id: documents
+  label: Documents
+  type: data_source
+- id: chunks
+  label: Chunks
+  type: intermediate
+- id: embedder
+  label: Embedding model
+  type: model
+- id: vector_db
+  label: Vector store
+  type: storage
+- id: retrieved_context
+  label: Retrieved context
+  type: intermediate
+- id: llm
+  label: LLM
+  type: model
+- id: bare_answer
+  label: Bare prompt answer
+  type: data_source
+- id: grounded_answer
+  label: Grounded answer
+  type: data_source
+scene_seeds:
+- id: problem_setup
+  title: The grounding gap
+  goal: 'Set up the problem: a bare model answer still needs the document corpus.'
+  narration: A user question reaches the model, but the answer still needs the document corpus.
+  nodes:
+  - query
+  - llm
+  - documents
+  duration: 6s
+  grammar: pipeline
+  edges:
+  - from: query
+    to: llm
+    kind: flow
+- id: indexing_path
+  title: Index the corpus
+  goal: Stage the offline indexing path from documents to a vector store.
+  narration: 'VIROC stages the indexing path: documents split into chunks, become embeddings, and land in the vector store.'
+  nodes:
+  - documents
+  - chunks
+  - embedder
+  - vector_db
+  duration: 7s
+  grammar: pipeline
+  edges:
+  - from: documents
+    to: chunks
+    kind: split
+  - from: chunks
+    to: embedder
+    kind: transform
+  - from: embedder
+    to: vector_db
+    kind: store
+- id: retrieval_path
+  title: Retrieve at query time
+  goal: Probe the vector store with the question and pull back the nearest context.
+  narration: At query time, the same question probes the vector store and pulls back the nearest context.
+  nodes:
+  - query
+  - vector_db
+  - retrieved_context
+  duration: 6s
+  grammar: pipeline
+  edges:
+  - from: query
+    to: vector_db
+    kind: flow
+  - from: vector_db
+    to: retrieved_context
+    kind: flow
+- id: answer_synthesis
+  title: Synthesize a grounded answer
+  goal: Carry the question and retrieved context into the model for synthesis.
+  narration: The retrieved context carries the question into synthesis, and the LLM turns that grounded path into an answer.
+  nodes:
+  - query
+  - retrieved_context
+  - llm
+  - grounded_answer
+  duration: 7s
+  grammar: pipeline
+  edges:
+  - from: query
+    to: retrieved_context
+    kind: flow
+  - from: retrieved_context
+    to: llm
+    kind: merge
+  - from: llm
+    to: grounded_answer
+    kind: transform
+- id: payoff
+  title: Bare versus grounded
+  goal: Contrast the bare-prompt answer with the grounded result.
+  narration: 'The payoff is evidence: bare prompting falls short, while retrieved context carries the answer to a grounded result.'
+  nodes:
+  - bare_answer
+  - retrieved_context
+  - grounded_answer
+  duration: 8s
+  grammar: pipeline
+  edges:
+  - from: bare_answer
+    to: retrieved_context
+    kind: compare
+  - from: retrieved_context
+    to: grounded_answer
+    kind: merge
